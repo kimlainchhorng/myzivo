@@ -3,7 +3,7 @@
  * Each city has unique questions to avoid duplicate content
  */
 
-import { FAQItem } from "@/components/shared/FAQSchema";
+import type { FAQItem } from "@/components/shared/FAQSchema";
 
 // =========================================
 // FLIGHT ROUTE FAQs

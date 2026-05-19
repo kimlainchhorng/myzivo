@@ -14,7 +14,8 @@ import {
 import UnifiedActivityTimeline from "@/components/shared/UnifiedActivityTimeline";
 import { cn } from "@/lib/utils";
 import { getPublicOrigin } from "@/lib/getPublicOrigin";
-import { useTripItineraries, useCreateTrip, useDeleteTrip, TripItinerary } from "@/hooks/useTripItineraries";
+import { useTripItineraries, useCreateTrip, useDeleteTrip } from "@/hooks/useTripItineraries";
+import type { TripItinerary } from "@/hooks/useTripItineraries";
 import { useFlightBookings, getTicketingStatusInfo } from "@/hooks/useFlightBooking";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import { format } from "date-fns";

@@ -17,7 +17,8 @@ import WifiOff from "lucide-react/dist/esm/icons/wifi-off";
 import SwitchCamera from "lucide-react/dist/esm/icons/switch-camera";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import { motion, AnimatePresence } from "framer-motion";
-import { useWebRTC, CallRole, WebRTCFailure, classifyWebRTCFailure } from "@/hooks/useWebRTC";
+import { useWebRTC, classifyWebRTCFailure } from "@/hooks/useWebRTC";
+import type { CallRole, WebRTCFailure } from "@/hooks/useWebRTC";
 import { useCallQuality } from "@/hooks/useCallQuality";
 import { useScreenShare } from "@/hooks/useScreenShare";
 

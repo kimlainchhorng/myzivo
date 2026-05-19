@@ -3,7 +3,7 @@
  * Cancels grocery orders stuck at "pending_payment" for more than 1 hour.
  * Designed to be called via pg_cron every 10 minutes.
  */
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {

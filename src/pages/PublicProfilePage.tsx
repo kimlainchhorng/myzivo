@@ -1091,7 +1091,7 @@ export default function PublicProfilePage() {
               <div className="flex gap-2 mt-4.5 w-full max-w-sm px-2">
                 {!zivoOFMode && (
                   <motion.button whileTap={{ scale: 0.95 }} onClick={() => { if (isFollowing) { setConfirmAction({ action: "unfollow", label: `Unfollow ${resolvedProfile?.full_name}?` }); } else { followMutation.mutate(); } }} disabled={followMutation.isPending}
-                    className={`flex-1 h-10 sm:h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-all ${isFollowing ? "bg-muted text-foreground border border-border" : "bg-primary text-primary-foreground"}`}>
+                    className={`flex-1 h-10 sm:h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-1.5 transition-all ${isFollowing ? "bg-muted text-foreground border border-border" : "bg-ig-gradient text-white hover:opacity-90 shadow-sm"}`}>
                     {followMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Heart className={`h-4 w-4 ${isFollowing ? "fill-primary text-primary" : ""}`} />}
                     {followMutation.isPending ? "Updating" : isFollowing ? "Following" : "Follow"}
                   </motion.button>

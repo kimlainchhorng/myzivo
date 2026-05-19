@@ -6,18 +6,15 @@
 
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  ZivoPropertyExtended,
-  ZivoPropertySearchResult,
-  PropertySource,
-} from "@/types/zivoProperty";
+import type { ZivoPropertyExtended, ZivoPropertySearchResult } from "@/types/zivoProperty";
+import type { PropertySource } from "@/types/zivoProperty";
 import {
   normalizeHotelbedsToZivoProperty,
   normalizeRateHawkToZivoProperty,
   mergeMultiSourceProperties,
 } from "@/services/propertyNormalizer";
-import { HotelbedsHotel } from "@/types/hotelbeds";
-import { RateHawkHotel } from "@/types/ratehawk";
+import type { HotelbedsHotel } from "@/types/hotelbeds";
+import type { RateHawkHotel } from "@/types/ratehawk";
 import { differenceInDays } from "date-fns";
 
 export interface MultiProviderSearchParams {

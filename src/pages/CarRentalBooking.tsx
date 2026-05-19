@@ -64,8 +64,8 @@ import { TrustFeatureCards, OGImageMeta } from "@/components/marketing";
 import { SEOContentBlock, InternalLinkGrid } from "@/components/seo";
 import { carAffiliatePartners } from "@/data/carAffiliatePartners";
 import CarCategoryTiles from "@/components/car/CarCategoryTiles";
-import { CarCategory } from "@/config/photos";
-import { Airport } from "@/data/airports";
+import type { CarCategory } from "@/config/photos";
+import type { Airport } from "@/data/airports";
 import { CAR_DISCLAIMERS } from "@/config/carCompliance";
 
 /**

@@ -178,25 +178,42 @@ function NavIcon({
           layoutId="zivo-bottom-nav-pill"
           transition={{ type: "spring", stiffness: 380, damping: 30 }}
           aria-hidden
-          className="absolute -inset-x-3 -inset-y-1.5 rounded-full bg-foreground/[0.07] ring-1 ring-foreground/10"
+          className="absolute -inset-x-3 -inset-y-1.5 rounded-full bg-foreground/[0.06] ring-1 ring-foreground/10"
+        />
+      )}
+      {isActive && (
+        <motion.span
+          layoutId="zivo-bottom-nav-glow"
+          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+          aria-hidden
+          className="bg-ig-gradient absolute -bottom-2 left-1/2 -translate-x-1/2 h-[3px] w-6 rounded-full opacity-90"
         />
       )}
       {tab.id === "account" && user ? (
-        <Avatar
+        <div
           className={cn(
-            "h-[26px] w-[26px] transition-all duration-150",
-            isActive ? "ring-[1.5px] ring-foreground ring-offset-2 ring-offset-background" : ""
+            "relative z-10 rounded-full",
+            isActive
+              ? "bg-ig-gradient p-[1.5px] ring-2 ring-background"
+              : ""
           )}
         >
-          <AvatarImage
-            src={profile?.avatar_url || user.user_metadata?.avatar_url || undefined}
-            alt="Account"
-            className="object-cover"
-          />
-          <AvatarFallback className="bg-muted text-foreground text-[11px] font-semibold">
-            {(profile?.full_name?.[0] || user.email?.[0] || "Z").toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+          <Avatar
+            className={cn(
+              "h-[26px] w-[26px] transition-all duration-150",
+              isActive ? "ring-2 ring-background" : ""
+            )}
+          >
+            <AvatarImage
+              src={profile?.avatar_url || user.user_metadata?.avatar_url || undefined}
+              alt="Account"
+              className="object-cover"
+            />
+            <AvatarFallback className="bg-muted text-foreground text-[11px] font-semibold">
+              {(profile?.full_name?.[0] || user.email?.[0] || "Z").toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        </div>
       ) : (
         <tab.icon
           className="relative z-10 w-[24px] h-[24px]"

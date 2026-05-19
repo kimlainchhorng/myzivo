@@ -1,4 +1,5 @@
-import { LucideIcon, Activity } from "lucide-react";
+import { Activity } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";

@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { megaMenuData, moreServicesData, MegaMenuData } from "./megaMenuData";
+import { megaMenuData, moreServicesData } from "./megaMenuData";
+import type { MegaMenuData } from "./megaMenuData";
 import ZivoLogo from "@/components/ZivoLogo";
 import CurrencySelector from "@/components/shared/CurrencySelector";
 

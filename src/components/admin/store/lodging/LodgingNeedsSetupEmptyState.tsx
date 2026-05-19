@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle2, ListChecks, LucideIcon } from "lucide-react";
+import { ArrowRight, CheckCircle2, ListChecks } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 export type LodgingSetupAction = {
   label: string;

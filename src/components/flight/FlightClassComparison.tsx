@@ -1,4 +1,5 @@
-import { Plane, Armchair, UtensilsCrossed, Wifi, Luggage, Check, X, Crown, Sparkles, LucideIcon } from "lucide-react";
+import { Plane, Armchair, UtensilsCrossed, Wifi, Luggage, Check, X, Crown, Sparkles } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const cabinClasses: { name: string; Icon: LucideIcon; color: string; priceRange: string; seatPitch: string; seatWidth: string; features: { meal: string; drinks: string; wifi: string; lounge: boolean; priority: boolean; luggage: string } }[] = [

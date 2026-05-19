@@ -11,7 +11,8 @@ import { BarChart3, MousePointerClick, Eye, Target, DollarSign, RefreshCw, Trend
 import { toast } from "sonner";
 import { PerformanceChartSkeleton } from "./ads/MarketingSkeletons";
 import MarketingEmptyState from "./ads/MarketingEmptyState";
-import ResponsiveBreakdown, { BreakdownColumn } from "./ads/ResponsiveBreakdown";
+import ResponsiveBreakdown from "./ads/ResponsiveBreakdown";
+import type { BreakdownColumn } from "./ads/ResponsiveBreakdown";
 import { mkMeta } from "./ads/marketing-tokens";
 import { cn } from "@/lib/utils";
 

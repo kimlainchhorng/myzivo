@@ -2,7 +2,8 @@
  * Brand Context
  * Domain-based brand detection and configuration provider
  */
-import { createContext, ReactNode, useEffect, useMemo } from "react";
+import { createContext, useEffect, useMemo } from "react";
+import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 

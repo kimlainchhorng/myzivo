@@ -2,7 +2,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Lightbulb, MapPin, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import FAQSchema, { FAQItem } from "@/components/shared/FAQSchema";
+import FAQSchema from "@/components/shared/FAQSchema";
+import type { FAQItem } from "@/components/shared/FAQSchema";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 /**

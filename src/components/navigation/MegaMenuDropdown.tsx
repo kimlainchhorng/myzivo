@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown, ArrowRight, ExternalLink, Sparkles } from "lucide-react";
-import { MegaMenuData } from "./megaMenuData";
+import type { MegaMenuData } from "./megaMenuData";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

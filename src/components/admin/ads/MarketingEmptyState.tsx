@@ -2,7 +2,8 @@
  * MarketingEmptyState — shared empty-state UI for Marketing & Ads surfaces.
  * Compact on mobile, spacious on desktop.
  */
-import { LucideIcon, Megaphone } from "lucide-react";
+import { Megaphone } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { mkBody, mkHeading } from "./marketing-tokens";
 

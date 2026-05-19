@@ -2331,7 +2331,7 @@ export default function LiveStreamPage() {
   }}
   className={cn(
     "mt-2 w-full py-1 rounded-full text-[10px] font-bold active:scale-95 transition-transform",
-    isFollowed ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30" : "bg-emerald-500 text-white",
+    isFollowed ? "bg-white/15 text-white border border-white/30" : "bg-ig-gradient text-white hover:opacity-90 shadow-sm",
   )}
 >
  {isFollowed ? "Following" : "+ Follow"}

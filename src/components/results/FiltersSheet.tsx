@@ -4,7 +4,8 @@
  * Premium design with service-specific accent colors
  */
 
-import { ReactNode, useState } from "react";
+import { useState } from "react";
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { SlidersHorizontal, RotateCcw, Loader2 } from "lucide-react";

@@ -381,7 +381,7 @@ const DailyMissionCard = ({ onNavigate }: { onNavigate: (to: string) => void }) 
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={() => onNavigate(mission.to)}
-          className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-semibold bg-primary text-primary-foreground active:opacity-80 transition-opacity touch-manipulation"
+          className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-bold bg-ig-gradient text-white shadow-sm hover:opacity-90 active:opacity-80 transition-opacity touch-manipulation"
         >
           {mission.cta}
           <ChevronRight className="w-3.5 h-3.5" />
@@ -758,7 +758,7 @@ const AppHome = () => {
           {/* ─── ALL SERVICES (moved to top) ─── */}
           <div className={cn("pb-5", user ? "pt-1" : "pt-safe")}>
             <div className="flex items-center justify-between mb-3 px-5">
-              <h2 className="text-base font-bold text-foreground">{t("home.more_services")}</h2>
+              <h2 className="text-base font-bold text-ig-gradient">{t("home.more_services")}</h2>
               <button type="button" aria-label="View all services" onClick={() => navigate("/services")} className="h-11 w-11 -mr-2 flex items-center justify-center touch-manipulation rounded-full hover:bg-muted/50 transition-colors">
                 <ArrowRight className="w-4.5 h-4.5 text-muted-foreground" />
               </button>
@@ -1087,7 +1087,7 @@ const AppHome = () => {
           {/* ─── DISCOVER (gradient cards) ─── */}
           <div className="pb-5">
             <div className="flex items-center justify-between mb-3 px-5">
-              <h2 className="text-base font-bold text-foreground">Discover</h2>
+              <h2 className="text-base font-bold text-ig-gradient">Discover</h2>
               <button type="button" aria-label="View more services" onClick={() => navigate("/more")} className="h-11 w-11 -mr-2 flex items-center justify-center touch-manipulation rounded-full hover:bg-muted/50 transition-colors">
                 <ArrowRight className="w-4.5 h-4.5 text-muted-foreground" />
               </button>

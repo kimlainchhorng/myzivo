@@ -12,10 +12,8 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  useLocalPaymentMethods,
-  LocalPaymentMethod,
-} from "@/hooks/useLocalPaymentMethods";
+import { useLocalPaymentMethods } from "@/hooks/useLocalPaymentMethods";
+import type { LocalPaymentMethod } from "@/hooks/useLocalPaymentMethods";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/hooks/useI18n";
 import { toast } from "sonner";

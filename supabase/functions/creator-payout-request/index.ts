@@ -9,7 +9,7 @@
  * Without this, creators request withdrawals → row sits in `creator_payouts`
  * with status='pending' forever and nobody sees it.
  */
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {

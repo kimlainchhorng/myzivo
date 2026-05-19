@@ -9,7 +9,7 @@ import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { HotelFiltersState } from "@/hooks/useResultsFilters";
+import type { HotelFiltersState } from "@/hooks/useResultsFilters";
 
 interface HotelFiltersContentProps {
   filters: HotelFiltersState;

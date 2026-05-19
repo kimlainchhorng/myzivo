@@ -10,7 +10,8 @@ import { ArrowLeft, Heart, X, MapPin, Sparkles, MessageCircle } from "lucide-rea
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import type { PanInfo } from "framer-motion";
 import { useState, useCallback } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";

@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useDriverShoppingOrders, ShoppingOrder } from "@/hooks/useDriverShoppingOrders";
+import { useDriverShoppingOrders } from "@/hooks/useDriverShoppingOrders";
+import type { ShoppingOrder } from "@/hooks/useDriverShoppingOrders";
 import { toast } from "sonner";
 import { useEatsNotifications } from "@/hooks/useEatsNotifications";
 import { supabase } from "@/integrations/supabase/client";

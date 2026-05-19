@@ -17,8 +17,9 @@ import {
 import { cn } from "@/lib/utils";
 import {
   useTripItinerary, useTripItems, useUpdateTrip, useCreateTripItem,
-  useDeleteTripItem, ItemType, TripItem,
+  useDeleteTripItem,
 } from "@/hooks/useTripItineraries";
+import type { ItemType, TripItem } from "@/hooks/useTripItineraries";
 import { format } from "date-fns";
 import { ReservationStatusTimeline, type LodgeStatus } from "@/components/lodging/ReservationStatusTimeline";
 import { ReservationStatusHistory } from "@/components/lodging/ReservationStatusHistory";

@@ -6,9 +6,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { UserFavorite, AddFavoriteInput, FavoriteItemType } from "@/types/personalization";
+import type { UserFavorite, AddFavoriteInput, FavoriteItemType } from "@/types/personalization";
 import { toast } from "sonner";
-import { Json } from "@/integrations/supabase/types";
+import type { Json } from "@/integrations/supabase/types";
 
 const QUERY_KEY = "user-favorites";
 

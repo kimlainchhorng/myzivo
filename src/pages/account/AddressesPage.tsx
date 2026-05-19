@@ -41,9 +41,8 @@ import {
   useAddSavedLocation,
   useUpdateSavedLocation,
   useDeleteSavedLocation,
-  SavedLocation,
-  SavedLocationInput,
 } from "@/hooks/useSavedLocations";
+import type { SavedLocation, SavedLocationInput } from "@/hooks/useSavedLocations";
 
 export default function AddressesPage() {
   const navigate = useNavigate();

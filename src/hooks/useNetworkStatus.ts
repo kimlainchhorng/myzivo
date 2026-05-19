@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Network, ConnectionStatus } from '@capacitor/network';
+import { Network } from '@capacitor/network';
+import type { ConnectionStatus } from '@capacitor/network';
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 

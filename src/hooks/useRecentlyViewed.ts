@@ -6,10 +6,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { RecentlyViewedItem, TrackViewInput, RecentlyViewedItemType } from "@/types/personalization";
+import type { RecentlyViewedItem, TrackViewInput, RecentlyViewedItemType } from "@/types/personalization";
 import { usePersonalizationSettings } from "./usePersonalizationSettings";
 import { toast } from "sonner";
-import { Json } from "@/integrations/supabase/types";
+import type { Json } from "@/integrations/supabase/types";
 
 const QUERY_KEY = "recently-viewed";
 const MAX_ITEMS = 20; // Keep last 20 items

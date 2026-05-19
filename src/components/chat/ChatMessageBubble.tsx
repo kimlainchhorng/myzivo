@@ -4,7 +4,8 @@
  * Design: Glassmorphic iMessage aesthetic with gradient bubbles, tail shapes, and depth effects
  */
 import { useState, useEffect, useRef, useCallback, useMemo, memo, lazy, Suspense, type ComponentType, type SVGProps } from "react";
-import { motion, AnimatePresence, PanInfo } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import type { PanInfo } from "framer-motion";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import Music2 from "lucide-react/dist/esm/icons/music-2";
 import Reply from "lucide-react/dist/esm/icons/reply";

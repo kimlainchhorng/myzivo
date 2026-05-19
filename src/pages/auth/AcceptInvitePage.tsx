@@ -53,7 +53,7 @@ export default function AcceptInvitePage() {
 
       <div className="relative w-full max-w-sm">
         <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-7 py-9 shadow-sm text-center space-y-4">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-rose-500/20">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-ig-gradient flex items-center justify-center shadow-lg shadow-rose-500/20">
             <Briefcase className="w-7 h-7 text-white" />
           </div>
           {state === "idle" || state === "claiming" ? (
@@ -72,7 +72,7 @@ export default function AcceptInvitePage() {
               </p>
               <button type="button"
                 onClick={() => navigate("/personal-dashboard")}
-                className="w-full h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] transition flex items-center justify-center shadow-md"
+                className="w-full h-9 rounded-lg text-sm font-semibold text-white bg-ig-gradient hover:opacity-95 active:scale-[0.99] transition flex items-center justify-center shadow-md"
               >
                 Open Workplace
               </button>

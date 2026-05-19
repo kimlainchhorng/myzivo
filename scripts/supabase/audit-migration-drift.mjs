@@ -12,6 +12,12 @@ const args = new Set(process.argv.slice(2));
 const useLinked = args.has("--linked");
 const writeReport = args.has("--write-report");
 const strict = args.has("--strict");
+const allowedDuplicateVersions = new Set(
+  [...args]
+    .filter((arg) => arg.startsWith("--allow-duplicate-version="))
+    .map((arg) => arg.split("=")[1])
+    .filter(Boolean),
+);
 
 const migrationPattern = /^(\d{14})_.+\.sql$/;
 
@@ -185,6 +191,9 @@ function renderReport(summary) {
 const { files: local, invalid } = readLocalMigrations();
 const duplicateVersions = findDuplicates(local, "version");
 const duplicateHashes = findDuplicates(local, "hash");
+const blockingDuplicateVersions = duplicateVersions.filter(
+  (items) => !allowedDuplicateVersions.has(items[0].version),
+);
 const { versions: remoteVersions, error: remoteError } = readRemoteVersions();
 
 const localVersionSet = new Set(local.map((item) => item.version));
@@ -199,6 +208,7 @@ const summary = {
   local,
   invalid,
   duplicateVersions,
+  blockingDuplicateVersions,
   duplicateHashes,
   remoteVersions,
   remoteError,
@@ -218,6 +228,8 @@ console.log(JSON.stringify({
   localMigrations: local.length,
   invalidFilenames: invalid.length,
   duplicateVersions: duplicateVersions.length,
+  allowedDuplicateVersions: duplicateVersions.length - blockingDuplicateVersions.length,
+  newDuplicateVersions: blockingDuplicateVersions.length,
   duplicateHashes: duplicateHashes.length,
   remoteMigrations: remoteVersions.length,
   matchedVersions: matchedVersions.length,
@@ -232,6 +244,6 @@ console.log(JSON.stringify({
   remoteError,
 }, null, 2));
 
-if (strict && (invalid.length || duplicateVersions.length || duplicateHashes.length || remoteError)) {
+if (strict && (invalid.length || blockingDuplicateVersions.length || duplicateHashes.length || remoteError)) {
   process.exitCode = 1;
 }

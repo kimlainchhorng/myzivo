@@ -191,7 +191,7 @@ const VerifyOTP = () => {
             confusing. Users with a code can tap "Use code instead" to expand. */}
         <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-7 pt-9 pb-6 shadow-sm">
           <div className="flex flex-col items-center mb-6">
-            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 flex items-center justify-center mb-4 shadow-lg shadow-rose-500/20">
+            <div className="relative w-14 h-14 rounded-2xl bg-ig-gradient flex items-center justify-center mb-4 shadow-lg shadow-rose-500/20">
               <Mail className="w-7 h-7 text-white" />
             </div>
             <h1 className="text-xl font-bold text-zinc-900 dark:text-white">Check your email</h1>
@@ -217,7 +217,7 @@ const VerifyOTP = () => {
                   href={provider.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full h-10 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] transition flex items-center justify-center gap-2 shadow-md"
+                  className="w-full h-10 rounded-lg text-sm font-semibold text-white bg-ig-gradient hover:opacity-95 active:scale-[0.99] transition flex items-center justify-center gap-2 shadow-md"
                 >
                   <ExternalLink className="w-4 h-4" /> Open {provider.name}
                 </a>
@@ -293,7 +293,7 @@ const VerifyOTP = () => {
                   type="button"
                   onClick={() => submit(code.join(""))}
                   disabled={submitting || code.some((c) => !c)}
-                  className="w-full h-11 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md"
+                  className="w-full h-11 rounded-lg text-sm font-semibold text-white bg-ig-gradient hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md"
                 >
                   {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (mode === "signup" ? "Confirm email" : "Verify")}
                 </button>

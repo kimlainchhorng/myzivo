@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import SafeExternalLink from "@/components/security/SafeExternalLink";
 
 const URL_REGEX = /(https?:\/\/[^\s<>"']+)/gi;

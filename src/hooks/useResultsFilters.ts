@@ -5,7 +5,7 @@
 
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { FilterChip } from "@/components/results/ActiveFiltersChips";
+import type { FilterChip } from "@/components/results/ActiveFiltersChips";
 
 // Tracking params to preserve during filter updates
 const TRACKING_PARAMS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "creator", "subid"];

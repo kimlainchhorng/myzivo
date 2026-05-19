@@ -20,7 +20,6 @@ import MoreHorizontal from "lucide-react/dist/esm/icons/more-horizontal";
 import Play from "lucide-react/dist/esm/icons/play";
 import Volume2 from "lucide-react/dist/esm/icons/volume-2";
 import VolumeX from "lucide-react/dist/esm/icons/volume-x";
-import ImageIcon from "lucide-react/dist/esm/icons/image";
 import Plus from "lucide-react/dist/esm/icons/plus";
 import Camera from "lucide-react/dist/esm/icons/camera";
 import XIcon from "lucide-react/dist/esm/icons/x";
@@ -470,7 +469,7 @@ function GuestFeedCta({ onLogin, onSignup }: { onLogin: () => void; onSignup: ()
           <button
             type="button"
             onClick={onSignup}
-            className="h-9 rounded-full bg-primary px-4 text-[12px] font-semibold text-primary-foreground active:scale-95"
+            className="h-9 rounded-full bg-ig-gradient px-4 text-[12px] font-bold text-white active:scale-95 shadow-sm hover:opacity-90 transition-opacity"
           >
             Sign up
           </button>
@@ -535,7 +534,6 @@ export default function ReelsFeedPage() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [storeSearchResults, setStoreSearchResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [feedFilter, setFeedFilter] = useState<"all" | "photos" | "videos" | "text">("all");
   const [feedTab, setFeedTab] = useState<"For You" | "Friends" | "Following">(() => {
     try {
       const v = localStorage.getItem("zivo:feed-tab-v1");
@@ -546,7 +544,7 @@ export default function ReelsFeedPage() {
   useEffect(() => {
     try { localStorage.setItem("zivo:feed-tab-v1", feedTab); } catch { /* ignore */ }
   }, [feedTab]);
-  // Scroll to top when the user actually switches tabs or filters — skip the
+  // Scroll to top when the user actually switches tabs or hashtag scope — skip the
   // initial mount so a remembered tab from localStorage doesn't yank the page.
   const tabMountedRef = useRef(false);
   useEffect(() => {
@@ -555,7 +553,7 @@ export default function ReelsFeedPage() {
       return;
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [feedTab, feedFilter, selectedHashtag]);
+  }, [feedTab, selectedHashtag]);
   const [sidebarContacts, setSidebarContacts] = useState<Array<{ id: string; name: string; avatar: string | null }>>([]);
   const [trendingTags, setTrendingTags] = useState<Array<{ tag: string; count: number }>>([]);
   const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
@@ -1590,11 +1588,11 @@ export default function ReelsFeedPage() {
                       setCreateMode("photo");
                       setShowCreate(true);
                     }}
-                    className="shrink-0 h-11 w-11 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
+                    className="shrink-0 h-10 w-10 rounded-full bg-ig-gradient flex items-center justify-center text-white shadow-sm hover:opacity-90 active:scale-95 transition"
                     aria-label="Create post"
                     title="Create post"
                   >
-                    <Plus className="h-5 w-5" />
+                    <Plus className="h-5 w-5" strokeWidth={2.5} />
                   </button>
                   <button type="button"
                     onClick={() => userId ? navigate("/notifications") : goLogin("/notifications")}
@@ -1649,23 +1647,6 @@ export default function ReelsFeedPage() {
                       ))}
                     </div>
                   )}
-                  {/* Content type filter chips */}
-                  <div className="flex gap-1.5 px-3 pb-1 overflow-x-auto scrollbar-hide">
-                    {(["all", "photos", "videos", "text"] as const).map((f) => (
-                      <button type="button"
-                        key={f}
-                        onClick={() => setFeedFilter(f)}
-                        className={cn(
-                          "shrink-0 min-h-[40px] px-3.5 py-2 rounded-full text-[12px] font-semibold transition-all active:scale-95",
-                          feedFilter === f
-                            ? "bg-foreground text-background"
-                            : "bg-muted/50 text-muted-foreground"
-                        )}
-                      >
-                        {f === "all" ? "All" : f === "photos" ? "Photos" : f === "videos" ? "Videos" : "Text"}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               </div>
             </div>
@@ -1819,59 +1800,13 @@ export default function ReelsFeedPage() {
             )}
           </AnimatePresence>
 
-
-          {/* Create post — Facebook-style card composer */}
           <div ref={feedPageTopRef} data-feed-page-top aria-hidden="true" />
-
-          {userId && (
-            <div className="border-b border-border/10 bg-card px-3 pt-2 pb-1 lg:pt-1.5 lg:pb-0.5">
-              <div className="flex items-center gap-2.5 mb-1.5 lg:mb-1">
-                <div className="h-9 w-9 rounded-full overflow-hidden bg-muted border border-primary/20 shrink-0">
-                  {userProfile?.avatar ? (
-                    <img src={userProfile.avatar} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center text-muted-foreground/50">
-                      <Camera className="h-3.5 w-3.5" />
-                    </div>
-                  )}
-                </div>
-                <button type="button"
-                  onClick={() => { setCreateMode("photo"); setShowCreate(true); }}
-                  className="flex-1 text-left px-4 py-1.5 rounded-full bg-muted/40 border border-border/30 text-[13px] text-muted-foreground hover:bg-muted/60 transition-colors"
-                >
-                  {(() => {
-                    const first = (userProfile?.name || "").trim().split(/\s+/)[0];
-                    return first ? `What's on your mind, ${first}?` : "What's on your mind?";
-                  })()}
-                </button>
-              </div>
-              <div className="border-t border-border/15 pt-1 flex gap-1 overflow-x-auto scrollbar-hide lg:max-w-sm lg:mx-auto lg:gap-1.5" role="toolbar" aria-label="Create post">
-                <button type="button" onClick={() => { setCreateMode("photo"); setShowCreate(true); }} aria-label="Share a photo" title="Share a photo" className="flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1 rounded-lg bg-muted/20 hover:bg-muted/50 transition-colors min-w-[58px]">
-                  <ImageIcon className="h-3.5 w-3.5 text-emerald-500" />
-                  <span className="text-[9px] leading-none font-semibold text-muted-foreground">Photo</span>
-                </button>
-                <button type="button" onClick={() => { setCreateMode("reel"); setShowCreate(true); }} aria-label="Create a Reel" title="Create a Reel" className="flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1 rounded-lg bg-muted/20 hover:bg-muted/50 transition-colors min-w-[58px]">
-                  <Film className="h-3.5 w-3.5 text-violet-500" />
-                  <span className="text-[9px] leading-none font-semibold text-muted-foreground">Reels</span>
-                </button>
-                <button type="button" onClick={() => { setCreateMode("poll"); setShowCreate(true); }} aria-label="Create a poll" title="Create a poll" className="flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1 rounded-lg bg-muted/20 hover:bg-muted/50 transition-colors min-w-[58px]">
-                  <TrendingUp className="h-3.5 w-3.5 text-amber-500" />
-                  <span className="text-[9px] leading-none font-semibold text-muted-foreground">Poll</span>
-                </button>
-                <button type="button" onClick={() => navigate("/check-in")} aria-label="Check in to a place" title="Check in to a place" className="flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1 rounded-lg bg-muted/20 hover:bg-muted/50 transition-colors min-w-[58px]">
-                  <MapPin className="h-3.5 w-3.5 text-red-500" />
-                  <span className="text-[9px] leading-none font-semibold text-muted-foreground">Check In</span>
-                </button>
-                <button type="button" onClick={() => navigate("/live")} aria-label="Go live" title="Go live" className="flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1 rounded-lg bg-muted/20 hover:bg-muted/50 transition-colors min-w-[58px]">
-                  <Radio className="h-3.5 w-3.5 text-rose-600" />
-                  <span className="text-[9px] leading-none font-semibold text-muted-foreground">Live</span>
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* Anchor for scroll-to-top after tapping the new-posts banner */}
           <div ref={feedTopRef} aria-hidden="true" />
+
+          {/* Story Rings */}
+          <Suspense fallback={null}><FeedStoryRing /></Suspense>
 
           {!userId && (
             <GuestFeedCta onLogin={() => goLogin("/feed")} onSignup={goSignup} />
@@ -1925,23 +1860,17 @@ export default function ReelsFeedPage() {
               and pushed real feed posts further down the screen. The Feed page
               should land users in content, not in another greeting. */}
 
-          {/* Active filter summary — shown when any filter narrows the feed */}
-          {(selectedHashtag || feedTab !== "For You" || feedFilter !== "all") && (
+          {/* Active scope summary — shown when tab or hashtag narrows the feed */}
+          {(selectedHashtag || feedTab !== "For You") && (
             <div className="mx-3 mt-2 mb-1 flex items-center justify-between gap-2 rounded-full bg-muted/60 px-3 py-1.5">
               <div className="flex items-center gap-1.5 min-w-0 text-[12px] text-foreground">
                 <span className="text-muted-foreground">Filtered:</span>
                 {feedTab !== "For You" && (
                   <span className="font-semibold">{feedTab}</span>
                 )}
-                {feedFilter !== "all" && (
-                  <>
-                    {feedTab !== "For You" && <span className="text-muted-foreground">·</span>}
-                    <span className="font-semibold capitalize">{feedFilter}</span>
-                  </>
-                )}
                 {selectedHashtag && (
                   <>
-                    {(feedTab !== "For You" || feedFilter !== "all") && <span className="text-muted-foreground">·</span>}
+                    {feedTab !== "For You" && <span className="text-muted-foreground">·</span>}
                     <span className="font-semibold text-primary truncate">#{selectedHashtag}</span>
                   </>
                 )}
@@ -1950,7 +1879,6 @@ export default function ReelsFeedPage() {
                 onClick={() => {
                   setSelectedHashtag(null);
                   setFeedTab("For You");
-                  setFeedFilter("all");
                 }}
                 className="shrink-0 text-[11px] font-semibold text-primary active:opacity-70"
               >
@@ -1969,9 +1897,6 @@ export default function ReelsFeedPage() {
 
           {/* Scroll-to-top FAB (renders portal-ish via fixed positioning) */}
           <Suspense fallback={null}><ScrollToTopFab /></Suspense>
-
-          {/* Story Rings */}
-           <Suspense fallback={null}><FeedStoryRing /></Suspense>
 
            {/* Facebook-style quick-link shortcut bar removed — Live / Map /
                Marketplace / Groups / Events / ZIVO+ are navigation shortcuts
@@ -2056,10 +1981,7 @@ export default function ReelsFeedPage() {
               : feedTab === "Following"
               ? baseItems.filter(i => i.author_id && followingIds.has(i.author_id))
               : baseItems;
-            const filteredItems = feedFilter === "all" ? tabItems
-              : feedFilter === "photos" ? tabItems.filter(i => i.media_type === "image" && i.media_urls.length > 0)
-              : feedFilter === "videos" ? tabItems.filter(i => i.media_type === "video")
-              : tabItems.filter(i => !i.media_urls.length || !i.media_urls[0]);
+            const filteredItems = tabItems;
             return filteredItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-3 min-h-48 py-6 px-6 text-center">
                 {selectedHashtag ? (
@@ -2099,7 +2021,7 @@ export default function ReelsFeedPage() {
                     )}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground/70">No {feedFilter} posts found</p>
+                  <p className="text-sm text-muted-foreground/70">No posts found</p>
                 )}
               </div>
             ) : (
@@ -3143,16 +3065,16 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
                   aria-label={isFollowing ? "Unfollow creator" : "Follow creator"}
                   title={isFollowing ? "Unfollow creator" : "Follow creator"}
                   className={cn(
-                    "absolute -bottom-1.5 left-1/2 -translate-x-1/2 h-5 w-5 rounded-full flex items-center justify-center shadow-lg",
-                    isFollowing ? "bg-muted" : "bg-primary"
+                    "absolute -bottom-1.5 left-1/2 -translate-x-1/2 h-5 w-5 rounded-full flex items-center justify-center shadow-lg ring-2 ring-background",
+                    isFollowing ? "bg-muted" : "bg-ig-gradient"
                   )}
                 >
                   {followLoading ? (
-                    <Loader2 className="h-2.5 w-2.5 animate-spin text-primary-foreground" />
+                    <Loader2 className={cn("h-2.5 w-2.5 animate-spin", isFollowing ? "text-primary-foreground" : "text-white")} />
                   ) : isFollowing ? (
                     <UserCheck className="h-2.5 w-2.5 text-primary-foreground" />
                   ) : (
-                    <Plus className="h-3 w-3 text-primary-foreground" />
+                    <Plus className="h-3 w-3 text-white" strokeWidth={3} />
                   )}
                 </button>
               )}
@@ -3228,10 +3150,10 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
                     aria-label={isFollowing ? "Unfollow creator" : "Follow creator"}
                     title={isFollowing ? "Unfollow creator" : "Follow creator"}
                     className={cn(
-                      "shrink-0 px-4 py-1 rounded-md text-xs font-semibold transition-all",
+                      "shrink-0 px-4 py-1 rounded-md text-xs font-bold transition-all hover:opacity-90",
                       isFollowing
                         ? "bg-white/20 text-white border border-white/30"
-                        : "bg-emerald-500 text-white"
+                        : "bg-ig-gradient text-white shadow-sm"
                     )}
                   >
                     {followLoading ? (
@@ -4202,8 +4124,8 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                   aria-label={isFollowingAuthor ? "Unfollow author" : "Follow author"}
                   title={isFollowingAuthor ? "Unfollow author" : "Follow author"}
                   className={cn(
-                    "text-[12px] font-semibold px-3 py-1 rounded-md transition-all active:scale-95",
-                    isFollowingAuthor ? "text-muted-foreground" : "text-primary"
+                    "text-[12px] font-bold px-3 py-1 rounded-md transition-all active:scale-95",
+                    isFollowingAuthor ? "text-muted-foreground" : "text-ig-gradient"
                   )}
                 >
                   {followLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : isFollowingAuthor ? "Following" : "Follow"}

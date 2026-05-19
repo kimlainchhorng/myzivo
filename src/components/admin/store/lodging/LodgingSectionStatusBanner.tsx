@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, ListChecks, LucideIcon } from "lucide-react";
+import { CheckCircle2, ListChecks } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 const goTab = (tab: string) => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab } }));
 

@@ -3,7 +3,7 @@
  * Reusable card for notification channel toggles
  */
 
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";

@@ -721,7 +721,7 @@ export default function EatsLanding() {
                   <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center mx-auto mb-2 sm:mb-6 shadow-lg shadow-orange-500/20">
                     <UtensilsCrossed className="w-5 h-5 sm:w-8 sm:h-8 text-primary-foreground" />
                   </div>
-                  <h1 className="text-2xl sm:text-5xl font-bold tracking-tight mb-1 sm:mb-3">ZIVO <span className="text-primary">Eats</span></h1>
+                  <h1 className="text-2xl sm:text-5xl font-bold tracking-tight mb-1 sm:mb-3">ZIVO <span className="text-ig-gradient">Eats</span></h1>
                   <p className="text-muted-foreground text-xs sm:text-lg">Delicious food from local restaurants, delivered fast.</p>
                 </motion.div>
 

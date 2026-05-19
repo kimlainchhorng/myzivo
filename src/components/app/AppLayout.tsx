@@ -2,7 +2,7 @@
  * App Layout
  * Mobile-first shell with header and bottom navigation
  */
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import ZivoMobileNav from "./ZivoMobileNav";
 import AppHeader from "./AppHeader";
 import SystemStatusBanner from "@/components/shared/SystemStatusBanner";

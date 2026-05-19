@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { CarFiltersState } from "@/hooks/useResultsFilters";
+import type { CarFiltersState } from "@/hooks/useResultsFilters";
 
 interface CarFiltersContentProps {
   filters: CarFiltersState;

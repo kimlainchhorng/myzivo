@@ -7,7 +7,8 @@ import * as React from "react";
 import { Smartphone, Tablet, Monitor, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useMarketingPreview, MarketingPreviewWidth } from "./MarketingPreviewContext";
+import { useMarketingPreview } from "./MarketingPreviewContext";
+import type { MarketingPreviewWidth } from "./MarketingPreviewContext";
 
 const PRESETS: { label: string; width: number; icon: React.ComponentType<{ className?: string }> }[] = [
   { label: "Mobile", width: 375, icon: Smartphone },

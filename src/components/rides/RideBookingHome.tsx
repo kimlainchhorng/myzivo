@@ -4,7 +4,8 @@
  */
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence, useDragControls, PanInfo } from "framer-motion";
+import { motion, AnimatePresence, useDragControls } from "framer-motion";
+import type { PanInfo } from "framer-motion";
 import MapPin from "lucide-react/dist/esm/icons/map-pin";
 import Navigation from "lucide-react/dist/esm/icons/navigation";
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
@@ -2675,6 +2676,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                         <span className="text-[10px] font-semibold text-primary px-2 py-1 rounded-lg hover:bg-primary/10">Edit</span>
                         <button
                           type="button"
+                          aria-label="Clear pickup location"
                           onClick={(e) => { e.stopPropagation(); setPickup(null); setPickupDisplay(""); pickupManuallySet.current = false; setPickupConfirmed(false); }}
                           className="text-muted-foreground hover:text-foreground"
                         >
@@ -2708,6 +2710,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                         <span className="text-[10px] font-semibold text-primary px-2 py-1 rounded-lg hover:bg-primary/10">Edit</span>
                         <button
                           type="button"
+                          aria-label="Clear destination"
                           onClick={(e) => { e.stopPropagation(); setDestination(null); setDestinationDisplay(""); }}
                           className="text-muted-foreground hover:text-foreground"
                         >
@@ -2757,7 +2760,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                           }}
                           className="text-[10px] font-semibold text-primary px-2 py-1 rounded-lg hover:bg-primary/10"
                         >Edit</button>
-                        <button type="button" onClick={() => handleRemoveStop(stop.id)} className="text-muted-foreground hover:text-destructive">
+                        <button type="button" aria-label="Remove stop" onClick={() => handleRemoveStop(stop.id)} className="text-muted-foreground hover:text-destructive">
                           <X className="w-4 h-4" />
                         </button>
                       </div>
@@ -3091,6 +3094,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                               className="[&_input]:h-8 [&_input]:rounded-lg [&_input]:text-xs [&_input]:font-medium [&_input]:bg-muted/30 [&_input]:border-border/30 [&_input]:px-2"
                             />
                             <button type="button"
+                              aria-label="Remove stop"
                               onClick={() => handleRemoveStop(stop.id)}
                               className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-muted/50"
                             >
@@ -4237,7 +4241,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
             <h4 className="text-sm font-bold text-foreground mb-3">Rate {assignedDriver.name}</h4>
             <div className="flex justify-center gap-2 mb-1">
               {[1, 2, 3, 4, 5].map((star) => (
-                <button type="button" key={star} onClick={() => setRating(star)} className="touch-manipulation">
+                <button type="button" key={star} aria-label={`Rate ${star} ${star === 1 ? "star" : "stars"}`} onClick={() => setRating(star)} className="touch-manipulation">
                   <Star
                     className={cn(
                       "w-8 h-8 transition-colors",

@@ -1,6 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { motion, HTMLMotionProps } from "framer-motion";
+import { motion } from "framer-motion";
+import type { HTMLMotionProps } from "framer-motion";
 import { TrendingUp, TrendingDown, ArrowRight, Sparkles, Zap, Crown } from "lucide-react";
 
 interface PremiumCardProps extends Omit<HTMLMotionProps<"div">, "children"> {

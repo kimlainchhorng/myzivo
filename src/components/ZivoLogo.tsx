@@ -28,7 +28,7 @@ const ZivoLogo = forwardRef<HTMLDivElement, ZivoLogoProps>(({ size = "md", showT
       
       {showText && (
         <span className={cn(
-          "font-bold tracking-tight text-foreground",
+          "font-bold tracking-tight text-ig-gradient",
           sizes.text
         )}>
           ZIVO

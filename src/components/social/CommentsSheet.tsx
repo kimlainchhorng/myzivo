@@ -8,7 +8,8 @@ import { Send, Trash2, ChevronDown, ChevronUp, X, Pencil, Pin, PinOff } from "lu
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
-import { usePostComments, PostComment } from "@/hooks/usePostComments";
+import { usePostComments } from "@/hooks/usePostComments";
+import type { PostComment } from "@/hooks/usePostComments";
 import { useHaptic } from "@/hooks/useHaptic";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -222,10 +223,10 @@ export default function CommentsSheet({
               <button type="button"
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="h-9 w-9 rounded-full bg-primary flex items-center justify-center shrink-0"
+                className="h-9 w-9 rounded-full bg-ig-gradient flex items-center justify-center shrink-0 shadow-sm hover:opacity-90 active:scale-95 transition-all"
                 aria-label="Send comment"
               >
-                <Send className="h-4 w-4 text-primary-foreground" />
+                <Send className="h-4 w-4 text-white" />
               </button>
             )}
           </div>

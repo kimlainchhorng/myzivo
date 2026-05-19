@@ -4,7 +4,8 @@
  */
 
 import { Link } from "react-router-dom";
-import { destinationPhotos, DestinationCity } from "@/config/photos";
+import { destinationPhotos } from "@/config/photos";
+import type { DestinationCity } from "@/config/photos";
 import { Sparkles } from "lucide-react";
 
 const popularCities: { city: string; slug: DestinationCity }[] = [

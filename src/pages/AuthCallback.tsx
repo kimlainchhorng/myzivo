@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useExchangeAuthToken } from "@/hooks/useCrossAppAuth";
-import { User } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { getSafeRedirectTarget, withRedirectParam } from "@/lib/authRedirect";
 
@@ -362,7 +362,7 @@ const AuthCallback = () => {
               </button>
               <button type="button"
                 onClick={() => navigate(withRedirectParam("/login", redirectTo))}
-                className="flex-1 h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] transition shadow-md"
+                className="flex-1 h-9 rounded-lg text-sm font-semibold text-white bg-ig-gradient hover:opacity-95 active:scale-[0.99] transition shadow-md"
               >
                 Sign in
               </button>
@@ -381,7 +381,7 @@ const AuthCallback = () => {
       </div>
       <div className="relative w-full max-w-sm">
         <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-7 py-9 shadow-sm text-center">
-          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-rose-500/20">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-ig-gradient flex items-center justify-center shadow-lg shadow-rose-500/20">
             <Loader2 className="w-7 h-7 text-white animate-spin" />
           </div>
           <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Signing you in…</h2>

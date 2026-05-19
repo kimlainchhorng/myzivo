@@ -5,7 +5,8 @@
  */
 
 import { useNavigate } from "react-router-dom";
-import { destinationPhotos, DestinationCity } from "@/config/photos";
+import { destinationPhotos } from "@/config/photos";
+import type { DestinationCity } from "@/config/photos";
 import { cn } from "@/lib/utils";
 
 interface PhotoDestinationGridProps {

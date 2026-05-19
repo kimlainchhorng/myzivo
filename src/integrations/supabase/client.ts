@@ -67,5 +67,20 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: authStorage,
     persistSession: true,
     autoRefreshToken: true,
-  }
+    detectSessionInUrl: true,
+  },
+  global: {
+    // Keep TCP connection alive across requests to avoid cold-start latency
+    // on mobile networks (saves ~100-300 ms per API call after idle).
+    fetch: (url, options = {}) =>
+      fetch(url, { ...options, keepalive: true }),
+  },
+  realtime: {
+    params: {
+      // Reduce heartbeat interval so the WS connection stays alive on
+      // aggressive NAT/firewalls (default is 30 s, 20 s is safer).
+      heartbeatIntervalMs: 20_000,
+    },
+    timeout: 30_000,
+  },
 });

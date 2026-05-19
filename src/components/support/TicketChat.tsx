@@ -7,12 +7,8 @@ import { useEffect, useRef } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, MessageSquare } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  useTicketMessages,
-  useSendTicketMessage,
-  useTicketChatRealtime,
-  TicketReply,
-} from "@/hooks/useSupportChat";
+import { useTicketMessages, useSendTicketMessage, useTicketChatRealtime } from "@/hooks/useSupportChat";
+import type { TicketReply } from "@/hooks/useSupportChat";
 import { TicketChatMessage } from "./TicketChatMessage";
 import { TicketChatInput } from "./TicketChatInput";
 import { toast } from "sonner";

@@ -25,7 +25,8 @@ import {
   Clock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { usePriceAlerts, PriceAlert } from '@/hooks/usePriceAlerts';
+import { usePriceAlerts } from '@/hooks/usePriceAlerts';
+import type { PriceAlert } from '@/hooks/usePriceAlerts';
 import { format, formatDistanceToNow } from 'date-fns';
 
 interface PriceAlertsDashboardProps {

@@ -7,8 +7,8 @@
  */
 
 import { useState, useCallback } from "react";
-import { HotelResult } from "@/components/hotels/HotelResultCard";
-import { HotelFilters } from "@/components/hotels/HotelFilters";
+import type { HotelResult } from "@/components/hotels/HotelResultCard";
+import type { HotelFilters } from "@/components/hotels/HotelFilters";
 import { getCityBySlug, type City } from "@/data/cities";
 
 export interface HotelSearchParams {

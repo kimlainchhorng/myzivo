@@ -25,7 +25,8 @@
     "skipDefaultLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "strict": false,
-    "target": "ES2020",
+    "target": "ES2022",
+    "verbatimModuleSyntax": true,
     "types": [
       "vitest/globals"
     ],

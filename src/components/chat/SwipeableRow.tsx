@@ -3,7 +3,8 @@
  * Swipe left → reveals right-side actions (Archive / Delete).
  * Swipe right → reveals left-side actions (Pin / Read).
  */
-import { ReactNode, useRef } from "react";
+import { useRef } from "react";
+import type { ReactNode } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { cn } from "@/lib/utils";
 

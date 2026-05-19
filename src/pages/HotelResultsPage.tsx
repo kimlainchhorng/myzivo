@@ -12,7 +12,8 @@ import { differenceInDays, format, parseISO } from "date-fns";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
-import HotelFiltersComponent, { HotelFilters } from "@/components/hotels/HotelFilters";
+import HotelFiltersComponent from "@/components/hotels/HotelFilters";
+import type { HotelFilters } from "@/components/hotels/HotelFilters";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {

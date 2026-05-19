@@ -1,5 +1,5 @@
 import { createClient } from "../_shared/deps.ts";
-import { decode } from "https://deno.land/std@0.208.0/encoding/base64.ts";
+import { decode } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 import { withSecurity } from "../_shared/withSecurity.ts";
 import { enforceAal2 } from "../_shared/aalCheck.ts";
 import { scanContentForLinks, logBlockedAttempt, isAbuseThresholdExceeded, isIpAbuseThresholdExceeded, getRequestIpHash } from "../_shared/contentLinkValidation.ts";

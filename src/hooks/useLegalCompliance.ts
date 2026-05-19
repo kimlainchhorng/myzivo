@@ -7,19 +7,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import {
-  LegalPolicy,
-  UserConsentLog,
-  RoleTerms,
-  RoleTermsAcceptance,
-  SellerOfTravelStatus,
-  LegalDispute,
-  LegalAuditLog,
-  PolicyType,
-  RoleType,
-  ConsentRequest,
-  LegalSummary,
-} from "@/types/legal";
+import type { LegalPolicy, UserConsentLog, RoleTerms, RoleTermsAcceptance, SellerOfTravelStatus, LegalDispute, LegalAuditLog, PolicyType, RoleType, ConsentRequest } from "@/types/legal";
+import type { LegalSummary } from "@/types/legal";
 
 // ============================================
 // LEGAL POLICIES

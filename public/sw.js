@@ -4,7 +4,7 @@
  */
 
 // Import Workbox from CDN
-importScripts('https://storage.googleapis.com/workbox-cdn/releases/7.0.0/workbox-sw.js');
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/7.4.1/workbox-sw.js');
 
 // Precache manifest (injected by vite-plugin-pwa)
 const precacheManifest = self.__WB_MANIFEST;
@@ -37,15 +37,40 @@ if (workbox) {
     })
   );
 
-  // Cache images
+  // Cache images (local assets only — cross-origin images are handled separately)
   workbox.routing.registerRoute(
     /\.(?:png|jpg|jpeg|svg|gif|webp|avif)$/i,
     new workbox.strategies.CacheFirst({
       cacheName: 'images-cache',
       plugins: [
         new workbox.expiration.ExpirationPlugin({
-          maxEntries: 100,
-          maxAgeSeconds: 60 * 60 * 24 * 30,
+          maxEntries: 200,
+          maxAgeSeconds: 60 * 60 * 24 * 60, // 60 days
+          purgeOnQuotaError: true,
+        }),
+        new workbox.cacheableResponse.CacheableResponsePlugin({
+          statuses: [0, 200],
+        }),
+      ],
+    })
+  );
+
+  // Cache Supabase Storage media (user avatars, post images/videos thumbnails)
+  // StaleWhileRevalidate: show cached instantly, refresh in background.
+  workbox.routing.registerRoute(
+    ({ url }) =>
+      url.hostname.endsWith('.supabase.co') &&
+      url.pathname.includes('/storage/v1/object/public/'),
+    new workbox.strategies.StaleWhileRevalidate({
+      cacheName: 'supabase-storage-cache',
+      plugins: [
+        new workbox.expiration.ExpirationPlugin({
+          maxEntries: 300,
+          maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+          purgeOnQuotaError: true,
+        }),
+        new workbox.cacheableResponse.CacheableResponsePlugin({
+          statuses: [0, 200],
         }),
       ],
     })
@@ -73,12 +98,23 @@ if (workbox) {
     }
   );
 
-  // NetworkFirst for Supabase API calls
+  // NetworkFirst for Supabase API/auth/realtime calls (not storage — handled above)
   workbox.routing.registerRoute(
-    /^https:\/\/.*\.supabase\.co\/.*/i,
+    ({ url }) =>
+      url.hostname.endsWith('.supabase.co') &&
+      !url.pathname.includes('/storage/v1/object/public/'),
     new workbox.strategies.NetworkFirst({
       cacheName: 'api-cache',
-      networkTimeoutSeconds: 5,
+      networkTimeoutSeconds: 4, // was 5s — fail faster on mobile
+      plugins: [
+        new workbox.expiration.ExpirationPlugin({
+          maxEntries: 50,
+          maxAgeSeconds: 60 * 5, // 5 min stale fallback
+        }),
+        new workbox.cacheableResponse.CacheableResponsePlugin({
+          statuses: [0, 200],
+        }),
+      ],
     })
   );
 } else {
@@ -249,6 +285,7 @@ self.addEventListener('activate', (event) => {
         'google-fonts-stylesheets',
         'google-fonts-webfonts',
         'images-cache',
+        'supabase-storage-cache',
         'api-cache',
         'local-images',
         'unsplash-images',

@@ -140,9 +140,9 @@ export default function HotelLanding() {
               {/* UPDATED HEADLINE */}
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4">
                 {formattedCity ? (
-                  <>Hotels in <span className="text-amber-400">{formattedCity}</span></>
+                  <>Hotels in <span className="text-ig-gradient">{formattedCity}</span></>
                 ) : (
-                  <>Compare Hotels Worldwide — <span className="text-amber-400">Book Securely with Partners</span></>
+                  <>Compare Hotels Worldwide — <span className="text-ig-gradient">Book Securely with Partners</span></>
                 )}
               </h1>
               

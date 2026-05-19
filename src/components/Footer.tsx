@@ -102,8 +102,8 @@ const Footer = ({ className }: { className?: string }) => {
       <div className="absolute -top-40 -left-40 w-80 h-80 bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute -bottom-40 -right-40 w-80 h-80 bg-secondary rounded-full blur-[120px] pointer-events-none" />
       
-      {/* Top accent line */}
-      <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+      {/* Top accent line — IG gradient */}
+      <div aria-hidden className="bg-ig-gradient h-[2px] w-full opacity-90" />
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Main grid */}
@@ -130,16 +130,24 @@ const Footer = ({ className }: { className?: string }) => {
 
             {/* Social */}
             <div className="flex items-center gap-2">
-              {socialLinks.map((social) => (
-                <button type="button"
-                  key={social.label}
-                  onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(social.href))}
-                  className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-lg bg-primary-foreground/10 flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground hover:bg-primary/20 hover:shadow-[0_0_12px_hsl(var(--primary)/0.3)] active:scale-90 transition-all touch-manipulation"
-                  aria-label={social.label}
-                >
-                  {social.icon}
-                </button>
-              ))}
+              {socialLinks.map((social) => {
+                const isInstagram = social.label === "Instagram";
+                return (
+                  <button type="button"
+                    key={social.label}
+                    onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(social.href))}
+                    className={cn(
+                      "w-10 h-10 min-w-[40px] min-h-[40px] rounded-lg flex items-center justify-center active:scale-90 transition-all touch-manipulation",
+                      isInstagram
+                        ? "bg-ig-gradient text-white hover:opacity-90 shadow-[0_0_12px_rgba(220,39,67,0.35)]"
+                        : "bg-primary-foreground/10 text-primary-foreground/50 hover:text-primary-foreground hover:bg-primary/20 hover:shadow-[0_0_12px_hsl(var(--primary)/0.3)]"
+                    )}
+                    aria-label={social.label}
+                  >
+                    {social.icon}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

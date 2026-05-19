@@ -16,7 +16,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
-import { useSocialNotifications, SocialNotification } from '@/hooks/useSocialNotifications';
+import { useSocialNotifications } from '@/hooks/useSocialNotifications';
+import type { SocialNotification } from '@/hooks/useSocialNotifications';
 import VerifiedBadge from '@/components/VerifiedBadge';
 import { isBlueVerified } from '@/lib/verification';
 
@@ -73,9 +74,9 @@ const FriendRequestCard = ({ request, onAccept, onDecline }: { request: FriendRe
           <motion.button
             whileTap={{ scale: 0.85 }}
             onClick={onAccept}
-            className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shadow-lg shadow-primary/25 touch-manipulation"
+            className="w-9 h-9 rounded-xl bg-ig-gradient text-white flex items-center justify-center shadow-lg shadow-rose-500/25 touch-manipulation hover:opacity-90 transition-opacity"
           >
-            <Check className="w-4 h-4" />
+            <Check className="w-4 h-4" strokeWidth={3} />
           </motion.button>
           <motion.button
             whileTap={{ scale: 0.85 }}
@@ -377,8 +378,7 @@ const NotificationsPage = () => {
                     <div
                       role="heading"
                       aria-level={1}
-                      className="block min-w-[8rem] text-xl font-bold tracking-normal text-foreground sm:text-2xl"
-                      style={{ color: 'hsl(var(--foreground))' }}
+                      className="block min-w-[8rem] text-xl font-bold tracking-tight text-ig-gradient sm:text-2xl"
                     >
                       {notificationTitle}
                     </div>

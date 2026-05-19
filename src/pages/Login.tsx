@@ -66,12 +66,12 @@ function AccountCard({
       {/* Avatar — Instagram-style circular ring with brand gradient. The
           gentle wiggle in edit mode hints "tap the X to remove" without
           requiring any extra label. */}
-      <div className={`w-16 h-16 rounded-full p-[2px] bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 shadow-md transition ${editing ? "animate-pulse opacity-90" : "group-hover:scale-105 group-active:scale-95"}`}>
+      <div className={`w-16 h-16 rounded-full p-[2px] bg-ig-gradient shadow-md transition ${editing ? "animate-pulse opacity-90" : "group-hover:scale-105 group-active:scale-95"}`}>
         <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-zinc-900 flex items-center justify-center">
           {account.avatarUrl ? (
             <img src={account.avatarUrl} alt={account.fullName} className="w-full h-full object-cover" />
           ) : (
-            <span className="bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 bg-clip-text text-transparent font-bold text-lg">{initials}</span>
+            <span className="bg-ig-gradient bg-clip-text text-transparent font-bold text-lg">{initials}</span>
           )}
         </div>
       </div>
@@ -398,7 +398,7 @@ const Login = () => {
 
           {/* Brand wordmark — IG-style script logo */}
           <div className="flex flex-col items-center mb-8">
-            <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 flex items-center justify-center mb-5 shadow-lg shadow-rose-500/20">
+            <div className="relative w-16 h-16 rounded-2xl bg-ig-gradient flex items-center justify-center mb-5 shadow-lg shadow-rose-500/20">
               <span className="brand-script-mark text-white font-black text-3xl tracking-tight italic">Z</span>
             </div>
             <h1 className="brand-script-wordmark text-4xl font-light tracking-wider text-zinc-900 dark:text-white">
@@ -472,12 +472,12 @@ const Login = () => {
               </button>
 
               <div className="flex flex-col items-center gap-2 pb-2">
-                <div className="w-20 h-20 rounded-full p-[2px] bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 shadow-md">
+                <div className="w-20 h-20 rounded-full p-[2px] bg-ig-gradient shadow-md">
                   <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-zinc-900 flex items-center justify-center">
                     {selectedAccount.avatarUrl ? (
                       <img src={selectedAccount.avatarUrl} alt={selectedAccount.fullName} className="w-full h-full object-cover" />
                     ) : (
-                      <span className="bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 bg-clip-text text-transparent font-bold text-2xl">
+                      <span className="bg-ig-gradient bg-clip-text text-transparent font-bold text-2xl">
                         {selectedAccount.fullName ? selectedAccount.fullName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() : selectedAccount.email[0].toUpperCase()}
                       </span>
                     )}
@@ -529,7 +529,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className="w-full h-11 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md shadow-rose-500/20"
+                className="w-full h-11 rounded-lg text-sm font-bold text-white bg-ig-gradient hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md shadow-rose-500/20"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Log in"}
               </button>
@@ -648,7 +648,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className="w-full h-11 mt-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md shadow-rose-500/20"
+                className="w-full h-11 mt-2 rounded-lg text-sm font-bold text-white bg-ig-gradient hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md shadow-rose-500/20"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Log in"}
               </button>

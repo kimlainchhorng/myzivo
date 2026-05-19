@@ -93,9 +93,9 @@ export default function CarRentalLanding() {
               
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4">
                 {formattedLocation ? (
-                  <>Car Rental in <span className="text-foreground">{formattedLocation}</span></>
+                  <>Car Rental in <span className="text-ig-gradient">{formattedLocation}</span></>
                 ) : (
-                  <>Find the <span className="text-foreground">Best Rental Car Deals</span></>
+                  <>Find the <span className="text-ig-gradient">Best Rental Car Deals</span></>
                 )}
               </h1>
               

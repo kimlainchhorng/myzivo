@@ -1,4 +1,5 @@
-import { useState, MouseEvent, ReactNode } from "react";
+import { useState } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { ShieldAlert, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { assessLinkSync } from "@/hooks/useLinkRisk";
 import { stripTrackingParams } from "@/lib/linkSafetyExtras";

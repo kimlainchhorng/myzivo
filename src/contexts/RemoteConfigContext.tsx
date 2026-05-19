@@ -4,7 +4,8 @@
  */
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { remoteConfig, RemoteConfig } from '@/services/remoteConfigService';
+import { remoteConfig } from '@/services/remoteConfigService';
+import type { RemoteConfig } from '@/services/remoteConfigService';
 
 interface RemoteConfigContextType {
   config: RemoteConfig;

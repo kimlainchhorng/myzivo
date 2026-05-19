@@ -1,7 +1,8 @@
  import { motion, type Variants } from "framer-motion";
 import { Shield, Clock, Globe, Plane, Hotel, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { destinationPhotos, wideCityHeroPhotos, DestinationCity } from "@/config/photos";
+import { destinationPhotos, wideCityHeroPhotos } from "@/config/photos";
+import type { DestinationCity } from "@/config/photos";
 import cityHeroGlassSunset from "@/assets/city-hero-glass-sunset.jpg";
 
 /**

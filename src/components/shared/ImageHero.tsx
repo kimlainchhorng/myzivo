@@ -1,6 +1,7 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { LucideIcon, Shield, Globe, Zap, Headphones, Star, Clock } from "lucide-react";
+import { Shield, Globe, Zap, Headphones, Star, Clock } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useImagePreload } from "@/hooks/useImagePreload";
 
 // Hero images (imported as ES6 modules)

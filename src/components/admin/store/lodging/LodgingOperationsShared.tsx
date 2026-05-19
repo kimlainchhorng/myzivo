@@ -7,7 +7,8 @@ import { useLodgeRooms, type LodgeAddon, type LodgeRoom } from "@/hooks/lodging/
 import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
 import { useLodgeReservations } from "@/hooks/lodging/useLodgeReservations";
 import { reservationTimeRangeLabel } from "@/lib/lodging/reservationTime";
-import { BedDouble, CalendarRange, CheckCircle2, ClipboardList, Hotel, Loader2, LucideIcon, PackagePlus, Sparkles } from "lucide-react";
+import { BedDouble, CalendarRange, CheckCircle2, ClipboardList, Hotel, Loader2, PackagePlus, Sparkles } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import LodgingNeedsSetupEmptyState from "./LodgingNeedsSetupEmptyState";
 
 type AddonView = LodgeAddon & { roomName: string; roomId: string };

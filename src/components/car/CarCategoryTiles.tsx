@@ -2,7 +2,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Briefcase, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { carCategoryPhotos, CarCategory } from "@/config/photos";
+import { carCategoryPhotos } from "@/config/photos";
+import type { CarCategory } from "@/config/photos";
 
 /**
  * CAR CATEGORY TILES

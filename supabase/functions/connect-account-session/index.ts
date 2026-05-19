@@ -1,5 +1,5 @@
 // Creates a Stripe AccountSession client_secret for embedded onboarding.
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import Stripe from "../_shared/stripe.ts";
 import { createClient } from "../_shared/deps.ts";
 

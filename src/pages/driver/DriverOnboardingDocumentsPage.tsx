@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { useDriverVerification, REQUIRED_DOC_TYPES, DocType } from "@/hooks/useDriverVerification";
+import { useDriverVerification, REQUIRED_DOC_TYPES } from "@/hooks/useDriverVerification";
+import type { DocType } from "@/hooks/useDriverVerification";
 import { toast } from "sonner";
 import { Upload, CheckCircle2, Clock, XCircle, FileQuestion } from "lucide-react";
 

@@ -3,7 +3,8 @@
  * Lightweight access to brand configuration
  */
 import { useContext } from "react";
-import { BrandContext, DEFAULT_BRAND, BrandContextValue } from "@/contexts/BrandContext";
+import { BrandContext, DEFAULT_BRAND } from "@/contexts/BrandContext";
+import type { BrandContextValue } from "@/contexts/BrandContext";
 
 export function useBrand(): BrandContextValue {
   const context = useContext(BrandContext);

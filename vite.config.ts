@@ -23,6 +23,16 @@ const manualChunkGroups = {
     "@radix-ui/react-accordion",
     "@radix-ui/react-tooltip",
   ],
+  // Heavy lazy-loaded libs — keep each in its own chunk so the main bundle
+  // stays lean and these only download when the relevant route opens.
+  "vendor-livekit": ["livekit-client"],
+  "vendor-stripe": ["@stripe/stripe-js", "@stripe/react-stripe-js", "@stripe/connect-js", "@stripe/react-connect-js"],
+  "vendor-maps": ["@react-google-maps/api", "@googlemaps/markerclusterer"],
+  "vendor-framer": ["framer-motion"],
+  "vendor-charts": ["recharts"],
+  "vendor-mediapipe": ["@mediapipe/tasks-vision"],
+  "vendor-pdf": ["jspdf", "jspdf-autotable", "html2canvas", "html-to-image"],
+  "vendor-docx": ["docx", "file-saver"],
 } as const;
 
 const packageSegment = (packageName: string) =>
@@ -50,6 +60,8 @@ const pwaPrecacheGlobPatterns = [
   "assets/vendor-react-*.js",
   "assets/vendor-radix-*.js",
   "assets/vendor-supabase-*.js",
+  "assets/vendor-query-*.js",
+  "assets/vendor-framer-*.js",
   "assets/*.css",
   "pwa-icons/*.png",
 ];
@@ -90,7 +102,7 @@ export default defineConfig(({ mode }) => ({
     exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util", "@ffmpeg/core"],
   },
   build: {
-    target: "es2020",
+    target: "es2022",
     modulePreload: { polyfill: false },
     minify: "esbuild",
     cssMinify: "esbuild",
@@ -99,6 +111,9 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks,
+        // Merge micro-chunks (< 20 kB) back into their importer to reduce
+        // the number of HTTP/2 round-trips on first load.
+        experimentalMinChunkSize: 20_000,
       },
     },
     cssCodeSplit: true,

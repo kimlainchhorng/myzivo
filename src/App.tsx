@@ -555,6 +555,9 @@ const MultiCityBuilder = lazy(() => import("./pages/MultiCityBuilder"));
 const ZivoPlus = lazy(() => import("./pages/ZivoPlus"));
 const MembershipPage = lazy(() => import("./pages/MembershipPage"));
 const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
+const LibraryPage = lazy(() => import("./pages/LibraryPage"));
+const MediaLibraryPage = lazy(() => import("./pages/MediaLibraryPage"));
+const CreatorGoalsPage = lazy(() => import("./pages/CreatorGoalsPage"));
 
 const Vision = lazy(() => import("./pages/Vision"));
 const BrandMission = lazy(() => import("./pages/BrandMission"));
@@ -651,9 +654,10 @@ const BestTimeToBook = lazy(() => import("./pages/guides/BestTimeToBook"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60_000, // 1 min default — reduce unnecessary refetches
-      gcTime: 5 * 60_000, // keep cache 5 min
+      staleTime: 2 * 60_000, // 2 min — halve unnecessary background refetches
+      gcTime: 10 * 60_000, // keep cache 10 min (was 5 min)
       refetchOnWindowFocus: false, // don't refetch every tab switch
+      refetchOnReconnect: "always", // always sync after network reconnects
       retry: (failureCount, error) => {
         const info = categorizeError(error);
         if (info.type === "auth") return false;
@@ -1500,11 +1504,11 @@ const App = () => (
                 <Route path="/filters" element={<ComingSoonPage title="AR Filters" description="Browse and apply AR effects in stories, reels, and live streams." />} />
                 <Route path="/promote" element={<ProtectedRoute><ComingSoonPage title="Promote Posts" description="Boost reach for your posts, reels, and stories." /></ProtectedRoute>} />
                 <Route path="/brand-deals" element={<ProtectedRoute><ComingSoonPage title="Brand Deals" description="Connect with brands for sponsorships and partnerships." /></ProtectedRoute>} />
-                <Route path="/library" element={<ProtectedRoute><ComingSoonPage title="Content Library" description="All your saved drafts, snippets, and templates." /></ProtectedRoute>} />
+                <Route path="/library" element={<ProtectedRoute><LibraryPage /></ProtectedRoute>} />
                 <Route path="/podcasts" element={<ComingSoonPage title="Podcasts" description="Listen to ZIVO podcasts on the go." />} />
                 <Route path="/sounds" element={<ComingSoonPage title="Sound Effects" description="Audio & sound effects library for creators." />} />
-                <Route path="/media-library" element={<ProtectedRoute><ComingSoonPage title="Media Library" description="All your photos, videos, and assets." /></ProtectedRoute>} />
-                <Route path="/creator/goals" element={<ProtectedRoute><ComingSoonPage title="Creator Goals" description="Track milestones and creator achievements." /></ProtectedRoute>} />
+                <Route path="/media-library" element={<ProtectedRoute><MediaLibraryPage /></ProtectedRoute>} />
+                <Route path="/creator/goals" element={<ProtectedRoute><CreatorGoalsPage /></ProtectedRoute>} />
                 <Route path="/track" element={<ProtectedRoute><ComingSoonPage title="Track Package" description="Live tracking for deliveries and shipments." /></ProtectedRoute>} />
                 {/* Redirect legacy paths to the real implementations */}
                 <Route path="/account/cookies" element={<Navigate to="/account/data-rights#cookies" replace />} />

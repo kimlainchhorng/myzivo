@@ -4,7 +4,8 @@
  */
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import type { PanInfo } from "framer-motion";
 import {
   ArrowLeft, Search, ShoppingCart, Plus, Minus, Trash2,
   Loader2, X, Package, Store, Sparkles, Clock, Star, ChevronUp, Filter,

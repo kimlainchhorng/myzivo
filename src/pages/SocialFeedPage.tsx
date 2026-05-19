@@ -4,19 +4,15 @@
  * Layout (top to bottom):
  *   - Sticky header: hamburger (CreateSheet trigger) | "Feed" | search | + | bell | chat (with unread badge)
  *   - Segmented tabs: For You / Friends / Following
- *   - Filter chips: All / Photos / Videos / Text
- *   - Composer (logged-in only): avatar + "What's on your mind, [Name]?" + Photo/Reels/Poll/Check In/Live row
- *   - Sign-in CTA (logged-out only)
  *   - Stories rail
  *   - Post list
  *
  * Routed at /feed.
  */
-import { Fragment, Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, Suspense, lazy, useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Menu, Search, Plus, Bell, MessageSquare,
-  Image as ImageIcon, Film, BarChart3, MapPin, Radio,
   Loader2, Heart, MessageCircle, Share2, MoreHorizontal, Bookmark,
   UserPlus, Check,
 } from "lucide-react";
@@ -63,7 +59,6 @@ const CreateStorySheet = lazy(() => import("@/components/profile/CreateStoryShee
 const FollowSuggestions = lazy(() => import("@/components/social/FollowSuggestions"));
 
 type FeedTab = "for-you" | "friends" | "following";
-type FeedFilter = "all" | "photos" | "videos" | "text";
 
 type FeedPost = {
   id: string;
@@ -94,23 +89,6 @@ const TABS: { id: FeedTab; label: string }[] = [
   { id: "following", label: "Following" },
 ];
 
-const FILTERS: { id: FeedFilter; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "photos", label: "Photos" },
-  { id: "videos", label: "Videos" },
-  { id: "text", label: "Text" },
-];
-
-type QuickActionId = "photo" | "reels" | "poll" | "checkin" | "live";
-
-const QUICK_ACTIONS: { id: QuickActionId; label: string; icon: typeof ImageIcon; iconClass: string; tintClass: string }[] = [
-  { id: "photo", label: "Photo", icon: ImageIcon, iconClass: "text-emerald-600", tintClass: "bg-emerald-500/10" },
-  { id: "reels", label: "Reels", icon: Film, iconClass: "text-purple-500", tintClass: "bg-purple-500/10" },
-  { id: "poll", label: "Poll", icon: BarChart3, iconClass: "text-orange-500", tintClass: "bg-orange-500/10" },
-  { id: "checkin", label: "Check In", icon: MapPin, iconClass: "text-rose-500", tintClass: "bg-rose-500/10" },
-  { id: "live", label: "Live", icon: Radio, iconClass: "text-red-500", tintClass: "bg-red-500/10" },
-];
-
 export default function SocialFeedPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -123,7 +101,6 @@ export default function SocialFeedPage() {
   const [storyOpen, setStoryOpen] = useState(false);
   const [highlightPostId, setHighlightPostId] = useState<string | null>(null);
   const [tab, setTab] = useState<FeedTab>("for-you");
-  const [filter, setFilter] = useState<FeedFilter>("all");
 
   // Honor ?compose=post|reel|poll|photo|story and ?post=<id> from external links
   // (CreateSheet shortcuts, /saved tap-throughs, push notifications).
@@ -164,11 +141,6 @@ export default function SocialFeedPage() {
       return count ?? 0;
     },
   });
-
-  const firstName = useMemo(() => {
-    const name = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "";
-    return name.split(/[\s_]/)[0] || "";
-  }, [profile?.full_name, user]);
 
   // Posts query — Friends/Following narrow the author set; For You is everyone.
   // Returns null when the tab needs auth and the user is logged out, so the
@@ -230,45 +202,10 @@ export default function SocialFeedPage() {
   });
 
   const needsAuth = rawPosts === null;
-  const posts = useMemo(() => {
-    if (!rawPosts) return [];
-    return rawPosts.filter((p) => {
-      const urls = (p.media_urls && p.media_urls.length > 0) ? p.media_urls : (p.media_url ? [p.media_url] : []);
-      const isVideo = p.media_type === "video" || urls[0]?.match(/\.(mp4|mov|webm)/i);
-      const isImage = urls.length > 0 && !isVideo;
-      const isText = urls.length === 0;
-      switch (filter) {
-        case "photos": return isImage;
-        case "videos": return Boolean(isVideo);
-        case "text": return isText;
-        default: return true;
-      }
-    });
-  }, [rawPosts, filter]);
-
-  const composerPlaceholder = firstName
-    ? `What's on your mind, ${firstName}?`
-    : "What's on your mind?";
+  const posts = rawPosts ?? [];
 
   const goAuth = () => {
     navigate("/auth?next=" + encodeURIComponent("/feed"));
-  };
-
-  const handleQuickAction = (id: QuickActionId) => {
-    if (!user) {
-      goAuth();
-      return;
-    }
-    if (id === "live") {
-      navigate("/go-live");
-      return;
-    }
-    setComposerMode(
-      id === "photo" ? "photo" :
-      id === "reels" ? "reel" :
-      id === "poll" ? "poll" :
-      "post", // checkin opens default post composer
-    );
   };
 
   return (
@@ -362,80 +299,6 @@ export default function SocialFeedPage() {
         </div>
       </div>
 
-      {/* Filter chips */}
-      <div className="flex items-center gap-2 overflow-x-auto px-3 py-3 scrollbar-hide">
-        {FILTERS.map((f) => {
-          const active = f.id === filter;
-          return (
-            <button
-              key={f.id}
-              type="button"
-              onClick={() => setFilter(f.id)}
-              className={cn(
-                "shrink-0 rounded-full px-3.5 h-8 text-[13px] font-semibold transition-colors",
-                active ? "bg-foreground text-background" : "bg-muted/70 text-foreground/85 hover:bg-muted",
-              )}
-            >
-              {f.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Composer (logged in) or Sign-in CTA (logged out) */}
-      {user ? (
-        <div className="border-y border-border/30 bg-card/30 px-3 py-3">
-          <button
-            type="button"
-            onClick={() => setComposerMode("post")}
-            className="flex w-full items-center gap-3"
-          >
-            <Avatar className="h-9 w-9 shrink-0">
-              <AvatarImage src={optimizeAvatar(profile?.avatar_url, 80) || profile?.avatar_url || user.user_metadata?.avatar_url} />
-              <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
-                {firstName[0]?.toUpperCase() || "U"}
-              </AvatarFallback>
-            </Avatar>
-            <span className="flex-1 h-10 rounded-full bg-muted/70 px-4 inline-flex items-center text-[14px] text-muted-foreground">
-              {composerPlaceholder}
-            </span>
-          </button>
-
-          <div className="mt-2 -mx-1 flex items-stretch gap-0.5 border-t border-border/30 pt-1.5">
-            {QUICK_ACTIONS.map((qa) => {
-              const Icon = qa.icon;
-              return (
-                <button
-                  key={qa.id}
-                  type="button"
-                  onClick={() => handleQuickAction(qa.id)}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg hover:bg-muted/40 active:scale-95 transition-all"
-                >
-                  <span className={cn("inline-flex items-center justify-center h-7 w-7 rounded-full", qa.tintClass)}>
-                    <Icon className={cn("h-4 w-4", qa.iconClass)} />
-                  </span>
-                  <span className="text-[12px] font-medium text-foreground/85">{qa.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ) : (
-        <div className="border-y border-border/30 bg-primary/5 px-4 py-5 text-center">
-          <p className="text-[15px] font-semibold">Sign in to share & follow</p>
-          <p className="mt-1 text-[12px] text-muted-foreground">
-            Post photos, go live, and follow creators on ZIVO.
-          </p>
-          <button
-            type="button"
-            onClick={goAuth}
-            className="mt-3 inline-flex h-9 items-center justify-center rounded-full bg-primary px-6 text-[13px] font-semibold text-primary-foreground active:opacity-80"
-          >
-            Sign in
-          </button>
-        </div>
-      )}
-
       {/* Stories rail (auth-gated inside the component already) */}
       <Suspense fallback={null}>
         <FeedStoryRing />
@@ -451,7 +314,6 @@ export default function SocialFeedPage() {
           <>
             <FeedEmptyState
               tab={tab}
-              filter={filter}
               needsAuth={needsAuth}
               onSignIn={goAuth}
               onDiscover={() => navigate("/explore")}
@@ -932,7 +794,6 @@ function PostCaption({ caption }: { caption: string }) {
   );
 }
 
-// eslint-disable-next-line
 /**
  * PostMoreMenu — the "…" dropdown next to each post header.
  * Was a no-op stub. Now exposes Copy link / Hide post / Mute author /
@@ -1457,13 +1318,11 @@ function ActionButton({
 
 function FeedEmptyState({
   tab,
-  filter,
   needsAuth,
   onSignIn,
   onDiscover,
 }: {
   tab: FeedTab;
-  filter: FeedFilter;
   needsAuth: boolean;
   onSignIn: () => void;
   onDiscover: () => void;
@@ -1499,9 +1358,6 @@ function FeedEmptyState({
     title = "Nothing in Following yet";
     body = "Follow creators and you'll see their posts here.";
     cta = { label: "Discover creators", onClick: onDiscover };
-  } else if (filter !== "all") {
-    title = `No ${filter} to show`;
-    body = `Try switching to "All" to see every kind of post.`;
   }
 
   return (

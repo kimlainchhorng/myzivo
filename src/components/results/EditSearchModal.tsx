@@ -6,7 +6,8 @@
  * Pre-filled with current search values, updates URL on submit.
  */
 
-import { ReactNode, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
+import type { ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Pencil, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";

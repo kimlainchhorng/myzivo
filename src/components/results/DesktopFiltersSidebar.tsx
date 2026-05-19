@@ -3,7 +3,7 @@
  * Reusable sticky sidebar wrapper with service-specific styling
  */
 
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";

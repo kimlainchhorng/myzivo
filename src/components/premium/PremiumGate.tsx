@@ -4,7 +4,7 @@
  * If the user has ZIVO+, renders children. Otherwise renders a teaser
  * with the feature name and a CTA that opens the upgrade flow.
  */
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";

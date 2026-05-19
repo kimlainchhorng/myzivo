@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { FlightFilters } from "@/hooks/useResultsFilters";
+import type { FlightFilters } from "@/hooks/useResultsFilters";
 import { getAirlineLogo } from "@/data/airlines";
 
 interface FlightFiltersContentProps {

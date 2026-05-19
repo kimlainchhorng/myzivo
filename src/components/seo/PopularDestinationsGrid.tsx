@@ -5,7 +5,8 @@
  */
 
 import { Link } from "react-router-dom";
-import { destinationPhotos, DestinationCity } from "@/config/photos";
+import { destinationPhotos } from "@/config/photos";
+import type { DestinationCity } from "@/config/photos";
 import { Globe, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";

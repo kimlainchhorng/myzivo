@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { brandedCarModels, BrandedCarModel } from "@/config/photos";
+import { brandedCarModels } from "@/config/photos";
+import type { BrandedCarModel } from "@/config/photos";
 import { useMemo } from "react";
 
 export interface RampCarCardData {

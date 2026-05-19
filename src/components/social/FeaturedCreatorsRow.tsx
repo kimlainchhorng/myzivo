@@ -249,7 +249,7 @@ export default function FeaturedCreatorsRow({ fullBleed = true }: Props) {
                   className={
                     isFollowing
                       ? "mt-3 w-full rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/15 active:scale-95 transition-all"
-                      : "mt-3 w-full rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-600 active:scale-95 transition-all"
+                      : "mt-3 w-full rounded-full bg-ig-gradient px-3 py-1.5 text-xs font-bold text-white hover:opacity-90 active:scale-95 transition-all"
                   }
                 >
                   {isPending ? (

@@ -3,15 +3,8 @@
  * Manages user currency preference with persistence and exchange rates
  */
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  ReactNode,
-} from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
+import type { ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   SUPPORTED_CURRENCIES,

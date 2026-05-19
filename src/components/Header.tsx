@@ -58,6 +58,8 @@ const Header = () => {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-xl border-b border-border safe-area-top">
+        {/* IG gradient accent — hairline beneath the header */}
+        <div aria-hidden className="bg-ig-gradient absolute left-0 right-0 bottom-0 h-px opacity-80" />
         <div className="container mx-auto px-3 sm:px-4">
           <div className="flex items-center gap-3 h-11 sm:h-12">
             {/* Logo */}
@@ -219,7 +221,7 @@ const Header = () => {
                   <Button
                     size="sm"
                     onClick={() => navigate("/signup")}
-                    className="rounded-xl font-bold"
+                    className="bg-ig-gradient hover:opacity-90 text-white rounded-xl font-bold border-0 shadow-sm"
                   >
                     Sign up free
                   </Button>

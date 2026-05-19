@@ -2,7 +2,8 @@
  * ZIVO+ Subscription Context
  * Checks Stripe for active ZIVO+ membership and provides status across the app.
  */
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 

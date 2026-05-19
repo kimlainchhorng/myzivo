@@ -1,7 +1,8 @@
 /**
  * Admin Layout - Responsive sidebar layout for admin dashboard
  */
-import { ReactNode, useState } from "react";
+import { useState } from "react";
+import type { ReactNode } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";

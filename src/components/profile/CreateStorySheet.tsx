@@ -467,7 +467,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
                   onClick={() => fileInputRef.current?.click()}
                   className="group w-full flex items-center gap-4 rounded-2xl border border-border/60 bg-background/60 p-4 text-left hover:bg-muted/40 hover:border-border active:scale-[0.985] transition-all"
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                  <div className="w-12 h-12 rounded-2xl bg-ig-gradient text-white flex items-center justify-center shadow-lg shadow-rose-500/25">
                     <ImageIcon className="w-5 h-5" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -663,7 +663,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
               <button type="button"
                 onClick={publish}
                 disabled={uploading || (step === "compose-text" && !text.trim())}
-                className="w-full h-11 rounded-full bg-primary text-primary-foreground font-bold text-sm shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full h-11 rounded-full bg-ig-gradient text-white font-bold text-sm shadow-md shadow-rose-500/25 hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 transition-opacity"
               >
                 {uploading ? (
                   <>

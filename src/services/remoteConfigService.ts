@@ -5,7 +5,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { Database } from '@/integrations/supabase/types';
+import type { Database } from '@/integrations/supabase/types';
 
 type AppSetting = Database['public']['Tables']['app_settings']['Row'];
 type PricingConfig = Database['public']['Tables']['pricing_config']['Row'];

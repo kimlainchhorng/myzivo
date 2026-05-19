@@ -22,7 +22,8 @@ import BedDouble from "lucide-react/dist/esm/icons/bed-double";
 import type { LucideIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { planFromQuery, ConciergeStepKind } from "@/lib/conciergePlanner";
+import { planFromQuery } from "@/lib/conciergePlanner";
+import type { ConciergeStepKind } from "@/lib/conciergePlanner";
 import SEOHead from "@/components/SEOHead";
 
 const ICON_BY_KIND: Record<ConciergeStepKind, { icon: LucideIcon; tone: string }> = {

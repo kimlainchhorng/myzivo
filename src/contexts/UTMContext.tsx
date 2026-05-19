@@ -5,7 +5,8 @@
  * Persists UTM params in session storage for use across pages
  */
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { initUTMTracking, getPersistedUTMParams, type UTMParams } from '@/lib/subidGenerator';
 

@@ -16,5 +16,5 @@
  *    See supabase/functions/_shared/README.md.
  */
 
-export { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-export { createClient } from "npm:@supabase/supabase-js@2.49.1";
+export { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+export { createClient } from "npm:@supabase/supabase-js@2.106.0";

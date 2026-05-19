@@ -1,7 +1,8 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { HelpCircle, Info } from "lucide-react";
-import FAQSchema, { FAQItem } from "./FAQSchema";
+import FAQSchema from "./FAQSchema";
+import type { FAQItem } from "./FAQSchema";
 import { Link } from "react-router-dom";
 
 /**

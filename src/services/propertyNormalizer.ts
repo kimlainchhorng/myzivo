@@ -4,19 +4,10 @@
  * Supports comparison and deduplication across multiple suppliers
  */
 
-import {
-  ZivoProperty,
-  ZivoPropertyExtended,
-  PropertySource,
-  PricingType,
-  InventoryStatus,
-  PropertyMatchKey,
-  PropertyMatchGroup,
-  ZivoPropertyRate,
-  ZivoAlternativeRate,
-} from "@/types/zivoProperty";
-import { HotelbedsHotel, HotelbedsRate } from "@/types/hotelbeds";
-import { RateHawkHotel, RateHawkRate } from "@/types/ratehawk";
+import type { ZivoProperty, ZivoPropertyExtended, PropertySource, PricingType, InventoryStatus, PropertyMatchKey, PropertyMatchGroup, ZivoPropertyRate } from "@/types/zivoProperty";
+import type { ZivoAlternativeRate } from "@/types/zivoProperty";
+import type { HotelbedsHotel, HotelbedsRate } from "@/types/hotelbeds";
+import type { RateHawkHotel, RateHawkRate } from "@/types/ratehawk";
 import { calculateMarkup } from "@/config/pricing";
 
 // ==================== HOTELBEDS NORMALIZER ====================

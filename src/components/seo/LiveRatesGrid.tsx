@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PriceDisplay } from "@/components/ui/price-display";
 import { SourceBadge, BestPriceBadge, AvailabilityBadge } from "@/components/hotels/SourceBadge";
-import { ZivoPropertyExtended } from "@/types/zivoProperty";
+import type { ZivoPropertyExtended } from "@/types/zivoProperty";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 

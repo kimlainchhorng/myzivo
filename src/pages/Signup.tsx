@@ -149,7 +149,7 @@ const Signup = () => {
       <div className="min-h-[100dvh] w-full bg-white dark:bg-black flex items-center justify-center px-5 py-8">
         <div className="w-full max-w-sm">
           <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-8 py-10 shadow-sm text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 shadow-lg shadow-rose-500/20 mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-ig-gradient shadow-lg shadow-rose-500/20 mb-4">
               <MailCheck className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-xl font-bold text-zinc-900 dark:text-white">Check your email</h1>
@@ -159,7 +159,7 @@ const Signup = () => {
             </p>
             <Link
               to={`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}
-              className="block mt-6 w-full h-11 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 transition flex items-center justify-center shadow-md shadow-rose-500/20"
+              className="block mt-6 w-full h-11 rounded-lg text-sm font-semibold text-white bg-ig-gradient hover:opacity-95 transition flex items-center justify-center shadow-md shadow-rose-500/20"
             >
               Go to Sign In
             </Link>
@@ -184,7 +184,7 @@ const Signup = () => {
         <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-8 pt-9 pb-6 shadow-sm">
           {/* Brand wordmark */}
           <div className="flex flex-col items-center mb-6">
-            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 flex items-center justify-center mb-4 shadow-lg shadow-rose-500/20">
+            <div className="relative w-14 h-14 rounded-2xl bg-ig-gradient flex items-center justify-center mb-4 shadow-lg shadow-rose-500/20">
               <span className="brand-script-mark text-white font-black text-2xl tracking-tight italic">Z</span>
             </div>
             <h1 className="brand-script-wordmark text-3xl font-light tracking-wider text-zinc-900 dark:text-white">
@@ -354,7 +354,7 @@ const Signup = () => {
             <button
               type="submit"
               disabled={submitting || !agree || isUnderage}
-              className="w-full h-11 mt-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md shadow-rose-500/20"
+              className="w-full h-11 mt-2 rounded-lg text-sm font-bold text-white bg-ig-gradient hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md shadow-rose-500/20"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign up"}
             </button>

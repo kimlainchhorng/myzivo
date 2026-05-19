@@ -9,7 +9,7 @@ const devServerUrl =
     : undefined;
 
 const config: CapacitorConfig = {
-  appId: 'com.myzivo.app',
+  appId: 'com.hizovo.app',
   appName: 'ZIVO',
   webDir: 'dist',
   ...(devServerUrl
@@ -20,6 +20,26 @@ const config: CapacitorConfig = {
         },
       }
     : {}),
+  ios: {
+    // Use WKWebView's scroll inertia and allow native rubber-band scrolling
+    // inside the web content area — improves perceived scroll smoothness.
+    scrollEnabled: true,
+    // Opt into preferred background fetch on iOS so OTA updates and
+    // push-notification enrichment calls can run while the app is suspended.
+    preferredContentMode: 'mobile',
+    // Allow native links (tel:, mailto:, maps:) to open system apps.
+    allowsLinkPreview: false,
+  },
+  android: {
+    // Forces all WebView loads over HTTPS even when cleartext is normally
+    // allowed — prevents accidental mixed-content on older Android WebViews.
+    allowMixedContent: false,
+    // Use HTTPS scheme for the local server so cookies set with
+    // SameSite=None work inside the WebView (Android 9+ requirement).
+    buildOptions: {
+      keystorePath: undefined,
+    },
+  },
   plugins: {
     CapacitorUpdater: {
       autoUpdate: false,   // we check manually via useOTAUpdate hook

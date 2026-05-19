@@ -1,16 +1,5 @@
-import { 
-  Shield, 
-  CreditCard, 
-  Search, 
-  Clock, 
-  BadgeCheck,
-  Headphones,
-  RefreshCw,
-  Zap,
-  Lock,
-  Award,
-  LucideIcon
-} from "lucide-react";
+import { Shield, CreditCard, Search, Clock, BadgeCheck, Headphones, RefreshCw, Zap, Lock, Award } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import trustAirlinesBg from "@/assets/trust-airlines-bg.jpg";

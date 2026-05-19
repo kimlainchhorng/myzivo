@@ -2,7 +2,8 @@
  * Store Owner Layout — Simplified sidebar for store owners (non-admin).
  * Shows Profile, Products, Payment as sidebar navigation.
  */
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
