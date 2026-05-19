@@ -4068,18 +4068,6 @@ export default function FeedPage() {
           .limit(USER_PAGE * pageMultiplier), signal),
       ]);
 
-      useEffect(() => {
-        if (!hasCustomerFeedError || !customerFeedError) return;
-        reportFeedQueryError(
-          {
-            scope: "customer-feed",
-            queryKey: "customer-feed",
-            userId,
-            pageMultiplier,
-          },
-          customerFeedError,
-        );
-      }, [customerFeedError, hasCustomerFeedError, pageMultiplier, userId]);
       if (storePostsResult.error && userPostsResult.error) throw storePostsResult.error;
       if (storePostsResult.error || userPostsResult.error) {
         console.warn("[FeedPage] Some reel sources failed", {
@@ -4235,6 +4223,19 @@ export default function FeedPage() {
       return blendedPosts;
     },
   });
+
+  useEffect(() => {
+    if (!hasCustomerFeedError || !customerFeedError) return;
+    reportFeedQueryError(
+      {
+        scope: "customer-feed",
+        queryKey: "customer-feed",
+        userId,
+        pageMultiplier,
+      },
+      customerFeedError,
+    );
+  }, [customerFeedError, hasCustomerFeedError, pageMultiplier, userId]);
 
   // Posts shown in the snap-scroller — filtered by For You / Following / Trending + hashtag.
   // Memoized so cardRefs / activeIndex stay aligned with what's rendered.
