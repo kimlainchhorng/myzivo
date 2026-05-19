@@ -922,22 +922,9 @@ export default function ReelsFeedPage() {
             store_slug: store?.slug || null,
             created_at: post.created_at,
           });
-
-          useEffect(() => {
-            if (!hasGridError || !gridError) return;
-            reportFeedQueryError(
-              {
-                scope: "reels-feed-grid",
-                queryKey: "reels-feed-grid",
-                userId,
-                tab: feedTab,
-                pageSize,
-              },
-              gridError,
-            );
-          }, [feedTab, gridError, hasGridError, pageSize, userId]);
         }
       }
+
 
       // Fetch user posts
       try {
