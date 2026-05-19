@@ -1665,7 +1665,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                     </button>
                   )}
                   <div className={cn(desktopTwoColumn && sidebarCollapsed && "lg:hidden")}>
-                    <h1 className="text-xl font-bold text-foreground">
+                    <h1 className="text-xl font-bold text-ig-gradient">
                       {selectionMode ? `${selectedChatIds.size} selected` : "Chat"}
                     </h1>
                   </div>

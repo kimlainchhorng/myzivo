@@ -98,7 +98,7 @@ export default function ReviewModerationDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Review Moderation</h1>
+            <h1 className="text-2xl font-bold text-ig-gradient">Review Moderation</h1>
             <p className="text-sm text-muted-foreground">Manage flagged reviews and moderation</p>
           </div>
           <Shield className="w-8 h-8 text-primary" />

@@ -73,7 +73,7 @@ export default function AppSettingsPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <Settings className="h-5 w-5 text-primary" />
-          <h1 className="text-xl font-bold text-foreground">Settings</h1>
+          <h1 className="text-xl font-bold text-ig-gradient">Settings</h1>
         </div>
       </div>
 

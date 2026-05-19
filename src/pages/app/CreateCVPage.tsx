@@ -456,7 +456,7 @@ function MinimalLayout({ data }: { data: any }) {
             <img src={data.photo} alt="" className="cv-photo w-16 h-16 rounded-full object-cover" />
           </div>
         )}
-        <h1 className="cv-name text-[20px] font-bold text-foreground leading-tight">{data.fullName || "Your Name"}</h1>
+        <h1 className="cv-name text-[20px] font-bold text-ig-gradient leading-tight">{data.fullName || "Your Name"}</h1>
         {data.jobTitle && <p className="text-[11px] cv-accent-text mt-0.5">{data.jobTitle}</p>}
         <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-2 text-[9px] text-foreground/55">
           {data.email && <span>{data.email}</span>}
@@ -880,7 +880,7 @@ function AcademicLayout({ data }: { data: any }) {
   return (
     <div className="min-h-full p-5 space-y-4" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
       <div className="cv-hero text-center pb-3 border-b-[3px] border-double cv-accent-border">
-        <h1 className="cv-name text-[24px] font-bold text-foreground leading-tight">{data.fullName || "Your Name"}</h1>
+        <h1 className="cv-name text-[24px] font-bold text-ig-gradient leading-tight">{data.fullName || "Your Name"}</h1>
         {data.jobTitle && <p className="text-[11px] cv-accent-text mt-1 italic">{data.jobTitle}</p>}
         <div className="flex flex-wrap justify-center gap-x-3 mt-2 text-[10px] text-foreground/70">
           {data.email && <span>{data.email}</span>}
@@ -910,7 +910,7 @@ function TechLayout({ data }: { data: any }) {
     <div className="min-h-full" style={{ fontFamily: '"JetBrains Mono", "Fira Code", ui-monospace, monospace' }}>
       <div className="cv-hero p-4 border-b-2 cv-accent-border bg-foreground/[0.03]">
         <p className="text-[9px] cv-accent-text font-semibold mb-1">{`> whoami`}</p>
-        <h1 className="cv-name text-[22px] font-bold text-foreground leading-tight">{data.fullName || "Your Name"}</h1>
+        <h1 className="cv-name text-[22px] font-bold text-ig-gradient leading-tight">{data.fullName || "Your Name"}</h1>
         {data.jobTitle && <p className="text-[11px] text-foreground/70 mt-0.5">{`// ${data.jobTitle}`}</p>}
         <div className="flex flex-wrap gap-x-3 mt-2 text-[9px] text-foreground/60">
           {data.email && <span>email: <span className="cv-accent-text">{data.email}</span></span>}

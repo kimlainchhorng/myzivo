@@ -129,7 +129,7 @@ export default function SafetyCenterPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <Shield className="h-5 w-5 text-primary" />
-          <h1 className="text-xl font-bold text-foreground">Safety Center</h1>
+          <h1 className="text-xl font-bold text-ig-gradient">Safety Center</h1>
         </div>
       </div>
 

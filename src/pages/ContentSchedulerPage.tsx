@@ -150,7 +150,7 @@ export default function ContentSchedulerPage() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <Calendar className="h-5 w-5 text-primary" />
-            <h1 className="text-xl font-bold text-foreground">Content Scheduler</h1>
+            <h1 className="text-xl font-bold text-ig-gradient">Content Scheduler</h1>
           </div>
           <Button size="sm" className="rounded-full gap-1" onClick={() => setShowCreate(!showCreate)}>
             <Plus className="h-4 w-4" /> Schedule

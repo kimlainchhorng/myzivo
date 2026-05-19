@@ -84,7 +84,7 @@ export default function PlanTripBundle() {
           <motion.button
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate("/flights?bundle=1")}
-            className="relative flex-1 flex items-center justify-center gap-1 rounded-lg bg-primary text-primary-foreground font-semibold py-2.5 text-sm active:opacity-80 transition-opacity touch-manipulation"
+            className="relative flex-1 flex items-center justify-center gap-1 rounded-lg bg-ig-gradient text-white font-bold py-2.5 text-sm shadow-sm hover:opacity-90 active:opacity-80 transition-opacity touch-manipulation"
           >
             Start with a flight <ArrowRight className="w-4 h-4" />
           </motion.button>

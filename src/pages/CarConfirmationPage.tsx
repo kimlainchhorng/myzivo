@@ -37,7 +37,7 @@ export default function CarConfirmationPage() {
               <CheckCircle className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
             </div>
 
-            <h1 className="text-2xl font-bold text-foreground mb-2">
+            <h1 className="text-2xl font-bold text-ig-gradient mb-2">
               Booking Confirmed!
             </h1>
             <p className="text-muted-foreground mb-6">

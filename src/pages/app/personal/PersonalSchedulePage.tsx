@@ -248,7 +248,7 @@ export default function PersonalSchedulePage() {
             <button type="button" aria-label="Go back" onClick={() => navigate(-1)} className="w-8 h-8 rounded-full flex items-center justify-center active:scale-90 transition-transform -ml-1">
               <ArrowLeft className="w-[18px] h-[18px] text-foreground" />
             </button>
-            <h1 className="font-bold text-[15px] text-foreground flex-1">My Schedule</h1>
+            <h1 className="font-bold text-[15px] text-ig-gradient flex-1">My Schedule</h1>
             <button
               type="button"
               onClick={() => { setShowRequestSheet(true); setReqDone(false); setReqDate(""); setReqNote(""); }}

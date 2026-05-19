@@ -82,7 +82,7 @@ export default function AdminSecuritySentinelPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Security Sentinel</h1>
+            <h1 className="text-2xl font-bold text-ig-gradient">Security Sentinel</h1>
             <p className="text-muted-foreground">Tamper-evident incident command center</p>
           </div>
         </div>

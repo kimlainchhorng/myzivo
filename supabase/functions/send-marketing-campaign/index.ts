@@ -9,14 +9,84 @@ const corsHeaders = {
 };
 
 type Channel = "push" | "email" | "sms" | "inapp";
+type DispatchChannel = "push" | "email" | "sms" | "inbox";
+
+const DISPATCH_FUNCTION = "notify-dispatch";
+const GENERIC_EMAIL_TEMPLATE = "notification-generic";
 
 function detectChannels(c: any): Channel[] {
   const out: Channel[] = [];
   if (c.push_enabled) out.push("push");
   if (c.email_enabled) out.push("email");
   if (c.sms_enabled) out.push("sms");
+  if (c.campaign_type === "inapp" || c.inapp_enabled) out.push("inapp");
   if (!out.length && c.notification_title) out.push("push");
   return out;
+}
+
+function toDispatchChannels(channels: Channel[]): DispatchChannel[] {
+  const mapped = channels.map((channel) => (channel === "inapp" ? "inbox" : channel));
+  return Array.from(new Set(mapped));
+}
+
+function buildDispatchPayload(campaign: any, campaignId: string, userId: string, channels: DispatchChannel[]) {
+  const title = campaign.notification_title || campaign.title || "Update";
+  const body = campaign.notification_body || campaign.message || "";
+  const url = campaign.url || campaign.deep_link || campaign.action_url || undefined;
+
+  return {
+    user_id: userId,
+    event_type: "marketing",
+    title,
+    body,
+    category: "marketing" as const,
+    channels,
+    idempotency_key: `${campaignId}:${userId}`,
+    data: {
+      campaign_id: campaignId,
+      url,
+      campaign_type: campaign.campaign_type || null,
+    },
+    email: {
+      template: GENERIC_EMAIL_TEMPLATE,
+      data: {
+        title,
+        body,
+        url,
+        event_type: "marketing",
+        campaign_id: campaignId,
+      },
+      idempotencyKey: `${campaignId}:${userId}:email`,
+    },
+    sms: {
+      body: `${title}${body ? `: ${body}` : ""}`,
+    },
+  };
+}
+
+async function dispatchCampaignNotification(
+  url: string,
+  serviceKey: string,
+  campaign: any,
+  campaignId: string,
+  userId: string,
+  channels: DispatchChannel[],
+) {
+  const payload = buildDispatchPayload(campaign, campaignId, userId, channels);
+  const response = await fetch(`${url}/functions/v1/${DISPATCH_FUNCTION}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${serviceKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    body: await response.json().catch(() => null),
+  };
 }
 
 Deno.serve(async (req) => {
@@ -80,6 +150,7 @@ Deno.serve(async (req) => {
 
     const storeId = campaign.target_restaurant_id;
     const channels = detectChannels(campaign);
+    const dispatchChannels = toDispatchChannels(channels);
 
     // ── Test send ──
     if (isTest) {
@@ -101,16 +172,7 @@ Deno.serve(async (req) => {
           sent_by: userId || testRecipient,
         });
       }
-      // Best-effort push to operator
-      if (channels.includes("push")) {
-        await admin.functions.invoke("send-push-notification", {
-          body: {
-            user_id: testRecipient,
-            title: `[TEST] ${campaign.notification_title || campaign.title || "Campaign"}`,
-            body: campaign.notification_body || campaign.message || "",
-          },
-        }).catch(() => {});
-      }
+      await dispatchCampaignNotification(url, serviceKey, campaign, campaignId, testRecipient, dispatchChannels).catch(() => {});
       return new Response(JSON.stringify({ ok: true, recipients: 1, test: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -153,31 +215,11 @@ Deno.serve(async (req) => {
       if (error) errors++;
       else sent += chunk.length;
 
-      // Push channel: best-effort fan-out
-      if (channels.includes("push")) {
-        for (const uid of chunk) {
-          admin.functions.invoke("send-push-notification", {
-            body: {
-              user_id: uid,
-              title: campaign.notification_title || campaign.title || "",
-              body: campaign.notification_body || campaign.message || "",
-              data: { campaign_id: campaignId },
-            },
-          }).catch(() => {});
-        }
-      }
-
-      // In-app notifications
-      if (channels.includes("inapp" as any) || campaign.campaign_type === "inapp") {
-        const notifs = chunk.map((uid: string) => ({
-          user_id: uid,
-          title: campaign.notification_title || campaign.title || "Update",
-          message: campaign.notification_body || campaign.message || "",
-          type: "marketing",
-          metadata: { campaign_id: campaignId },
-        }));
-        await admin.from("notifications" as any).insert(notifs).catch(() => {});
-      }
+      await Promise.allSettled(
+        chunk.map((uid: string) =>
+          dispatchCampaignNotification(url, serviceKey, campaign, campaignId, uid, dispatchChannels)
+        ),
+      );
     }
 
     // Mark campaign as sent

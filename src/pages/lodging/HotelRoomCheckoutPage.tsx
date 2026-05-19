@@ -365,7 +365,7 @@ export default function HotelRoomCheckoutPage() {
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-base font-bold text-foreground truncate leading-tight">Confirm Booking</h1>
+          <h1 className="text-base font-bold text-ig-gradient truncate leading-tight">Confirm Booking</h1>
           {store && <p className="text-xs text-muted-foreground truncate mt-0.5">{store.name}</p>}
         </div>
         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-2 py-1 text-[10px] font-bold">

@@ -239,7 +239,7 @@ export default function TrendingPage() {
             </button>
             <div className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary" />
-              <h1 className="text-lg font-bold text-foreground">Trending</h1>
+              <h1 className="text-lg font-bold text-ig-gradient">Trending</h1>
             </div>
           </div>
 

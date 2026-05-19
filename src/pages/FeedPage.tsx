@@ -4,10 +4,11 @@
  * Videos auto-play when scrolled into view, pause when scrolled away.
  */
 import { lazy, Suspense } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
+import { normalizeSupabaseMediaUrl } from "@/utils/normalizeSupabaseMediaUrl";
+import { withSupabaseAbortSignal } from "@/utils/withSupabaseAbortSignal";
 import { useI18n } from "@/hooks/useI18n";
 import SEOHead from "@/components/SEOHead";
 import VerifiedBadge from "@/components/VerifiedBadge";
@@ -87,6 +88,7 @@ import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 import { perfLog, perfMeasure, perfNow } from "@/lib/perfTrace";
+import { reportFeedQueryError } from "@/lib/feedQueryTelemetry";
 // videoRepair is heavy (FFmpeg WASM) — dynamic import only when needed
 
 const FEED_STORE_PAGE_SIZE = 18;
@@ -606,8 +608,13 @@ function ReelCard({
   const liked = userLikedPostIds.has(post.id);
 
   const normalizedUrls = useMemo(
-    () => (post.media_urls || []).map((u) => normalizeStorePostMediaUrl(u)).filter(Boolean),
-    [post.media_urls],
+    () => (post.media_urls || []).map((u) =>
+      normalizeSupabaseMediaUrl(
+        u,
+        { preferredBucket: post.source === "user" ? "user-posts" : "store-posts" },
+      )
+    ).filter(Boolean),
+    [post.media_urls, post.source],
   );
   const firstUrl = normalizedUrls[0] || "";
   const detectedVideoUrl = normalizedUrls.find((url) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url));
@@ -3520,7 +3527,12 @@ function SoundOverlay({
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {reels.map((reel) => {
-                  const thumb = (reel.media_urls || []).map((u: string) => normalizeStorePostMediaUrl(u)).filter(Boolean)[0];
+                  const thumb = (reel.media_urls || []).map((u: string) =>
+                    normalizeSupabaseMediaUrl(
+                      u,
+                      { preferredBucket: reel.source === "user" ? "user-posts" : "store-posts" },
+                    )
+                  ).filter(Boolean)[0];
                   return (
                     <button type="button"
                       key={reel.id}
@@ -4018,19 +4030,20 @@ export default function FeedPage() {
     return () => { alive = false; };
   }, [userId]);
 
-  const { data: posts = [], isLoading, isFetching } = useQuery({
+  const { data: posts = [], isLoading, isFetching, isError: hasCustomerFeedError, error: customerFeedError } = useQuery({
     queryKey: ["customer-feed", userId, pageMultiplier, requestedReelId],
-    queryFn: async () => {
+    placeholderData: keepPreviousData,
+    queryFn: async ({ signal }) => {
       const feedStartedAt = perfNow();
       // Pull the muted/blocked author list first so we can filter the feed
       // server-side. Defence-in-depth: client also filters in case RLS isn't
       // wired for these tables yet (the migration is included in this branch).
       let mutedAuthorIds = new Set<string>();
       if (userId) {
-        const { data: safety } = await (supabase as any)
+        const { data: safety } = await withSupabaseAbortSignal((supabase as any)
           .from("user_safety_actions")
           .select("target_user_id, action")
-          .eq("user_id", userId);
+          .eq("user_id", userId), signal);
         mutedAuthorIds = new Set((safety ?? []).map((s: any) => s.target_user_id));
       }
 
@@ -4041,19 +4054,32 @@ export default function FeedPage() {
       const STORE_PAGE = FEED_STORE_PAGE_SIZE;
       const USER_PAGE  = FEED_USER_PAGE_SIZE;
       const [storePostsResult, userPostsResult] = await Promise.all([
-        supabase
+        withSupabaseAbortSignal(supabase
           .from("store_posts")
           .select("id, store_id, caption, media_urls, media_type, is_published, created_at, likes_count, comments_count, shares_count, reposts_count, view_count, audio_name, location")
           .eq("is_published", true)
           .order("created_at", { ascending: false })
-          .limit(STORE_PAGE * pageMultiplier),
-        (supabase as any)
+          .limit(STORE_PAGE * pageMultiplier), signal),
+        withSupabaseAbortSignal((supabase as any)
           .from("user_posts")
           .select("id, user_id, media_url, media_urls, media_type, caption, likes_count, comments_count, shares_count, views_count, created_at, audio_name, location")
           .eq("is_published", true)
           .order("created_at", { ascending: false })
-          .limit(USER_PAGE * pageMultiplier),
+          .limit(USER_PAGE * pageMultiplier), signal),
       ]);
+
+      useEffect(() => {
+        if (!hasCustomerFeedError || !customerFeedError) return;
+        reportFeedQueryError(
+          {
+            scope: "customer-feed",
+            queryKey: "customer-feed",
+            userId,
+            pageMultiplier,
+          },
+          customerFeedError,
+        );
+      }, [customerFeedError, hasCustomerFeedError, pageMultiplier, userId]);
       if (storePostsResult.error && userPostsResult.error) throw storePostsResult.error;
       if (storePostsResult.error || userPostsResult.error) {
         console.warn("[FeedPage] Some reel sources failed", {
@@ -4837,49 +4863,103 @@ export default function FeedPage() {
             role="tablist"
             aria-label="Reel feed mode"
           >
-            {(["following", "foryou"] as const).map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                role="tab"
-                aria-selected={feedMode === mode ? "true" : "false"}
-                onClick={() => {
-                  const now = Date.now();
-                  if (
-                    feedMode === mode &&
-                    lastTabTapRef.current.mode === mode &&
-                    now - lastTabTapRef.current.at < 400
-                  ) {
-                    lastTabTapRef.current = { mode: "", at: 0 };
-                    void queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
-                    cardRefs.current[0]?.scrollIntoView({ behavior: "smooth", block: "start" });
-                    toast.success("Refreshing…");
-                    return;
-                  }
-                  lastTabTapRef.current = { mode, at: now };
-                  setFeedMode(mode);
-                  setActiveIndex(0);
-                  requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
-                }}
-                className={cn(
-                  "relative py-2 text-[15px] sm:text-base font-semibold tracking-tight whitespace-nowrap transition-colors duration-200 active:scale-[0.97]",
-                  feedMode === mode
-                    ? "text-white"
-                    : "text-white/55 hover:text-white/80",
-                )}
-              >
-                <span className="relative z-10 drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
-                  {mode === "foryou" ? "For You" : "Following"}
-                </span>
-                {feedMode === mode && (
+            {feedMode === "following" ? (
+              <>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected="true"
+                  onClick={() => {
+                    const now = Date.now();
+                    if (
+                      lastTabTapRef.current.mode === "following" &&
+                      now - lastTabTapRef.current.at < 400
+                    ) {
+                      lastTabTapRef.current = { mode: "", at: 0 };
+                      void queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+                      cardRefs.current[0]?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      toast.success("Refreshing…");
+                      return;
+                    }
+                    lastTabTapRef.current = { mode: "following", at: now };
+                    setFeedMode("following");
+                    setActiveIndex(0);
+                    requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
+                  }}
+                  className="relative py-2 text-[15px] sm:text-base font-semibold tracking-tight whitespace-nowrap transition-colors duration-200 active:scale-[0.97] text-white"
+                >
+                  <span className="relative z-10 drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">Following</span>
                   <motion.span
                     layoutId="reel-tab-underline"
                     transition={{ type: "spring", damping: 28, stiffness: 380 }}
                     className="absolute left-1/2 -translate-x-1/2 bottom-0 h-[3px] w-6 rounded-full bg-white shadow-[0_2px_8px_rgba(255,255,255,0.5)]"
                   />
-                )}
-              </button>
-            ))}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected="false"
+                  onClick={() => {
+                    const now = Date.now();
+                    lastTabTapRef.current = { mode: "foryou", at: now };
+                    setFeedMode("foryou");
+                    setActiveIndex(0);
+                    requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
+                  }}
+                  className="relative py-2 text-[15px] sm:text-base font-semibold tracking-tight whitespace-nowrap transition-colors duration-200 active:scale-[0.97] text-white/55 hover:text-white/80"
+                >
+                  <span className="relative z-10 drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">For You</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected="false"
+                  onClick={() => {
+                    const now = Date.now();
+                    lastTabTapRef.current = { mode: "following", at: now };
+                    setFeedMode("following");
+                    setActiveIndex(0);
+                    requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
+                  }}
+                  className="relative py-2 text-[15px] sm:text-base font-semibold tracking-tight whitespace-nowrap transition-colors duration-200 active:scale-[0.97] text-white/55 hover:text-white/80"
+                >
+                  <span className="relative z-10 drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">Following</span>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected="true"
+                  onClick={() => {
+                    const now = Date.now();
+                    if (
+                      lastTabTapRef.current.mode === "foryou" &&
+                      now - lastTabTapRef.current.at < 400
+                    ) {
+                      lastTabTapRef.current = { mode: "", at: 0 };
+                      void queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+                      cardRefs.current[0]?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      toast.success("Refreshing…");
+                      return;
+                    }
+                    lastTabTapRef.current = { mode: "foryou", at: now };
+                    setFeedMode("foryou");
+                    setActiveIndex(0);
+                    requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
+                  }}
+                  className="relative py-2 text-[15px] sm:text-base font-semibold tracking-tight whitespace-nowrap transition-colors duration-200 active:scale-[0.97] text-white"
+                >
+                  <span className="relative z-10 drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">For You</span>
+                  <motion.span
+                    layoutId="reel-tab-underline"
+                    transition={{ type: "spring", damping: 28, stiffness: 380 }}
+                    className="absolute left-1/2 -translate-x-1/2 bottom-0 h-[3px] w-6 rounded-full bg-white shadow-[0_2px_8px_rgba(255,255,255,0.5)]"
+                  />
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

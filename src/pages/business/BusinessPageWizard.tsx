@@ -504,7 +504,7 @@ export default function BusinessPageWizard() {
             Step {step} of {STEP_COUNT}
           </p>
           <div className="flex items-center gap-2">
-            <h1 className="text-base font-bold text-foreground">Business Page</h1>
+            <h1 className="text-base font-bold text-ig-gradient">Business Page</h1>
             {isDirty && (
               <span
                 role="status"

@@ -307,7 +307,7 @@ export default function EatsRestaurantDashboard() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-bold text-foreground truncate">{restaurant.name}</h1>
+            <h1 className="text-lg font-bold text-ig-gradient truncate">{restaurant.name}</h1>
             <p className="text-xs text-muted-foreground">Restaurant Dashboard</p>
           </div>
           <Button aria-label="Refresh orders" variant="ghost" size="icon" onClick={() => restaurant && loadOrders(restaurant.id)} disabled={refreshing}>

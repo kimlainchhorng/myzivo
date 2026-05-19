@@ -537,7 +537,7 @@ export default function CreatorLiveEarningsPage() {
             <Button
               onClick={handleWithdraw}
               disabled={requestPayout.isPending || !validAmount}
-              className="w-full h-14 rounded-2xl font-extrabold text-[15px] gap-2 bg-emerald-500 hover:bg-emerald-600 text-white disabled:opacity-40"
+              className="w-full h-14 rounded-2xl font-extrabold text-[15px] gap-2 bg-ig-gradient hover:opacity-90 text-white shadow-md shadow-rose-500/25 border-0 disabled:opacity-40"
             >
               {requestPayout.isPending ? (
                 <>

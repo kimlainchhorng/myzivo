@@ -336,7 +336,7 @@ const AppMore = () => {
           </Link>
         )}
 
-        <h2 className="font-bold text-lg mb-4">Quick Access</h2>
+        <h2 className="font-bold text-lg mb-4 text-ig-gradient">Quick Access</h2>
 
         <div className="grid grid-cols-2 gap-3">
           {quickLinks.map((link, i) => {
@@ -369,7 +369,7 @@ const AppMore = () => {
 
         {access?.isStoreOwner && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-4">
-            <h3 className="text-sm font-bold mb-2">Super App Add-ons</h3>
+            <h3 className="text-sm font-bold mb-2 text-ig-gradient">Super App Add-ons</h3>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"

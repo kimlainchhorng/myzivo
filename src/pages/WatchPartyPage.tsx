@@ -165,7 +165,7 @@ export default function WatchPartyPage() {
           <div className="flex items-center gap-2">
             <Button aria-label="Back" variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
             <Tv className="h-5 w-5 text-primary" />
-            <h1 className="text-xl font-bold text-foreground">Watch Party</h1>
+            <h1 className="text-xl font-bold text-ig-gradient">Watch Party</h1>
           </div>
           <Button size="sm" className="rounded-full gap-1" onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4" /> Create Room

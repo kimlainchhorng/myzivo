@@ -85,7 +85,7 @@ export default function WhiteboardPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Button aria-label="Back" variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
-            <h1 className="text-lg font-bold text-foreground">Whiteboard</h1>
+            <h1 className="text-lg font-bold text-ig-gradient">Whiteboard</h1>
           </div>
           <div className="flex gap-1">
             <Button aria-label="Clear" variant="ghost" size="icon" className="h-8 w-8" onClick={clearCanvas}><Trash2 className="h-4 w-4" /></Button>

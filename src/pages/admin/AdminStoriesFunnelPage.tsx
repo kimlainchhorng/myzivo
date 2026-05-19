@@ -45,7 +45,7 @@ export default function AdminStoriesFunnelPage() {
 
       <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Stories Deep-Link Funnel</h1>
+          <h1 className="text-2xl font-bold text-ig-gradient">Stories Deep-Link Funnel</h1>
           <p className="text-sm text-muted-foreground">
             Opens → segment views → completion, per source and per story.
           </p>

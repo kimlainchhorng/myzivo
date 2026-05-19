@@ -585,7 +585,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
       "shrink-0 rounded-full text-[11px] font-bold px-3 py-1 transition-colors disabled:opacity-60",
       isFollowingHost
         ? "bg-white/10 text-white/70 border border-white/15"
-        : "bg-rose-500 text-white hover:bg-rose-600",
+        : "bg-ig-gradient text-white hover:opacity-90 shadow-sm",
     )}
     aria-label={isFollowingHost ? "Following" : "Follow host"}
     title={isFollowingHost ? "Following" : "Follow host"}
@@ -1074,7 +1074,7 @@ export default function LiveStreamPage() {
 <ArrowLeft className="h-5 w-5 text-foreground" />
 </button>
 <Radio className="h-5 w-5 text-red-500" />
-<h1 className="text-lg font-bold text-foreground flex-1">Live</h1>
+<h1 className="text-lg font-bold text-ig-gradient flex-1">Live</h1>
  {liveCount >0 && (
 <Badge className="bg-red-500 text-white border-0 text-xs gap-1 animate-pulse">
 <Wifi className="h-3 w-3" />{liveCount} Live
@@ -1782,7 +1782,7 @@ export default function LiveStreamPage() {
 <div className="flex items-center justify-between mb-2.5">
 <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
 <Calendar className="w-4 h-4 text-blue-500" />Coming Up
-<Badge className="bg-blue-500 text-white border-0 text-[9px]">Set reminder</Badge>
+<Badge className="bg-ig-gradient text-white border-0 text-[9px]">Set reminder</Badge>
 </h2>
 </div>
 <div className="space-y-2">
@@ -1820,7 +1820,7 @@ export default function LiveStreamPage() {
   }}
   className={cn(
  "shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all active:scale-95",
- isReminded ? "bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30" : "bg-blue-500 text-white",
+ isReminded ? "bg-white/15 text-white border border-white/30" : "bg-ig-gradient text-white shadow-sm hover:opacity-90",
  )}>
  {isReminded ? "Reminded" : "+ Remind"}
 </button>
@@ -2192,7 +2192,7 @@ export default function LiveStreamPage() {
 <div className="flex items-center justify-between mb-2.5">
 <h2 className="font-bold text-sm text-foreground flex items-center gap-1.5">
  Quiz Show Live
-<Badge className="bg-blue-500 text-white border-0 text-[9px]">Win prizes</Badge>
+<Badge className="bg-ig-gradient text-white border-0 text-[9px]">Win prizes</Badge>
 </h2>
 </div>
 <div className="space-y-2">
@@ -2219,7 +2219,7 @@ export default function LiveStreamPage() {
 <p className="text-[12px] font-black text-amber-600 dark:text-amber-400 leading-tight">{q.prize}</p>
 <button type="button"
   onClick={() =>toast.success(`Joined ${q.name}! Game starts ${q.time.toLowerCase()}`)}
-  className="mt-1 px-2.5 py-1 rounded-full bg-blue-500 text-white text-[10px] font-bold active:scale-95 transition-transform"
+  className="mt-1 px-2.5 py-1 rounded-full bg-ig-gradient text-white text-[10px] font-bold shadow-sm hover:opacity-90 active:scale-95 transition-all"
 >
  Join
 </button>

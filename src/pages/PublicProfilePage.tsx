@@ -965,7 +965,7 @@ export default function PublicProfilePage() {
           <button type="button" onClick={handleBack} aria-label="Back" className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted transition-colors">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
-          <h1 className="text-base sm:text-lg font-bold text-foreground truncate flex-1">{resolvedProfile?.full_name || "Profile"}</h1>
+          <h1 className="text-base sm:text-lg font-bold text-ig-gradient truncate flex-1">{resolvedProfile?.full_name || "Profile"}</h1>
           <button type="button" onClick={handleShare} aria-label="Share profile" className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted transition-colors">
             <Share2 className="h-5 w-5 text-foreground" />
           </button>

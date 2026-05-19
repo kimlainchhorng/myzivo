@@ -772,7 +772,7 @@ export default function StoresListPage() {
                   {manageMode ? <X className="w-5 h-5" /> : <ArrowLeft className="w-5 h-5" />}
                 </button>
                 <div className="flex-1 min-w-0">
-                  <h1 className="text-[16px] font-bold leading-tight text-foreground flex items-center gap-1.5">
+                  <h1 className="text-[16px] font-bold leading-tight text-ig-gradient flex items-center gap-1.5">
                     {listScopeTitle}
                     {isOffline && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800">

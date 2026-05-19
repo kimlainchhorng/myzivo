@@ -131,7 +131,7 @@ export default function NearbyPage() {
         <div className="flex items-center gap-2 mb-3">
           <Button aria-label="Back" variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
           <Navigation className="h-5 w-5 text-primary" />
-          <h1 className="text-xl font-bold text-foreground">Nearby</h1>
+          <h1 className="text-xl font-bold text-ig-gradient">Nearby</h1>
         </div>
         <div className="flex gap-2 overflow-x-auto no-scrollbar">
           {FILTERS.map((f) => (

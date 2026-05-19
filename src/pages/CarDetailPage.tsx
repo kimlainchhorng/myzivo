@@ -139,7 +139,7 @@ export default function CarDetailPage() {
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h1 className="text-2xl font-bold text-foreground mb-1">{category}</h1>
+                      <h1 className="text-2xl font-bold text-ig-gradient mb-1">{category}</h1>
                       {brandedCar && (
                         <p className="text-muted-foreground">
                           {brandedCar.brand} {brandedCar.model} or similar

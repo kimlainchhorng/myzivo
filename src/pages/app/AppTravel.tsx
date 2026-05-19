@@ -277,10 +277,7 @@ const AppTravel = () => {
           <Button
             onClick={handleSearch}
             disabled={loading}
-            className={cn(
-              "w-full h-13 rounded-xl font-bold gap-2 text-base shadow-lg transition-all duration-200",
-              `bg-gradient-to-r ${activeTabConfig.gradient} hover:opacity-90 text-primary-foreground`
-            )}
+            className="w-full h-13 rounded-xl font-bold gap-2 text-base shadow-lg bg-ig-gradient text-white hover:opacity-90 border-0 transition-all duration-200"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
             {loading ? "Searching…" : `Search ${activeTabConfig.label}`}
@@ -392,7 +389,7 @@ const AppTravel = () => {
                               <p className="text-sm text-muted-foreground">Contact for rates</p>
                             )}
                           </div>
-                          <Button size="sm" className="rounded-xl gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-primary-foreground shadow-md font-bold" onClick={handleBookNow}>
+                          <Button size="sm" className="rounded-xl gap-1 bg-ig-gradient text-white shadow-md font-bold border-0 hover:opacity-90" onClick={handleBookNow}>
                             View Deal <ArrowRight className="w-3 h-3" />
                           </Button>
                         </div>
@@ -422,7 +419,7 @@ const AppTravel = () => {
                             <p className="font-bold text-xl text-emerald-500">${car.price}</p>
                             <p className="text-[10px] text-muted-foreground">per day</p>
                           </div>
-                          <Button size="sm" className="rounded-xl gap-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-primary-foreground shadow-md font-bold" onClick={handleBookNow}>
+                          <Button size="sm" className="rounded-xl gap-1 bg-ig-gradient text-white shadow-md font-bold border-0 hover:opacity-90" onClick={handleBookNow}>
                             View Deal <ArrowRight className="w-3 h-3" />
                           </Button>
                         </div>

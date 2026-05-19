@@ -261,20 +261,35 @@ export const usePushNotifications = () => {
         updated_at: now,
       } as const;
 
-      // Prefer typed Supabase upsert to avoid REST header/on_conflict edge cases.
-      const { error: upsertError } = await (supabase as any)
-        .from("device_tokens")
-        .upsert(payload, { onConflict: "user_id,token" });
+      const { error: registerError } = await supabase.functions.invoke("register-push-token", {
+        body: {
+          token,
+          platform,
+          deactivate: false,
+        },
+        headers: {
+          Authorization: `Bearer ${activeSession.access_token}`,
+        },
+      });
 
-      if (upsertError) {
-        const msg = String(upsertError.message || "").toLowerCase();
-        console.error("[Push] Error saving token to server:", upsertError);
-        if ((msg.includes("jwt") || msg.includes("auth") || msg.includes("expired") || msg.includes("401")) && saveAttempt < 2) {
-          setTimeout(() => {
-            void saveToken(token, saveAttempt + 1);
-          }, 800);
+      if (registerError) {
+        console.error("[Push] register-push-token failed, falling back to direct upsert:", registerError);
+
+        // Prefer typed Supabase upsert to avoid REST header/on_conflict edge cases.
+        const { error: upsertError } = await (supabase as any)
+          .from("device_tokens")
+          .upsert(payload, { onConflict: "user_id,token" });
+
+        if (upsertError) {
+          const msg = String(upsertError.message || "").toLowerCase();
+          console.error("[Push] Error saving token to server:", upsertError);
+          if ((msg.includes("jwt") || msg.includes("auth") || msg.includes("expired") || msg.includes("401")) && saveAttempt < 2) {
+            setTimeout(() => {
+              void saveToken(token, saveAttempt + 1);
+            }, 800);
+          }
+          return;
         }
-        return;
       }
 
       delete tokenRetryAttemptsRef.current[token];

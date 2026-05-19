@@ -401,7 +401,7 @@ export default function Cars() {
                         loading="lazy"
                       />
                       {vehicle.instant_book && (
-                        <Badge className="absolute top-3 left-3 bg-emerald-500 text-primary-foreground gap-1">
+                        <Badge className="absolute top-3 left-3 bg-ig-gradient text-white border-0 gap-1 shadow-sm">
                           <Zap className="w-3 h-3" />
                           Instant
                         </Badge>

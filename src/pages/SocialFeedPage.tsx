@@ -16,7 +16,7 @@ import {
   Loader2, Heart, MessageCircle, Share2, MoreHorizontal, Bookmark,
   UserPlus, Check,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -50,6 +50,9 @@ import { cn } from "@/lib/utils";
 import CreateSheet from "@/components/feed/CreateSheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { getPostShareUrl } from "@/lib/getPublicOrigin";
+import { normalizeSupabaseMediaUrl } from "@/utils/normalizeSupabaseMediaUrl";
+import { withSupabaseAbortSignal } from "@/utils/withSupabaseAbortSignal";
+import { reportFeedQueryError } from "@/lib/feedQueryTelemetry";
 
 const FeedStoryRing = lazy(() => import("@/components/social/FeedStoryRing"));
 const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
@@ -131,13 +134,13 @@ export default function SocialFeedPage() {
     queryKey: ["feed-header-chat-unread", user?.id],
     enabled: Boolean(user?.id),
     staleTime: 30_000,
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       if (!user?.id) return 0;
-      const { count } = await (supabase as any)
+      const { count } = await withSupabaseAbortSignal((supabase as any)
         .from("chat_messages")
         .select("id", { count: "exact", head: true })
         .neq("sender_id", user.id)
-        .is("read_at", null);
+        .is("read_at", null), signal);
       return count ?? 0;
     },
   });
@@ -145,27 +148,28 @@ export default function SocialFeedPage() {
   // Posts query — Friends/Following narrow the author set; For You is everyone.
   // Returns null when the tab needs auth and the user is logged out, so the
   // empty state can show a tailored Sign-in CTA instead of "no posts yet".
-  const { data: rawPosts, isLoading } = useQuery({
+  const { data: rawPosts, isLoading, isError: hasFeedError, error: feedError } = useQuery({
     queryKey: ["social-feed-posts", tab, user?.id],
-    queryFn: async (): Promise<FeedPost[] | null> => {
+    placeholderData: keepPreviousData,
+    queryFn: async ({ signal }): Promise<FeedPost[] | null> => {
       let allowedAuthorIds: string[] | null = null;
 
       if (tab === "friends") {
         if (!user?.id) return null;
-        const { data: friendships } = await supabase
+        const { data: friendships } = await withSupabaseAbortSignal(supabase
           .from("friendships")
           .select("user_id, friend_id")
           .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`)
-          .eq("status", "accepted");
+          .eq("status", "accepted"), signal);
         const rows = (friendships || []) as { user_id: string; friend_id: string }[];
         allowedAuthorIds = rows.map((r) => (r.user_id === user.id ? r.friend_id : r.user_id));
         if (allowedAuthorIds.length === 0) return [];
       } else if (tab === "following") {
         if (!user?.id) return null;
-        const { data: follows } = await (supabase as any)
+        const { data: follows } = await withSupabaseAbortSignal((supabase as any)
           .from("user_followers")
           .select("following_id")
-          .eq("follower_id", user.id);
+          .eq("follower_id", user.id), signal);
         allowedAuthorIds = (follows || []).map((r: any) => r.following_id).filter(Boolean) as string[];
         if (allowedAuthorIds.length === 0) return [];
       }
@@ -180,14 +184,14 @@ export default function SocialFeedPage() {
         query = query.in("user_id", allowedAuthorIds);
       }
 
-      const { data: posts } = await query;
+      const { data: posts } = await withSupabaseAbortSignal(query, signal);
       if (!posts?.length) return [];
 
       const userIds = [...new Set(posts.map((p: any) => p.user_id))] as string[];
-      const { data: profiles } = await supabase
+      const { data: profiles } = await withSupabaseAbortSignal(supabase
         .from("profiles")
         .select("user_id, full_name, avatar_url")
-        .in("user_id", userIds);
+        .in("user_id", userIds), signal);
 
       const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
       return posts.map((p: any) => {
@@ -203,6 +207,19 @@ export default function SocialFeedPage() {
 
   const needsAuth = rawPosts === null;
   const posts = rawPosts ?? [];
+
+  useEffect(() => {
+    if (!hasFeedError || !feedError) return;
+    reportFeedQueryError(
+      {
+        scope: "social-feed-posts",
+        queryKey: "social-feed-posts",
+        userId: user?.id ?? null,
+        tab,
+      },
+      feedError,
+    );
+  }, [feedError, hasFeedError, tab, user?.id]);
 
   const goAuth = () => {
     navigate("/auth?next=" + encodeURIComponent("/feed"));
@@ -383,7 +400,9 @@ export default function SocialFeedPage() {
 function PostCard({ post, highlight = false }: { post: FeedPost; highlight?: boolean }) {
   const navigate = useNavigate();
   const ref = useRef<HTMLElement>(null);
-  const urls = (post.media_urls && post.media_urls.length > 0) ? post.media_urls : (post.media_url ? [post.media_url] : []);
+  const urls = ((post.media_urls && post.media_urls.length > 0) ? post.media_urls : (post.media_url ? [post.media_url] : []))
+    .map((url) => normalizeSupabaseMediaUrl(url, { preferredBucket: "user-posts" }))
+    .filter(Boolean);
   const isVideo = post.media_type === "video" || urls[0]?.match(/\.(mp4|mov|webm)/i);
   const relTime = (() => {
     try {
@@ -450,8 +469,16 @@ function PostCard({ post, highlight = false }: { post: FeedPost; highlight?: boo
               alt={post.caption || "Post"}
               loading="lazy"
               className="w-full max-h-[70vh] object-contain"
+              onError={(event) => {
+                event.currentTarget.style.display = "none";
+                const fallback = event.currentTarget.parentElement?.querySelector("[data-media-fallback]") as HTMLElement | null;
+                if (fallback) fallback.hidden = false;
+              }}
             />
           )}
+          <div data-media-fallback hidden className="flex min-h-[240px] items-center justify-center px-4 py-10 text-sm text-zinc-300">
+            Media could not be loaded.
+          </div>
         </div>
       )}
 
@@ -1245,17 +1272,28 @@ function FollowPill({ targetUserId }: { targetUserId: string }) {
     friendStatus === "pending_in" ? <><UserPlus className="h-3.5 w-3.5" />Accept</> :
     <><UserPlus className="h-3.5 w-3.5" />Add Friend</>;
 
-  const FollowBtn = (
+  const FollowBtn = following ? (
     <button
       type="button"
       onClick={handleFollow}
       disabled={followBusy}
-      aria-pressed={following}
+      aria-pressed="true"
       className={cn(
         "shrink-0 inline-flex items-center gap-1 h-7 px-3 rounded-full text-[12px] font-semibold transition-all active:scale-95 disabled:opacity-60",
-        following
-          ? "bg-muted text-foreground/80 hover:bg-muted/80"
-          : "bg-primary text-primary-foreground hover:opacity-90",
+        "bg-muted text-foreground/80 hover:bg-muted/80",
+      )}
+    >
+      {followLabel}
+    </button>
+  ) : (
+    <button
+      type="button"
+      onClick={handleFollow}
+      disabled={followBusy}
+      aria-pressed="false"
+      className={cn(
+        "shrink-0 inline-flex items-center gap-1 h-7 px-3 rounded-full text-[12px] font-semibold transition-all active:scale-95 disabled:opacity-60",
+        "bg-primary text-primary-foreground hover:opacity-90",
       )}
     >
       {followLabel}
@@ -1267,15 +1305,28 @@ function FollowPill({ targetUserId }: { targetUserId: string }) {
 
   // Personal → single Add Friend pill (auto-follows on send/accept,
   // auto-unfollows on cancel/unfriend — friend implies follow).
-  return (
+  return friendStatus === "accepted" ? (
     <button
       type="button"
       onClick={handleFriend}
       disabled={friendBusy}
-      aria-pressed={friendStatus === "accepted"}
+      aria-pressed="true"
       className={cn(
         "shrink-0 inline-flex items-center gap-1 h-7 px-3 rounded-full text-[12px] font-semibold transition-all active:scale-95 disabled:opacity-60",
-        friendStatus === "accepted" || friendStatus === "pending_out"
+        "bg-muted text-foreground/80 hover:bg-muted/80",
+      )}
+    >
+      {friendLabel}
+    </button>
+  ) : (
+    <button
+      type="button"
+      onClick={handleFriend}
+      disabled={friendBusy}
+      aria-pressed="false"
+      className={cn(
+        "shrink-0 inline-flex items-center gap-1 h-7 px-3 rounded-full text-[12px] font-semibold transition-all active:scale-95 disabled:opacity-60",
+        friendStatus === "pending_out"
           ? "bg-muted text-foreground/80 hover:bg-muted/80"
           : "bg-primary text-primary-foreground hover:opacity-90",
       )}

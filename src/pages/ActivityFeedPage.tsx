@@ -109,7 +109,7 @@ export default function ActivityFeedPage() {
           <Button aria-label="Back" variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-xl font-bold text-foreground">Activity</h1>
+          <h1 className="text-xl font-bold text-ig-gradient">Activity</h1>
         </div>
         <div className="flex gap-2 overflow-x-auto no-scrollbar">
           {filters.map((f) => (

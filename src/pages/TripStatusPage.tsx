@@ -378,7 +378,7 @@ export default function TripStatusPage() {
         </button>
 
         <div className="flex-1 min-w-0">
-          <h1 className="text-base font-bold text-foreground leading-tight">
+          <h1 className="text-base font-bold text-ig-gradient leading-tight">
             Live Tracking
           </h1>
           {job?.status && (

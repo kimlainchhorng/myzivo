@@ -1285,7 +1285,7 @@ export default function AdminAnalyticsDashboard() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="max-w-md">
           <CardContent className="p-8 text-center">
-            <h1 className="text-xl font-bold text-foreground mb-2">Access Denied</h1>
+            <h1 className="text-xl font-bold text-ig-gradient mb-2">Access Denied</h1>
             <p className="text-muted-foreground">This page is restricted to administrators.</p>
             <Button onClick={() => navigate("/")} className="mt-4">Go Home</Button>
           </CardContent>

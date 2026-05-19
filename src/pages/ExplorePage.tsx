@@ -318,7 +318,13 @@ export default function ExplorePage() {
                 </div>
                 {loadingTagged && <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />}
                 {!loadingTagged && taggedPosts.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4">No posts found for #{selectedTag}</p>
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <div className="h-14 w-14 rounded-2xl bg-ig-gradient flex items-center justify-center mb-3 shadow-lg shadow-rose-500/20">
+                      <Search className="h-6 w-6 text-white" />
+                    </div>
+                    <p className="text-sm font-bold text-foreground">No posts found for #{selectedTag}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Try a different tag or check back later.</p>
+                  </div>
                 )}
                 {taggedPosts.length > 0 && (
                   <div className="grid grid-cols-3 gap-0.5 -mx-4">

@@ -127,7 +127,7 @@ export default function AudioSpacesPage() {
               <Radio className="h-3 w-3" /> LIVE
             </Badge>
           </div>
-          <h1 className="text-xl font-bold text-foreground mb-1">{activeSpace.title}</h1>
+          <h1 className="text-xl font-bold text-ig-gradient mb-1">{activeSpace.title}</h1>
           <p className="text-sm text-muted-foreground">{activeSpace.topic} · {activeSpace.listeners} listening</p>
         </div>
 
@@ -193,7 +193,7 @@ export default function AudioSpacesPage() {
             <Button aria-label="Back" variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-xl font-bold text-foreground">Spaces</h1>
+            <h1 className="text-xl font-bold text-ig-gradient">Spaces</h1>
           </div>
           <Button size="sm" className="rounded-full gap-1" onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4" /> Create

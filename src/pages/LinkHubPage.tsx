@@ -177,7 +177,7 @@ export default function LinkHubPage() {
           <div className="flex items-center gap-2">
             <Button aria-label="Back" variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
             <Link2 className="h-5 w-5 text-primary" />
-            <h1 className="text-xl font-bold text-foreground">Link Hub</h1>
+            <h1 className="text-xl font-bold text-ig-gradient">Link Hub</h1>
           </div>
           <div className="flex gap-1">
             <Button size="sm" variant="outline" className="gap-1" onClick={() => setIsPreview(true)}>

@@ -5,7 +5,7 @@
  */
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Bookmark, Search, Heart, ChevronRight, Library } from "lucide-react";
+import { ArrowLeft, Bookmark, Search, Heart, ChevronRight, Library, Archive, Star, FolderHeart, Users, Vote, AtSign, Trophy, BookImage, Handshake, Smile } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
 
@@ -40,6 +40,66 @@ const sections: LibrarySection[] = [
     title: "Favorites",
     description: "Your favorite hotels, destinations, and creators",
     path: "/saved-favorites",
+  },
+  {
+    icon: Archive,
+    title: "Story Archive",
+    description: "Expired stories saved for repost and memory",
+    path: "/archive",
+  },
+  {
+    icon: Star,
+    title: "Highlights",
+    description: "Pin best stories to your profile in named collections",
+    path: "/highlights",
+  },
+  {
+    icon: FolderHeart,
+    title: "Collections",
+    description: "Organize bookmarked posts into named, color-tagged folders",
+    path: "/collections",
+  },
+  {
+    icon: Users,
+    title: "Close Friends",
+    description: "Pick who sees the stories you share privately",
+    path: "/close-friends",
+  },
+  {
+    icon: Vote,
+    title: "Polls",
+    description: "Create polls and track audience answers live",
+    path: "/polls",
+  },
+  {
+    icon: AtSign,
+    title: "Mentions",
+    description: "Posts where you've been @-tagged by others",
+    path: "/mentions",
+  },
+  {
+    icon: Trophy,
+    title: "Milestones",
+    description: "Creator achievements and what's coming next",
+    path: "/creator/milestones",
+  },
+  {
+    icon: BookImage,
+    title: "Albums",
+    description: "Group your posts into named portfolio albums",
+    path: "/albums",
+  },
+  {
+    icon: Handshake,
+    title: "Collabs",
+    description: "Co-author invites and accepted collaborations",
+    path: "/collabs",
+  },
+  {
+    icon: Smile,
+    title: "Sticker Store",
+    description: "Browse sticker packs for stories, reels, and messages",
+    path: "/stickers",
   },
 ];
 

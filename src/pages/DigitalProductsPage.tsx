@@ -160,8 +160,10 @@ export default function DigitalProductsPage() {
             animate={{ opacity: 1, y: 0 }}
             className="zivo-card-organic p-8 text-center border-dashed"
           >
-            <Package className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" />
-            <p className="font-bold text-sm mb-1">No products yet</p>
+            <div className="h-16 w-16 rounded-3xl bg-ig-gradient flex items-center justify-center mx-auto mb-4 shadow-lg shadow-rose-500/20">
+              <Package className="w-7 h-7 text-white" />
+            </div>
+            <p className="font-bold text-sm mb-1 text-foreground">No products yet</p>
             <p className="text-xs text-muted-foreground mb-4">Start selling by creating your first digital product.</p>
             <button type="button"
               onClick={() => setActiveTab(1)}
@@ -255,8 +257,10 @@ export default function DigitalProductsPage() {
             animate={{ opacity: 1, y: 0 }}
             className="zivo-card-organic p-6 text-center border-dashed"
           >
-            <BarChart3 className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" />
-            <p className="font-bold text-sm mb-1">No data yet</p>
+            <div className="h-16 w-16 rounded-3xl bg-ig-gradient flex items-center justify-center mx-auto mb-4 shadow-lg shadow-rose-500/20">
+              <BarChart3 className="w-7 h-7 text-white" />
+            </div>
+            <p className="font-bold text-sm mb-1 text-foreground">No data yet</p>
             <p className="text-xs text-muted-foreground">Create and sell products to see analytics here.</p>
           </motion.div>
         )}

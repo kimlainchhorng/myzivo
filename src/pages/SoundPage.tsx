@@ -135,7 +135,7 @@ export default function SoundPage() {
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <div className="flex-1 min-w-0">
-            <h1 className="text-base font-bold text-foreground truncate">{displayName}</h1>
+            <h1 className="text-base font-bold text-ig-gradient truncate">{displayName}</h1>
             <p className="text-xs text-muted-foreground">
               {posts.length} reel{posts.length !== 1 ? "s" : ""} • {totalViews > 1000 ? `${(totalViews / 1000).toFixed(1)}K` : totalViews} views
             </p>

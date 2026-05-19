@@ -153,7 +153,7 @@ export default function AutoRepairPage() {
               className={cn(
                 "shrink-0 min-h-[40px] px-4 py-2 rounded-full text-xs font-semibold transition-all whitespace-nowrap touch-manipulation",
                 activeFilter === f
-                  ? "bg-primary text-primary-foreground shadow-sm"
+                  ? "bg-ig-gradient text-white shadow-sm"
                   : "bg-muted/50 text-muted-foreground hover:bg-muted"
               )}
             >

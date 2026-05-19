@@ -57,7 +57,7 @@ export default function UnsubscribePage() {
             {status === "valid" && (
               <>
                 <MailX className="h-10 w-10 text-orange-500 mx-auto" />
-                <h1 className="text-lg font-bold text-foreground">Unsubscribe from ZIVO emails?</h1>
+                <h1 className="text-lg font-bold text-ig-gradient">Unsubscribe from ZIVO emails?</h1>
                 <p className="text-sm text-muted-foreground">You will no longer receive transactional emails from us.</p>
                 <Button onClick={handleUnsubscribe} disabled={processing} className="w-full">
                   {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
@@ -68,21 +68,21 @@ export default function UnsubscribePage() {
             {status === "done" && (
               <>
                 <CheckCircle className="h-10 w-10 text-green-500 mx-auto" />
-                <h1 className="text-lg font-bold text-foreground">Unsubscribed</h1>
+                <h1 className="text-lg font-bold text-ig-gradient">Unsubscribed</h1>
                 <p className="text-sm text-muted-foreground">You've been successfully unsubscribed.</p>
               </>
             )}
             {status === "already" && (
               <>
                 <CheckCircle className="h-10 w-10 text-muted-foreground mx-auto" />
-                <h1 className="text-lg font-bold text-foreground">Already Unsubscribed</h1>
+                <h1 className="text-lg font-bold text-ig-gradient">Already Unsubscribed</h1>
                 <p className="text-sm text-muted-foreground">This email is already unsubscribed.</p>
               </>
             )}
             {(status === "invalid" || status === "error") && (
               <>
                 <XCircle className="h-10 w-10 text-destructive mx-auto" />
-                <h1 className="text-lg font-bold text-foreground">Invalid Link</h1>
+                <h1 className="text-lg font-bold text-ig-gradient">Invalid Link</h1>
                 <p className="text-sm text-muted-foreground">This unsubscribe link is invalid or expired.</p>
               </>
             )}

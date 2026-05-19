@@ -238,7 +238,7 @@ export default function EatsDriverDeliveryPage() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-lg font-bold text-foreground">Food Deliveries</h1>
+            <h1 className="text-lg font-bold text-ig-gradient">Food Deliveries</h1>
             <p className="text-xs text-muted-foreground">Driver Dashboard</p>
           </div>
           <Button aria-label="Refresh" variant="ghost" size="icon" onClick={loadAllData} disabled={loading}>

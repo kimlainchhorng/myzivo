@@ -1376,7 +1376,7 @@ export default function EatsLanding() {
                   <ArrowLeft className="w-5 h-5 text-foreground" />
                 </motion.button>
                 <div className="flex-1">
-                  <h1 className="text-base font-bold text-foreground">{currentRestaurant.name}</h1>
+                  <h1 className="text-base font-bold text-ig-gradient">{currentRestaurant.name}</h1>
                   <p className="text-[10px] text-muted-foreground">{canonicalCuisine(currentRestaurant.cuisine_type)} · {currentRestaurant.avg_prep_time ?? 25}-{(currentRestaurant.avg_prep_time ?? 25) + 15} min</p>
                 </div>
                 <button type="button" onClick={() => toggleFavorite(currentRestaurant.id)}
@@ -1694,7 +1694,7 @@ export default function EatsLanding() {
                 <motion.button whileTap={{ scale: 0.88 }} onClick={handleBack} className="w-10 h-10 rounded-xl bg-card/80 border border-border/40 flex items-center justify-center touch-manipulation">
                   <ArrowLeft className="w-5 h-5 text-foreground" />
                 </motion.button>
-                <h1 className="text-base font-bold text-foreground">Your Cart</h1>
+                <h1 className="text-base font-bold text-ig-gradient">Your Cart</h1>
                 <Badge variant="outline" className="ml-auto text-xs font-bold">{cartCount} items</Badge>
                 {cart.length > 0 && (
                   <button type="button"
@@ -1915,7 +1915,7 @@ export default function EatsLanding() {
                 <motion.button whileTap={{ scale: 0.88 }} onClick={handleBack} className="w-10 h-10 rounded-xl bg-card/80 border border-border/40 flex items-center justify-center touch-manipulation">
                   <ArrowLeft className="w-5 h-5 text-foreground" />
                 </motion.button>
-                <h1 className="text-base font-bold text-foreground">Checkout</h1>
+                <h1 className="text-base font-bold text-ig-gradient">Checkout</h1>
               </div>
               <EatsStepIndicator currentStep="checkout" />
             </div>

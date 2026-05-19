@@ -95,7 +95,7 @@ export default function LeaderboardPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <Trophy className="h-5 w-5 text-primary" />
-          <h1 className="text-xl font-bold text-foreground">Leaderboard</h1>
+          <h1 className="text-xl font-bold text-ig-gradient">Leaderboard</h1>
         </div>
 
         {/* My Position */}

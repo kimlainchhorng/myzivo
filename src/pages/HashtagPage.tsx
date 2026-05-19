@@ -161,7 +161,7 @@ export default function HashtagPage() {
         </button>
         <div className="flex flex-1 items-center gap-2 min-w-0">
           <Hash className="h-5 w-5 text-primary shrink-0" />
-          <h1 className="text-lg font-bold text-foreground truncate">{safeTag}</h1>
+          <h1 className="text-lg font-bold text-ig-gradient truncate">{safeTag}</h1>
         </div>
       </div>
 
@@ -204,7 +204,7 @@ export default function HashtagPage() {
             <button
               type="button"
               onClick={() => navigate("/feed")}
-              className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground active:scale-95 transition-transform"
+              className="rounded-full bg-ig-gradient px-5 py-2 text-sm font-bold text-white shadow-sm hover:opacity-90 active:scale-95 transition-all"
             >
               Browse the feed
             </button>

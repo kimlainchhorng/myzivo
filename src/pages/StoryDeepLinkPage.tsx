@@ -106,7 +106,7 @@ export default function StoryDeepLinkPage() {
       data-testid="story-missing"
       data-reason={state.reason}
     >
-      <h1 className="text-xl font-bold text-foreground">{copy.title}</h1>
+      <h1 className="text-xl font-bold text-ig-gradient">{copy.title}</h1>
       <p className="text-sm text-muted-foreground max-w-sm">{copy.body}</p>
       <div className="flex items-center gap-2">
         {state.reason === "fetch_error" && (

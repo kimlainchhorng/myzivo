@@ -3,12 +3,13 @@
  * Full-width cards with author info, media, captions, and engagement
  * Everyone can post photos/videos that show up here
  */
-import { lazy, Suspense, useState, useRef, useCallback, useEffect, memo, useMemo } from "react";
+import { lazy, Suspense, useState, useRef, useCallback, useEffect, memo, useMemo, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
+import { normalizeSupabaseMediaUrl } from "@/utils/normalizeSupabaseMediaUrl";
+import { withSupabaseAbortSignal } from "@/utils/withSupabaseAbortSignal";
 import SEOHead from "@/components/SEOHead";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Heart from "lucide-react/dist/esm/icons/heart";
@@ -113,6 +114,7 @@ import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
 import { SwipeGrabHandle } from "@/components/social/SwipeGrabHandle";
 import { perfLog, perfMeasure, perfNow } from "@/lib/perfTrace";
+import { reportFeedQueryError } from "@/lib/feedQueryTelemetry";
 
 const INITIAL_REELS_PAGE_SIZE = 18;
 const REELS_PAGE_INCREMENT = 12;
@@ -505,12 +507,12 @@ export default function ReelsFeedPage() {
   const { prefs: chatPrefs } = useChatPrefs(userId ?? undefined);
   const { data: unreadChatSenders } = useQuery({
     queryKey: ["feed-header-chat-unread", userId],
-    queryFn: async () => {
-      const { data } = await supabase
+    queryFn: async ({ signal }) => {
+      const { data } = await withSupabaseAbortSignal(supabase
         .from("direct_messages")
         .select("sender_id")
         .eq("receiver_id", userId!)
-        .eq("is_read", false);
+        .eq("is_read", false), signal);
       return new Set((data ?? []).map((r: { sender_id: string }) => r.sender_id));
     },
     enabled: !!userId,
@@ -832,11 +834,11 @@ export default function ReelsFeedPage() {
   // banner so we don't promote a discovery surface that has nothing to show.
   const { data: liveStreamsCount = 0 } = useQuery({
     queryKey: ["feed-live-count"],
-    queryFn: async () => {
-      const { count } = await (supabase as any)
+    queryFn: async ({ signal }) => {
+      const { count } = await withSupabaseAbortSignal((supabase as any)
         .from("live_streams")
         .select("id", { count: "exact", head: true })
-        .eq("status", "live");
+        .eq("status", "live"), signal);
       return count || 0;
     },
     refetchInterval: 30_000,
@@ -870,31 +872,32 @@ export default function ReelsFeedPage() {
     if (showSearch) searchInputRef.current?.focus();
   }, [showSearch]);
 
-  const { data: items = [], isLoading, isFetching } = useQuery({
+  const { data: items = [], isLoading, isFetching, isError: hasGridError, error: gridError } = useQuery({
     queryKey: ["reels-feed-grid", pageSize],
-    queryFn: async () => {
+    placeholderData: keepPreviousData,
+    queryFn: async ({ signal }) => {
       const feedStartedAt = perfNow();
       const allItems: FeedItem[] = [];
 
       // Fetch store posts
-      const { data: storePosts } = await supabase
+      const { data: storePosts } = await withSupabaseAbortSignal(supabase
         .from("store_posts")
         .select("id, media_urls, media_type, caption, likes_count, comments_count, shares_count, view_count, created_at, store_id")
         .eq("is_published", true)
         .order("created_at", { ascending: false })
-        .limit(pageSize);
+        .limit(pageSize), signal);
 
       if (storePosts?.length) {
         const storeIds = [...new Set(storePosts.map((p: any) => p.store_id))];
-        const { data: stores } = await supabase
+        const { data: stores } = await withSupabaseAbortSignal(supabase
           .from("store_profiles")
           .select("id, name, logo_url, slug, is_verified")
-          .in("id", storeIds);
+          .in("id", storeIds), signal);
         const storeMap = new Map((stores || []).map((s: any) => [s.id, s]));
 
         for (const post of storePosts as any[]) {
           const store = storeMap.get(post.store_id);
-          const urls: string[] = (post.media_urls || []).map((u: string) => normalizeStorePostMediaUrl(u));
+          const urls: string[] = (post.media_urls || []).map((u: string) => normalizeSupabaseMediaUrl(u, { preferredBucket: "store-posts" }));
           // Allow text-only announcements through (matches the user_posts loop
           // below at line ~686). Previously we dropped any post without media,
           // so store text updates never reached the feed.
@@ -919,17 +922,31 @@ export default function ReelsFeedPage() {
             store_slug: store?.slug || null,
             created_at: post.created_at,
           });
+
+          useEffect(() => {
+            if (!hasGridError || !gridError) return;
+            reportFeedQueryError(
+              {
+                scope: "reels-feed-grid",
+                queryKey: "reels-feed-grid",
+                userId,
+                tab: feedTab,
+                pageSize,
+              },
+              gridError,
+            );
+          }, [feedTab, gridError, hasGridError, pageSize, userId]);
         }
       }
 
       // Fetch user posts
       try {
-        const { data: userPosts } = await (supabase as any)
+        const { data: userPosts } = await withSupabaseAbortSignal((supabase as any)
           .from("user_posts")
           .select("id, media_url, media_urls, media_type, caption, likes_count, comments_count, shares_count, views_count, created_at, user_id, shared_from_post_id, shared_from_user_id, location, is_pinned")
           .eq("is_published", true)
           .order("created_at", { ascending: false })
-          .limit(pageSize);
+          .limit(pageSize), signal);
 
         if (userPosts?.length) {
           const userIds = [...new Set(userPosts.map((p: any) => p.user_id))] as string[];
@@ -1001,8 +1018,8 @@ export default function ReelsFeedPage() {
             const profileDisplay = publicProfileMap.get(post.user_id);
             const profileSettings = profileSettingsMap.get(post.user_id);
             const postMediaUrls: string[] = Array.isArray(post.media_urls) && post.media_urls.length > 0
-              ? post.media_urls
-              : post.media_url ? [post.media_url] : [];
+              ? post.media_urls.map((url: string) => normalizeSupabaseMediaUrl(url, { preferredBucket: "user-posts" }))
+              : post.media_url ? [normalizeSupabaseMediaUrl(post.media_url, { preferredBucket: "user-posts" })] : [];
             if (!postMediaUrls.length && !post.caption?.trim()) continue;
             const normalizedMediaType = normalizeUserPostMediaType(post.media_type, postMediaUrls);
 
@@ -1083,7 +1100,7 @@ export default function ReelsFeedPage() {
                 .sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))
                 .forEach((row: any) => {
                   if (!mediaMap.has(row.post_id)) mediaMap.set(row.post_id, []);
-                  if (row.media_url) mediaMap.get(row.post_id)!.push(row.media_url);
+                  if (row.media_url) mediaMap.get(row.post_id)!.push(normalizeSupabaseMediaUrl(row.media_url, { preferredBucket: "user-posts" }));
                 });
               allItems.forEach((item) => {
                 if (item.source !== "user") return;
@@ -1444,10 +1461,19 @@ export default function ReelsFeedPage() {
               <div
                 className={cn(
                   "overflow-hidden transition-all duration-300 ease-out",
-                  "max-h-[200px] opacity-100",
+                  "max-h-[240px] opacity-100",
                   headerHidden && "shadow-sm"
                 )}
               >
+                <div
+                  className={cn(
+                    "overflow-hidden transition-all duration-300 ease-out",
+                    headerHidden ? "max-h-0 opacity-0" : "max-h-[112px] opacity-100"
+                  )}
+                >
+                  <Suspense fallback={null}><FeedStoryRing /></Suspense>
+                </div>
+
                 <div className="px-3 pt-1.5 pb-1 flex items-center gap-2">
                   {/* Hamburger menu — Facebook-style entry point for secondary
                       items (Complete profile, Saved posts, etc.) so the feed
@@ -1563,7 +1589,7 @@ export default function ReelsFeedPage() {
                       </div>
                     </SheetContent>
                   </Sheet>
-                  <h1 className="text-base font-bold text-foreground shrink-0 drop-shadow-sm">Feed</h1>
+                  <h1 className="text-base font-bold text-ig-gradient shrink-0 drop-shadow-sm">Feed</h1>
                   <div className="flex-1 relative">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                     <input
@@ -1624,12 +1650,12 @@ export default function ReelsFeedPage() {
                 <div
                   className={cn(
                     "overflow-hidden transition-all duration-300 ease-out",
-                    headerHidden ? "max-h-0 opacity-0" : "max-h-[76px] opacity-100"
+                    headerHidden ? "max-h-0 opacity-0" : "max-h-[48px] opacity-100"
                   )}
                 >
                   {/* Tab strip — For You / Friends / Following (signed-in only) */}
                   {userId && (
-                    <div className="flex justify-center gap-8 px-3 pb-2">
+                    <div className="flex justify-center gap-8 px-3 pt-1 pb-2">
                       {(["For You", "Friends", "Following"] as const).map((label) => (
                         <button type="button"
                           key={label}
@@ -1806,7 +1832,9 @@ export default function ReelsFeedPage() {
           <div ref={feedTopRef} aria-hidden="true" />
 
           {/* Story Rings */}
-          <Suspense fallback={null}><FeedStoryRing /></Suspense>
+          <div className="hidden lg:block">
+            <Suspense fallback={null}><FeedStoryRing /></Suspense>
+          </div>
 
           {!userId && (
             <GuestFeedCta onLogin={() => goLogin("/feed")} onSignup={goSignup} />
@@ -2624,6 +2652,9 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
   const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [holdSpeedActive, setHoldSpeedActive] = useState(false);
+  const [speedLocked, setSpeedLocked] = useState(false);
+  const [speedHud, setSpeedHud] = useState<{ label: string; detail: string } | null>(null);
   const interactionPostId = getFeedInteractionPostId(item);
   const likesTable = getFeedLikesTable(item);
   const isSharedReel = Boolean(item.shared_from_post_id || item.shared_from_user_id);
@@ -2685,6 +2716,17 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
 
   const [showComments, setShowComments] = useState(false);
   const mediaPerfLogged = useRef(false);
+  const longPressTimerRef = useRef<number | null>(null);
+  const singleTapTimerRef = useRef<number | null>(null);
+  const speedHudTimerRef = useRef<number | null>(null);
+  const lastTapRef = useRef<{ time: number; x: number; y: number; side: "left" | "right" } | null>(null);
+  const gestureRef = useRef({
+    pointerId: -1,
+    startX: 0,
+    startY: 0,
+    moved: false,
+    longPress: false,
+  });
 
   useEffect(() => {
     setLocalLikes(item.likes_count);
@@ -2754,7 +2796,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
     return () => observer.disconnect();
   }, [currentUserId, interactionPostId, item.id, item.source]);
 
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     if (!videoRef.current) return;
     if (videoRef.current.paused) {
       videoRef.current.play().catch(() => {});
@@ -2763,7 +2805,172 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
       videoRef.current.pause();
       setIsPlaying(false);
     }
-  };
+  }, []);
+
+  const clearLongPressTimer = useCallback(() => {
+    if (longPressTimerRef.current) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
+
+  const clearSingleTapTimer = useCallback(() => {
+    if (singleTapTimerRef.current) {
+      window.clearTimeout(singleTapTimerRef.current);
+      singleTapTimerRef.current = null;
+    }
+  }, []);
+
+  const showReelHud = useCallback((label: string, detail: string, duration = 1200) => {
+    setSpeedHud({ label, detail });
+    if (speedHudTimerRef.current) {
+      window.clearTimeout(speedHudTimerRef.current);
+    }
+    speedHudTimerRef.current = window.setTimeout(() => {
+      setSpeedHud(null);
+      speedHudTimerRef.current = null;
+    }, duration);
+  }, []);
+
+  const seekBy = useCallback((seconds: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    const duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : undefined;
+    const nextTime = Math.max(0, Math.min(duration ?? Number.MAX_SAFE_INTEGER, video.currentTime + seconds));
+    video.currentTime = nextTime;
+    haptic("selection");
+    showReelHud(seconds > 0 ? "+15s" : "-15s", seconds > 0 ? "Forward" : "Back", 700);
+  }, [haptic, showReelHud]);
+
+  const handleReelTap = useCallback((x: number, y: number) => {
+    const now = Date.now();
+    const side = x < window.innerWidth / 2 ? "left" : "right";
+    const previous = lastTapRef.current;
+    const isDoubleTap = previous
+      && previous.side === side
+      && now - previous.time < 320
+      && Math.hypot(x - previous.x, y - previous.y) < 96;
+
+    if (isDoubleTap) {
+      clearSingleTapTimer();
+      lastTapRef.current = null;
+      seekBy(side === "right" ? 15 : -15);
+      return;
+    }
+
+    lastTapRef.current = { time: now, x, y, side };
+    clearSingleTapTimer();
+    singleTapTimerRef.current = window.setTimeout(() => {
+      togglePlay();
+      lastTapRef.current = null;
+      singleTapTimerRef.current = null;
+    }, 260);
+  }, [clearSingleTapTimer, seekBy, togglePlay]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.playbackRate = speedLocked || holdSpeedActive ? 2 : 1;
+  }, [holdSpeedActive, speedLocked]);
+
+  useEffect(() => () => {
+    clearLongPressTimer();
+    clearSingleTapTimer();
+    if (speedHudTimerRef.current) {
+      window.clearTimeout(speedHudTimerRef.current);
+    }
+  }, [clearLongPressTimer, clearSingleTapTimer]);
+
+  const handleGesturePointerDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+
+    gestureRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      moved: false,
+      longPress: false,
+    };
+
+    clearLongPressTimer();
+    longPressTimerRef.current = window.setTimeout(() => {
+      if (gestureRef.current.pointerId !== event.pointerId) return;
+      gestureRef.current.longPress = true;
+      setHoldSpeedActive(true);
+      videoRef.current?.play().catch(() => {});
+      setIsPlaying(true);
+      haptic("light");
+      showReelHud(
+        speedLocked ? "2x locked" : "2x",
+        speedLocked ? "Swipe up for 1x" : "Hold speed - drag down to lock",
+        1600
+      );
+    }, 240);
+  }, [clearLongPressTimer, haptic, showReelHud, speedLocked]);
+
+  const handleGesturePointerMove = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    const gesture = gestureRef.current;
+    if (gesture.pointerId !== event.pointerId) return;
+
+    const dx = event.clientX - gesture.startX;
+    const dy = event.clientY - gesture.startY;
+    const distance = Math.hypot(dx, dy);
+    if (distance > 10) {
+      gesture.moved = true;
+    }
+
+    if (!gesture.longPress) {
+      if (distance > 14) clearLongPressTimer();
+      return;
+    }
+
+    event.preventDefault();
+
+    if (dy > 58 && !speedLocked) {
+      setSpeedLocked(true);
+      setHoldSpeedActive(false);
+      haptic("medium");
+      showReelHud("2x locked", "Swipe up while holding for 1x", 1600);
+      return;
+    }
+
+    if (dy < -58 && (speedLocked || holdSpeedActive)) {
+      setSpeedLocked(false);
+      setHoldSpeedActive(false);
+      haptic("selection");
+      showReelHud("1x", "Normal speed", 1000);
+    }
+  }, [clearLongPressTimer, haptic, holdSpeedActive, showReelHud, speedLocked]);
+
+  const handleGesturePointerEnd = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    const gesture = gestureRef.current;
+    if (gesture.pointerId !== event.pointerId) return;
+
+    clearLongPressTimer();
+    gestureRef.current.pointerId = -1;
+
+    if (gesture.longPress) {
+      clearSingleTapTimer();
+      if (!speedLocked) setHoldSpeedActive(false);
+      return;
+    }
+
+    if (!gesture.moved) {
+      handleReelTap(event.clientX, event.clientY);
+    }
+  }, [clearLongPressTimer, clearSingleTapTimer, handleReelTap, speedLocked]);
+
+  const handleGesturePointerCancel = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    const gesture = gestureRef.current;
+    if (gesture.pointerId !== event.pointerId) return;
+
+    clearLongPressTimer();
+    clearSingleTapTimer();
+    gestureRef.current.pointerId = -1;
+    if (gesture.longPress && !speedLocked) {
+      setHoldSpeedActive(false);
+    }
+  }, [clearLongPressTimer, clearSingleTapTimer, speedLocked]);
 
   const handleLike = async () => {
     if (!currentUserId) {
@@ -2904,9 +3111,39 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
             source: item.source,
           });
         }}
-        onClick={togglePlay}
         className="h-full w-full object-cover bg-black"
       />
+
+      <div
+        aria-label="Reel playback gestures"
+        className="absolute inset-0 cursor-pointer touch-manipulation"
+        onPointerDown={handleGesturePointerDown}
+        onPointerMove={handleGesturePointerMove}
+        onPointerUp={handleGesturePointerEnd}
+        onPointerCancel={handleGesturePointerCancel}
+      />
+
+      {/* Speed HUD */}
+      <AnimatePresence>
+        {(speedHud || holdSpeedActive || speedLocked) && (
+          <motion.div
+            key={`${speedHud?.label ?? (speedLocked ? "2x locked" : "2x")}-${speedHud?.detail ?? ""}`}
+            initial={{ opacity: 0, y: 8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.96 }}
+            transition={{ duration: 0.16 }}
+            className="pointer-events-none absolute left-1/2 top-[18%] z-20 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/55 px-4 py-2 text-white shadow-xl backdrop-blur-md"
+          >
+            {speedLocked ? <Lock className="h-4 w-4" /> : <Zap className="h-4 w-4" />}
+            <span className="text-sm font-black tracking-wide">
+              {speedHud?.label ?? (speedLocked ? "2x locked" : "2x")}
+            </span>
+            <span className="text-[11px] font-medium text-white/75">
+              {speedHud?.detail ?? (speedLocked ? "Swipe up for 1x" : "Hold speed")}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Pause indicator */}
       <AnimatePresence>

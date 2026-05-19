@@ -117,7 +117,7 @@ export default function BadgesPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <Award className="h-5 w-5 text-primary" />
-          <h1 className="text-xl font-bold text-foreground">Badges & Achievements</h1>
+          <h1 className="text-xl font-bold text-ig-gradient">Badges & Achievements</h1>
         </div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>

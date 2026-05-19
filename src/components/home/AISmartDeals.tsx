@@ -424,7 +424,7 @@ const AISmartDeals = () => {
               className={cn(
                 "shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-[11px] font-semibold transition-all border min-h-[36px]",
                 isActive
-                  ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25"
+                  ? "bg-ig-gradient text-white border-transparent shadow-lg shadow-rose-500/25"
                   : "bg-card text-muted-foreground border-border/30 hover:bg-muted/50 hover:border-border/60"
               )}
             >

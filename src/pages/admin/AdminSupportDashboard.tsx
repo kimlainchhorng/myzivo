@@ -106,7 +106,7 @@ export default function AdminSupportDashboard() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
           <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
-          <h1 className="text-xl font-bold text-foreground">Access Denied</h1>
+          <h1 className="text-xl font-bold text-ig-gradient">Access Denied</h1>
           <p className="text-muted-foreground">You don't have permission to access the Support Dashboard.</p>
           <Button onClick={() => navigate("/feed")} variant="outline">Go Home</Button>
         </div>

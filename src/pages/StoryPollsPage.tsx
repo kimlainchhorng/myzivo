@@ -120,7 +120,7 @@ export default function StoryPollsPage() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <BarChart3 className="h-5 w-5 text-primary" />
-            <h1 className="text-xl font-bold text-foreground">Polls & Quizzes</h1>
+            <h1 className="text-xl font-bold text-ig-gradient">Polls & Quizzes</h1>
           </div>
           <Button size="sm" className="rounded-full gap-1" onClick={() => setShowCreate(!showCreate)}>
             <Plus className="h-4 w-4" /> Create

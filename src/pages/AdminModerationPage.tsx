@@ -163,7 +163,7 @@ export default function AdminModerationPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <Shield className="h-5 w-5 text-primary" />
-          <h1 className="text-xl font-bold text-foreground">Admin & Moderation</h1>
+          <h1 className="text-xl font-bold text-ig-gradient">Admin & Moderation</h1>
         </div>
       </div>
 

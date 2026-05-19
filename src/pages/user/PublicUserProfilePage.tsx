@@ -270,7 +270,7 @@ export default function PublicUserProfilePage() {
           </Avatar>
 
           <div>
-            <h1 className="text-2xl font-bold text-foreground">{profile.full_name || "User"}</h1>
+            <h1 className="text-2xl font-bold text-ig-gradient">{profile.full_name || "User"}</h1>
             {profile.username && <p className="text-sm text-muted-foreground">@{profile.username}</p>}
           </div>
 

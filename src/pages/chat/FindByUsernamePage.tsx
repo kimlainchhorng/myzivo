@@ -78,7 +78,7 @@ export default function FindByUsernamePage() {
           >
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
-          <h1 className="text-base font-bold text-foreground">Find by username</h1>
+          <h1 className="text-base font-bold text-ig-gradient">Find by username</h1>
         </div>
       </div>
 

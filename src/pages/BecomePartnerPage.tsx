@@ -236,7 +236,7 @@ export default function BecomePartnerPage() {
           <button
             type="button"
             onClick={() => navigate("/partner-with-zivo?type=driver")}
-            className="mt-4 w-full rounded-2xl bg-emerald-500 text-white font-bold py-3 text-sm active:scale-[0.98] transition-transform"
+            className="mt-4 w-full rounded-2xl bg-ig-gradient text-white font-bold py-3 text-sm shadow-sm hover:opacity-90 active:scale-[0.98] transition-all"
           >
             Start driving with ZIVO
           </button>

@@ -210,7 +210,7 @@ export default function AdminLodgingWiringCheckPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-lg font-bold text-foreground flex items-center gap-2">
+            <h1 className="text-lg font-bold text-ig-gradient flex items-center gap-2">
               <Activity className="h-5 w-5 text-primary" /> Lodging wiring check
             </h1>
             <p className="text-[11px] text-muted-foreground">

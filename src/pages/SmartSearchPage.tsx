@@ -238,13 +238,15 @@ export default function SmartSearchPage() {
 
 function EmptyState() {
   return (
-    <SharedEmptyState
-      icon={Search}
-      tone="muted"
-      compact
-      title="No results found"
-      description="Try a different keyword or check your spelling."
-    />
+    <div className="flex flex-col items-center justify-center py-10 text-center">
+      <div className="h-16 w-16 rounded-3xl bg-ig-gradient flex items-center justify-center mb-3 shadow-lg shadow-rose-500/20">
+        <Search className="h-7 w-7 text-white" />
+      </div>
+      <p className="text-sm font-bold text-foreground">No results found</p>
+      <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+        Try a different keyword or check your spelling.
+      </p>
+    </div>
   );
 }
 

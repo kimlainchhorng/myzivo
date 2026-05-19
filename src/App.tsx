@@ -330,6 +330,7 @@ const DriverShoppingList = lazy(() => import("./pages/DriverShoppingList"));
 const DriverOrdersPage = lazy(() => import("./pages/DriverOrdersPage"));
 const AdminShoppingOrders = lazy(() => import("./pages/admin/AdminShoppingOrders"));
 const AdminAnalyticsDashboard = lazy(() => import("./pages/admin/AdminAnalyticsDashboard"));
+const AdminFeedDiagnosticsPage = lazy(() => import("./pages/admin/AdminFeedDiagnosticsPage"));
 const AdminNotificationAnalyticsPage = lazy(() => import("./pages/admin/AdminNotificationAnalyticsPage"));
 const AdminStoriesFunnelPage = lazy(() => import("./pages/admin/AdminStoriesFunnelPage"));
 const AdminUsersPage = lazy(() => import("./pages/admin/AdminUsersPage"));
@@ -554,10 +555,30 @@ const AITripPlanner = lazy(() => import("./pages/AITripPlanner"));
 const MultiCityBuilder = lazy(() => import("./pages/MultiCityBuilder"));
 const ZivoPlus = lazy(() => import("./pages/ZivoPlus"));
 const MembershipPage = lazy(() => import("./pages/MembershipPage"));
-const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
 const LibraryPage = lazy(() => import("./pages/LibraryPage"));
 const MediaLibraryPage = lazy(() => import("./pages/MediaLibraryPage"));
 const CreatorGoalsPage = lazy(() => import("./pages/CreatorGoalsPage"));
+const PodcastsPage = lazy(() => import("./pages/PodcastsPage"));
+const BrandDealsPage = lazy(() => import("./pages/BrandDealsPage"));
+const PromotePage = lazy(() => import("./pages/PromotePage"));
+const SoundsPage = lazy(() => import("./pages/SoundsPage"));
+const TrackPackagePage = lazy(() => import("./pages/TrackPackagePage"));
+const ReceiptsPage = lazy(() => import("./pages/ReceiptsPage"));
+const MindfulnessPage = lazy(() => import("./pages/MindfulnessPage"));
+const MedicationsPage = lazy(() => import("./pages/MedicationsPage"));
+const NutritionPage = lazy(() => import("./pages/NutritionPage"));
+const ARFiltersPage = lazy(() => import("./pages/ARFiltersPage"));
+const TaxInfoPage = lazy(() => import("./pages/TaxInfoPage"));
+const StoryArchivePage = lazy(() => import("./pages/StoryArchivePage"));
+const HighlightsPage = lazy(() => import("./pages/HighlightsPage"));
+const CloseFriendsPage = lazy(() => import("./pages/CloseFriendsPage"));
+const CollectionsPage = lazy(() => import("./pages/CollectionsPage"));
+const PollsPage = lazy(() => import("./pages/PollsPage"));
+const CreatorMilestonesPage = lazy(() => import("./pages/CreatorMilestonesPage"));
+const MentionsPage = lazy(() => import("./pages/MentionsPage"));
+const PostAlbumsPage = lazy(() => import("./pages/PostAlbumsPage"));
+const CollabsPage = lazy(() => import("./pages/CollabsPage"));
+const StickerStorePage = lazy(() => import("./pages/StickerStorePage"));
 
 const Vision = lazy(() => import("./pages/Vision"));
 const BrandMission = lazy(() => import("./pages/BrandMission"));
@@ -1329,6 +1350,7 @@ const App = () => (
                 <Route path="/package-delivery" element={<PreserveQueryRedirect to="/delivery" />} />
                 <Route path="/admin/shopping-orders" element={<ProtectedRoute requireAdmin={true}><AdminShoppingOrders /></ProtectedRoute>} />
                 <Route path="/admin/analytics" element={<ProtectedRoute requireAdmin={true}><AdminAnalyticsDashboard /></ProtectedRoute>} />
+                <Route path="/admin/feed-diagnostics" element={<ProtectedRoute requireAdmin={true}><AdminFeedDiagnosticsPage /></ProtectedRoute>} />
                 <Route path="/admin/notifications/analytics" element={<ProtectedRoute requireAdmin={true}><AdminNotificationAnalyticsPage /></ProtectedRoute>} />
                 <Route path="/admin/stories-funnel" element={<ProtectedRoute requireAdmin={true}><AdminStoriesFunnelPage /></ProtectedRoute>} />
                 <Route path="/admin/users" element={<ProtectedRoute requireAdmin={true}><AdminUsersPage /></ProtectedRoute>} />
@@ -1501,15 +1523,25 @@ const App = () => (
                 <Route path="/account/invoices" element={<ProtectedRoute><AccountInvoicesPage /></ProtectedRoute>} />
 
                 {/* Other ComingSoon placeholders */}
-                <Route path="/filters" element={<ComingSoonPage title="AR Filters" description="Browse and apply AR effects in stories, reels, and live streams." />} />
-                <Route path="/promote" element={<ProtectedRoute><ComingSoonPage title="Promote Posts" description="Boost reach for your posts, reels, and stories." /></ProtectedRoute>} />
-                <Route path="/brand-deals" element={<ProtectedRoute><ComingSoonPage title="Brand Deals" description="Connect with brands for sponsorships and partnerships." /></ProtectedRoute>} />
+                <Route path="/filters" element={<ARFiltersPage />} />
+                <Route path="/promote" element={<ProtectedRoute><PromotePage /></ProtectedRoute>} />
+                <Route path="/brand-deals" element={<ProtectedRoute><BrandDealsPage /></ProtectedRoute>} />
                 <Route path="/library" element={<ProtectedRoute><LibraryPage /></ProtectedRoute>} />
-                <Route path="/podcasts" element={<ComingSoonPage title="Podcasts" description="Listen to ZIVO podcasts on the go." />} />
-                <Route path="/sounds" element={<ComingSoonPage title="Sound Effects" description="Audio & sound effects library for creators." />} />
+                <Route path="/archive" element={<ProtectedRoute><StoryArchivePage /></ProtectedRoute>} />
+                <Route path="/highlights" element={<ProtectedRoute><HighlightsPage /></ProtectedRoute>} />
+                <Route path="/close-friends" element={<ProtectedRoute><CloseFriendsPage /></ProtectedRoute>} />
+                <Route path="/collections" element={<ProtectedRoute><CollectionsPage /></ProtectedRoute>} />
+                <Route path="/polls" element={<ProtectedRoute><PollsPage /></ProtectedRoute>} />
+                <Route path="/creator/milestones" element={<ProtectedRoute><CreatorMilestonesPage /></ProtectedRoute>} />
+                <Route path="/mentions" element={<ProtectedRoute><MentionsPage /></ProtectedRoute>} />
+                <Route path="/albums" element={<ProtectedRoute><PostAlbumsPage /></ProtectedRoute>} />
+                <Route path="/collabs" element={<ProtectedRoute><CollabsPage /></ProtectedRoute>} />
+                <Route path="/stickers" element={<StickerStorePage />} />
+                <Route path="/podcasts" element={<PodcastsPage />} />
+                <Route path="/sounds" element={<SoundsPage />} />
                 <Route path="/media-library" element={<ProtectedRoute><MediaLibraryPage /></ProtectedRoute>} />
                 <Route path="/creator/goals" element={<ProtectedRoute><CreatorGoalsPage /></ProtectedRoute>} />
-                <Route path="/track" element={<ProtectedRoute><ComingSoonPage title="Track Package" description="Live tracking for deliveries and shipments." /></ProtectedRoute>} />
+                <Route path="/track" element={<ProtectedRoute><TrackPackagePage /></ProtectedRoute>} />
                 {/* Redirect legacy paths to the real implementations */}
                 <Route path="/account/cookies" element={<Navigate to="/account/data-rights#cookies" replace />} />
                 <Route path="/account/translation" element={<Navigate to="/account/preferences#translation" replace />} />
@@ -1517,12 +1549,12 @@ const App = () => (
                 <Route path="/account/contact" element={<Navigate to="/account/profile-edit" replace />} />
 
                 {/* Wellness — placeholders */}
-                <Route path="/wellness/meds" element={<ProtectedRoute><ComingSoonPage title="Medications" description="Track meds, doses, and refills with reminders." /></ProtectedRoute>} />
-                <Route path="/wellness/mindfulness" element={<ProtectedRoute><ComingSoonPage title="Mindfulness" description="Guided meditation, breathing, and sleep stories." /></ProtectedRoute>} />
-                <Route path="/wellness/nutrition" element={<ProtectedRoute><ComingSoonPage title="Nutrition" description="Log meals, calories, macros, and water intake." /></ProtectedRoute>} />
-                <Route path="/account/tax" element={<ProtectedRoute><ComingSoonPage title="Tax Info" description="Tax forms, 1099s, and reporting." /></ProtectedRoute>} />
-                <Route path="/account/receipts" element={<ProtectedRoute><ComingSoonPage title="Receipts" description="Past payments and order receipts." /></ProtectedRoute>} />
-                <Route path="/account/reviews" element={<ProtectedRoute><ComingSoonPage title="My Reviews" description="Ratings and reviews you've left." /></ProtectedRoute>} />
+                <Route path="/wellness/meds" element={<ProtectedRoute><MedicationsPage /></ProtectedRoute>} />
+                <Route path="/wellness/mindfulness" element={<ProtectedRoute><MindfulnessPage /></ProtectedRoute>} />
+                <Route path="/wellness/nutrition" element={<ProtectedRoute><NutritionPage /></ProtectedRoute>} />
+                <Route path="/account/tax" element={<ProtectedRoute><TaxInfoPage /></ProtectedRoute>} />
+                <Route path="/account/receipts" element={<ProtectedRoute><ReceiptsPage /></ProtectedRoute>} />
+                <Route path="/account/reviews" element={<ProtectedRoute><MyReviewsPage /></ProtectedRoute>} />
                 <Route path="/account/subscriptions" element={<ProtectedRoute><AccountSubscriptionsPage /></ProtectedRoute>} />
                 <Route path="/account/tips" element={<ProtectedRoute><AccountTipsPage /></ProtectedRoute>} />
 

@@ -161,6 +161,7 @@ const adminNavEntries: NavEntry[] = [
   {
     label: "Platform", icon: Server, children: [
       { label: "System Health", icon: Activity, path: "/admin/system-health" },
+      { label: "Feed Diagnostics", icon: Activity, path: "/admin/feed-diagnostics" },
       { label: "Remote Config", icon: Sliders, path: "/admin/remote-config" },
       { label: "Launch Dashboard", icon: Rocket, path: "/admin/launch" },
       { label: "App Store Assets", icon: Smartphone, path: "/admin/app-store-assets" },

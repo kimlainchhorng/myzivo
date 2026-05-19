@@ -217,7 +217,7 @@ function PostMenuRegressionPageInner() {
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Dev only · Post viewer QA
         </p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground">Post menu regression checklist</h1>
+        <h1 className="mt-1 text-2xl font-bold text-ig-gradient">Post menu regression checklist</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Runs each post-viewer menu action against a synthetic post and surfaces the result.
           Use before shipping any change to <code className="text-xs">ProfileContentTabs</code> or{" "}

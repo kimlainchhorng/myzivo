@@ -151,7 +151,7 @@ export default function QRProfilePage() {
         <div className="flex items-center gap-2">
           <Button aria-label="Back" variant="ghost" size="icon" onClick={goBack}><ArrowLeft className="h-5 w-5" /></Button>
           <QrCode className="h-5 w-5 text-primary" />
-          <h1 className="text-xl font-bold text-foreground">QR Profile</h1>
+          <h1 className="text-xl font-bold text-ig-gradient">QR Profile</h1>
         </div>
       </div>
 

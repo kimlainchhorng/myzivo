@@ -100,7 +100,7 @@ export default function ConciergeLauncher() {
           ))}
           <button type="button"
             onClick={() => open()}
-            className="ml-auto inline-flex min-h-[40px] items-center gap-1 rounded-full bg-primary text-primary-foreground px-3 py-2 text-[11px] font-bold active:opacity-80 transition-opacity touch-manipulation"
+            className="ml-auto inline-flex min-h-[40px] items-center gap-1 rounded-full bg-ig-gradient text-white px-3 py-2 text-[11px] font-bold shadow-sm hover:opacity-90 active:opacity-80 transition-opacity touch-manipulation"
           >
             Start <ArrowRight className="w-3 h-3" />
           </button>
