@@ -1307,6 +1307,16 @@ export default function ReelsFeedPage() {
   });
 
   useEffect(() => {
+    if (!hasGridError || !gridError) return;
+    reportFeedQueryError(
+      { scope: "reels-feed-grid", queryKey: "reels-feed-grid", userId, tab: feedTab, pageSize },
+      gridError,
+    );
+  }, [feedTab, gridError, hasGridError, pageSize, userId]);
+
+
+
+  useEffect(() => {
     const postId = new URLSearchParams(location.search).get("post");
     if (!postId || items.length === 0) return;
 
