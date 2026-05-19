@@ -107,7 +107,7 @@ const getIllustratedPacks = () => {
   return [];
 };
 
-type ChatCategory = "personal" | "shop" | "support" | "ride";
+export type ChatCategory = "personal" | "shop" | "support" | "ride";
 type BuiltInChatFolder = "all" | "unread" | "personal" | "groups" | "shop" | "support" | "ride";
 
 interface CategoryTab {
