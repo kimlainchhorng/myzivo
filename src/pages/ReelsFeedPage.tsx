@@ -1848,9 +1848,9 @@ export default function ReelsFeedPage() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -8, scale: 0.96 }}
                 transition={{ type: "spring", damping: 24, stiffness: 320 }}
-                className="sticky top-[52px] lg:top-3 z-30 mx-auto my-2 flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-1.5 text-xs font-semibold shadow-lg shadow-primary/30 active:scale-95"
+                className="sticky top-[52px] lg:top-3 z-30 mx-auto my-2 flex items-center gap-2 rounded-full bg-ig-gradient text-white px-4 py-1.5 text-xs font-bold shadow-lg shadow-rose-500/30 hover:opacity-90 active:scale-95 transition-opacity"
               >
-                <span className="inline-flex h-1.5 w-1.5 rounded-full bg-primary-foreground animate-pulse" />
+                <span className="inline-flex h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
                 {newPostsCount} new {newPostsCount === 1 ? "post" : "posts"} — tap to refresh
               </motion.button>
             )}
@@ -1988,7 +1988,7 @@ export default function ReelsFeedPage() {
               {userId && (
                 <button type="button"
                   onClick={() => { setCreateMode("photo"); setShowCreate(true); }}
-                  className="px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold active:scale-95 transition-transform shadow-lg shadow-primary/20"
+                  className="px-6 py-2.5 bg-ig-gradient text-white rounded-full text-sm font-bold shadow-lg shadow-rose-500/25 hover:opacity-90 active:scale-95 transition-all"
                 >
                   Create Post
                 </button>
@@ -2016,7 +2016,7 @@ export default function ReelsFeedPage() {
                     </p>
                     <button type="button"
                       onClick={() => setSelectedHashtag(null)}
-                      className="rounded-full bg-primary text-primary-foreground text-xs font-semibold px-4 py-2 active:scale-95 transition-transform"
+                      className="rounded-full bg-ig-gradient text-white text-xs font-bold px-4 py-2 shadow-sm hover:opacity-90 active:scale-95 transition-all"
                     >
                       Clear filter
                     </button>
@@ -2034,7 +2034,7 @@ export default function ReelsFeedPage() {
                       </p>
                       <button type="button"
                         onClick={() => setFeedTab("For You")}
-                        className="rounded-full bg-primary text-primary-foreground text-xs font-semibold px-4 py-2 active:scale-95 transition-transform"
+                        className="rounded-full bg-ig-gradient text-white text-xs font-bold px-4 py-2 shadow-sm hover:opacity-90 active:scale-95 transition-all"
                       >
                         Back to For You
                       </button>
@@ -2268,7 +2268,7 @@ export default function ReelsFeedPage() {
                   </div>
                   <button type="button"
                     onClick={() => navigate("/explore")}
-                    className="mt-2 px-5 py-2 rounded-full bg-primary text-primary-foreground text-[12px] font-semibold active:scale-95 transition-transform"
+                    className="mt-2 px-5 py-2 rounded-full bg-ig-gradient text-white text-[12px] font-bold shadow-sm hover:opacity-90 active:scale-95 transition-all"
                   >
                     Discover more
                   </button>
@@ -4428,8 +4428,8 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                   aria-label={isFollowingSharedAuthor ? "Unfollow author" : "Follow author"}
                   title={isFollowingSharedAuthor ? "Unfollow author" : "Follow author"}
                   className={cn(
-                    "text-[12px] font-semibold px-2 py-1 rounded-md transition-all active:scale-95",
-                    isFollowingSharedAuthor ? "text-muted-foreground" : "text-primary"
+                    "text-[12px] font-bold px-2 py-1 rounded-md transition-all active:scale-95",
+                    isFollowingSharedAuthor ? "text-muted-foreground" : "text-ig-gradient"
                   )}
                 >
                   {followLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : isFollowingSharedAuthor ? "Following" : "Follow"}
@@ -4591,10 +4591,10 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                   aria-label={isFollowingAuthor ? "Unfollow author" : "Follow author"}
                   title={isFollowingAuthor ? "Unfollow author" : "Follow author"}
                   className={cn(
-                    "mr-1 text-[12px] font-semibold px-3 py-1 rounded-full transition-all active:scale-95",
+                    "mr-1 text-[12px] font-bold px-3 py-1 rounded-full transition-all active:scale-95",
                     isFollowingAuthor
                       ? "text-muted-foreground bg-muted/40"
-                      : "text-primary bg-primary/10"
+                      : "text-white bg-ig-gradient shadow-sm hover:opacity-90"
                   )}
                 >
                   {followLoading ? (
@@ -5054,7 +5054,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
           </div>
           <button type="button"
             onClick={() => navigate("/admin/marketing/campaigns")}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-bold shrink-0 active:scale-95 transition-transform"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-ig-gradient text-white text-[11px] font-bold shrink-0 shadow-sm hover:opacity-90 active:scale-95 transition-all"
           >
             <Zap className="h-3 w-3" />
             Boost
@@ -5066,7 +5066,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
         <div className="px-3 pb-2">
           <button type="button"
             onClick={handleBuyNow}
-            className="w-full rounded-xl bg-primary text-primary-foreground py-2.5 text-sm font-semibold"
+            className="w-full rounded-xl bg-ig-gradient text-white py-2.5 text-sm font-bold shadow-sm shadow-rose-500/25 hover:opacity-90 active:scale-[0.98] transition-all"
            title="Action">
             Buy Now
           </button>

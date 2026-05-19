@@ -27,6 +27,7 @@ import { useAllowMessageRequests } from "@/hooks/useAllowMessageRequests";
 import ProfilePreviewSheet from "@/components/profile/ProfilePreviewSheet";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import { subscribeToPooledPostgresChanges } from "@/services/chatRealtimePool";
 
 const LONG_PRESS_MS = 450;
 
@@ -253,10 +254,9 @@ export default function MessageRequestsPage() {
   // the list updates without leaving the page.
   useEffect(() => {
     if (!user?.id) return;
-    const channel = supabase.channel(`msg-req-${user.id}-${crypto.randomUUID()}`);
-    channel.on(
-      "postgres_changes" as never,
+    const unsubscribe = subscribeToPooledPostgresChanges(
       {
+        poolKey: `msg-req:${user.id}`,
         event: "INSERT",
         schema: "public",
         table: "direct_messages",
@@ -264,10 +264,7 @@ export default function MessageRequestsPage() {
       },
       () => invalidate(),
     );
-    channel.subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 

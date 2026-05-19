@@ -24,6 +24,7 @@ import { OPEN_MEDIA_EVENT, type OpenMediaDetail } from "@/lib/chat/openMedia";
 import { openP2PTransfer } from "@/lib/p2pTransfer";
 import { signedUrlFor } from "@/lib/security/signedMedia";
 import { topicForPairSync } from "@/lib/security/channelName";
+import { subscribeToPooledPostgresChanges } from "@/services/chatRealtimePool";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Send from "lucide-react/dist/esm/icons/send";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
@@ -893,10 +894,15 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   useEffect(() => {
     if (!user?.id) return;
     const channelName = topicForPairSync(user.id, recipientId, "dm");
-    const channel = supabase
-      .channel(channelName)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, (payload: RealtimeInsertPayload<Message>) => {
-        const msg = payload.new as Message;
+    const unsubscribeInsert = subscribeToPooledPostgresChanges(
+      {
+        poolKey: channelName,
+        event: "INSERT",
+        schema: "public",
+        table: "direct_messages",
+      },
+      (payload) => {
+        const msg = (payload as RealtimeInsertPayload<Message>).new as Message;
         if (
           (msg.sender_id === user.id && msg.receiver_id === recipientId) ||
           (msg.sender_id === recipientId && msg.receiver_id === user.id)
@@ -959,17 +965,40 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             void dbFrom("direct_messages").update({ is_read: true, delivered_at: new Date().toISOString() }).eq("id", msg.id);
           }
         }
-      })
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "direct_messages" }, (payload: RealtimeUpdatePayload<Message>) => {
-        const updated = payload.new as Message;
-        setMessages((prev) => prev.map((m) => m.id === updated.id ? { ...m, ...updated } : m));
-      })
-      .on("postgres_changes", { event: "DELETE", schema: "public", table: "direct_messages" }, (payload: RealtimeDeletePayload) => {
-        if (payload.old?.id) setMessages((prev) => prev.filter((m) => m.id !== payload.old.id));
-      })
-      .subscribe();
+      }
+    );
 
-    return () => { supabase.removeChannel(channel); };
+    const unsubscribeUpdate = subscribeToPooledPostgresChanges(
+      {
+        poolKey: channelName,
+        event: "UPDATE",
+        schema: "public",
+        table: "direct_messages",
+      },
+      (payload) => {
+        const updated = (payload as RealtimeUpdatePayload<Message>).new as Message;
+        setMessages((prev) => prev.map((m) => m.id === updated.id ? { ...m, ...updated } : m));
+      }
+    );
+
+    const unsubscribeDelete = subscribeToPooledPostgresChanges(
+      {
+        poolKey: channelName,
+        event: "DELETE",
+        schema: "public",
+        table: "direct_messages",
+      },
+      (payload) => {
+        const deleted = payload as RealtimeDeletePayload;
+        if (deleted.old?.id) setMessages((prev) => prev.filter((m) => m.id !== deleted.old.id));
+      }
+    );
+
+    return () => {
+      unsubscribeInsert();
+      unsubscribeUpdate();
+      unsubscribeDelete();
+    };
   }, [user?.id, recipientId, scrollToBottom]);
 
   // Fallback refresh: if websocket/realtime misses events (common on mobile
@@ -1103,10 +1132,15 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     if (!user?.id) return;
 
     const channelName = `call-history-${[user.id, recipientId].sort().join("-")}`;
-    const channel = supabase
-      .channel(channelName)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "call_history" }, (payload: RealtimeInsertPayload<CallHistoryRow>) => {
-        const call = payload.new as Omit<CallEvent, "_isCallEvent">;
+    const unsubscribe = subscribeToPooledPostgresChanges(
+      {
+        poolKey: channelName,
+        event: "INSERT",
+        schema: "public",
+        table: "call_history",
+      },
+      (payload) => {
+        const call = (payload as RealtimeInsertPayload<CallHistoryRow>).new as Omit<CallEvent, "_isCallEvent">;
         if (
           (call.caller_id === user.id && call.callee_id === recipientId) ||
           (call.caller_id === recipientId && call.callee_id === user.id)
@@ -1116,10 +1150,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             return [...prev, { ...call, _isCallEvent: true as const }];
           });
         }
-      })
-      .subscribe();
+      }
+    );
 
-    return () => { supabase.removeChannel(channel); };
+    return unsubscribe;
   }, [recipientId, user?.id]);
 
   // Send

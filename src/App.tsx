@@ -598,6 +598,21 @@ const TrendingTopicsPage = lazy(() => import("./pages/TrendingTopicsPage"));
 const ReelEffectsPage = lazy(() => import("./pages/ReelEffectsPage"));
 const PlacesPage = lazy(() => import("./pages/PlacesPage"));
 const ReactionPacksPage = lazy(() => import("./pages/ReactionPacksPage"));
+const TravelJournalsPage = lazy(() => import("./pages/TravelJournalsPage"));
+const SurveysPage = lazy(() => import("./pages/SurveysPage"));
+const ExchangeRatesPage = lazy(() => import("./pages/ExchangeRatesPage"));
+const HashtagsDirectoryPage = lazy(() => import("./pages/HashtagsDirectoryPage"));
+const CoinWalletPage = lazy(() => import("./pages/CoinWalletPage"));
+const GifLibraryPage = lazy(() => import("./pages/GifLibraryPage"));
+const SplitBillsPage = lazy(() => import("./pages/SplitBillsPage"));
+const FitnessActivitiesPage = lazy(() => import("./pages/FitnessActivitiesPage"));
+const FanBadgesPage = lazy(() => import("./pages/FanBadgesPage"));
+const MyUnlocksPage = lazy(() => import("./pages/MyUnlocksPage"));
+const VoiceNotesPage = lazy(() => import("./pages/VoiceNotesPage"));
+const AffiliateLinksPage = lazy(() => import("./pages/AffiliateLinksPage"));
+const GiftHistoryPage = lazy(() => import("./pages/GiftHistoryPage"));
+const SharedTodosPage = lazy(() => import("./pages/SharedTodosPage"));
+const MarketplaceCartPage = lazy(() => import("./pages/MarketplaceCartPage"));
 
 const Vision = lazy(() => import("./pages/Vision"));
 const BrandMission = lazy(() => import("./pages/BrandMission"));
@@ -1575,6 +1590,21 @@ const App = () => (
                 <Route path="/reel-effects" element={<ReelEffectsPage />} />
                 <Route path="/places" element={<PlacesPage />} />
                 <Route path="/reaction-packs" element={<ReactionPacksPage />} />
+                <Route path="/journals" element={<ProtectedRoute><TravelJournalsPage /></ProtectedRoute>} />
+                <Route path="/surveys" element={<SurveysPage />} />
+                <Route path="/exchange-rates" element={<ExchangeRatesPage />} />
+                <Route path="/hashtags" element={<HashtagsDirectoryPage />} />
+                <Route path="/coins" element={<ProtectedRoute><CoinWalletPage /></ProtectedRoute>} />
+                <Route path="/gifs" element={<GifLibraryPage />} />
+                <Route path="/split-bills" element={<ProtectedRoute><SplitBillsPage /></ProtectedRoute>} />
+                <Route path="/fitness" element={<ProtectedRoute><FitnessActivitiesPage /></ProtectedRoute>} />
+                <Route path="/fan-badges" element={<ProtectedRoute><FanBadgesPage /></ProtectedRoute>} />
+                <Route path="/my-unlocks" element={<ProtectedRoute><MyUnlocksPage /></ProtectedRoute>} />
+                <Route path="/voice-notes" element={<ProtectedRoute><VoiceNotesPage /></ProtectedRoute>} />
+                <Route path="/affiliate-links" element={<ProtectedRoute><AffiliateLinksPage /></ProtectedRoute>} />
+                <Route path="/gift-history" element={<ProtectedRoute><GiftHistoryPage /></ProtectedRoute>} />
+                <Route path="/shared-todos" element={<ProtectedRoute><SharedTodosPage /></ProtectedRoute>} />
+                <Route path="/marketplace-cart" element={<ProtectedRoute><MarketplaceCartPage /></ProtectedRoute>} />
                 <Route path="/podcasts" element={<PodcastsPage />} />
                 <Route path="/sounds" element={<SoundsPage />} />
                 <Route path="/media-library" element={<ProtectedRoute><MediaLibraryPage /></ProtectedRoute>} />

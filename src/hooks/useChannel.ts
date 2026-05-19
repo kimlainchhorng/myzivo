@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { subscribeToPooledPostgresChanges } from "@/services/chatRealtimePool";
 
 export type Channel = {
   id: string;
@@ -98,17 +99,17 @@ export function useChannel(handle: string | undefined) {
   // realtime
   useEffect(() => {
     if (!channel?.id) return;
-    const ch = supabase
-      .channel(`channel-${channel.id}-${crypto.randomUUID()}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "channel_posts", filter: `channel_id=eq.${channel.id}` },
-        () => refresh()
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
+    const unsubscribe = subscribeToPooledPostgresChanges(
+      {
+        poolKey: `channel-posts:${channel.id}`,
+        event: "*",
+        schema: "public",
+        table: "channel_posts",
+        filter: `channel_id=eq.${channel.id}`,
+      },
+      () => refresh(),
+    );
+    return unsubscribe;
   }, [channel?.id, refresh]);
 
   const subscribe = async () => {

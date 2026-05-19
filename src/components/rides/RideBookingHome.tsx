@@ -78,6 +78,7 @@ import Percent from "lucide-react/dist/esm/icons/percent";
 import CheckCircle2 from "lucide-react/dist/esm/icons/check-circle-2";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import PlaceLogo from "@/components/rides/PlaceLogo";
+import { subscribeToPooledPostgresChanges } from "@/services/chatRealtimePool";
 import { useCityPricing } from "@/hooks/useCityPricing";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
 import { useCustomerLocationBroadcast } from "@/hooks/useCustomerLocationBroadcast";
@@ -1117,7 +1118,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
     if (viewStep !== "searching") return;
     let cancelled = false;
     let jobId: string | null = null;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let unsubscribeJobUpdates: (() => void) | null = null;
 
     // Reset search phase & elapsed timer
     setSearchPhase("dispatching");
@@ -1166,74 +1167,71 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
       if (import.meta.env.DEV) console.log("[Dispatch] Job created:", jobId);
 
       // 2. Subscribe to job updates (driver acceptance)
-      channel = supabase
-        .channel(`job-assignment-${jobId}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "UPDATE",
-            schema: "public",
-            table: "jobs",
-            filter: `id=eq.${jobId}`,
-          },
-          async (payload) => {
-            const updatedJob = payload.new as any;
-            if (cancelled) return;
-            
-            if (updatedJob.assigned_driver_id && ["accepted", "driver_assigned", "en_route_pickup"].includes(updatedJob.status)) {
-              // Driver accepted! Fetch driver details
-              const { data: driverRow } = await supabase
-                .from("drivers")
-                .select("id, full_name, rating, total_trips, vehicle_model, vehicle_color, vehicle_plate, phone, current_lat, current_lng")
-                .eq("id", updatedJob.assigned_driver_id)
-                .single();
+      unsubscribeJobUpdates = subscribeToPooledPostgresChanges(
+        {
+          poolKey: `job-assignment:${jobId}`,
+          event: "UPDATE",
+          schema: "public",
+          table: "jobs",
+          filter: `id=eq.${jobId}`,
+        },
+        async (payload) => {
+          const updatedJob = payload.new as any;
+          if (cancelled) return;
 
-              if (driverRow && !cancelled) {
-                const firstName = driverRow.full_name?.split(" ")[0] || "Driver";
-                const lastInitial = driverRow.full_name?.split(" ")[1]?.[0] || "";
-                const initials = `${firstName[0]}${lastInitial}`.toUpperCase();
-                const vehicleDesc = [driverRow.vehicle_color, driverRow.vehicle_model].filter(Boolean).join(" ");
+          if (updatedJob.assigned_driver_id && ["accepted", "driver_assigned", "en_route_pickup"].includes(updatedJob.status)) {
+            // Driver accepted! Fetch driver details
+            const { data: driverRow } = await supabase
+              .from("drivers")
+              .select("id, full_name, rating, total_trips, vehicle_model, vehicle_color, vehicle_plate, phone, current_lat, current_lng")
+              .eq("id", updatedJob.assigned_driver_id)
+              .single();
 
-                let eta = 5;
-                if (driverRow.current_lat && driverRow.current_lng && pickup) {
-                  const distKm = haversineKm(driverRow.current_lat, driverRow.current_lng, pickup.lat, pickup.lng);
-                  eta = Math.max(1, Math.round(distKm / 0.5));
-                }
+            if (driverRow && !cancelled) {
+              const firstName = driverRow.full_name?.split(" ")[0] || "Driver";
+              const lastInitial = driverRow.full_name?.split(" ")[1]?.[0] || "";
+              const initials = `${firstName[0]}${lastInitial}`.toUpperCase();
+              const vehicleDesc = [driverRow.vehicle_color, driverRow.vehicle_model].filter(Boolean).join(" ");
 
-                const driverData: AssignedDriver = {
-                  id: driverRow.id,
-                  name: `${firstName} ${lastInitial}.`,
-                  initials,
-                  rating: driverRow.rating ?? 0,
-                  trips: driverRow.total_trips ?? 0,
-                  vehicle: vehicleDesc || "Vehicle",
-                  plate: driverRow.vehicle_plate || "",
-                  phone: driverRow.phone || "",
-                  etaMin: eta,
-                  lat: driverRow.current_lat ?? pickup.lat,
-                  lng: driverRow.current_lng ?? pickup.lng,
-                };
-
-                // Link driver to ride_request too
-                if (rideRequestId) {
-                  await supabase.from("ride_requests").update({
-                    status: "driver_assigned",
-                    assigned_driver_id: driverRow.id,
-                  } as any).eq("id", rideRequestId);
-                }
-
-                setAssignedDriver(driverData);
-                setDriverEta(driverData.etaMin);
-                if (driverData.lat && driverData.lng) {
-                  setDriverCoords({ lat: driverData.lat, lng: driverData.lng });
-                }
-                setViewStep("driver-assigned");
-                toast("Driver Found! 🚗", { description: `${driverData.name} is on the way. Arriving in ~${driverData.etaMin} min.` });
+              let eta = 5;
+              if (driverRow.current_lat && driverRow.current_lng && pickup) {
+                const distKm = haversineKm(driverRow.current_lat, driverRow.current_lng, pickup.lat, pickup.lng);
+                eta = Math.max(1, Math.round(distKm / 0.5));
               }
+
+              const driverData: AssignedDriver = {
+                id: driverRow.id,
+                name: `${firstName} ${lastInitial}.`,
+                initials,
+                rating: driverRow.rating ?? 0,
+                trips: driverRow.total_trips ?? 0,
+                vehicle: vehicleDesc || "Vehicle",
+                plate: driverRow.vehicle_plate || "",
+                phone: driverRow.phone || "",
+                etaMin: eta,
+                lat: driverRow.current_lat ?? pickup.lat,
+                lng: driverRow.current_lng ?? pickup.lng,
+              };
+
+              // Link driver to ride_request too
+              if (rideRequestId) {
+                await supabase.from("ride_requests").update({
+                  status: "driver_assigned",
+                  assigned_driver_id: driverRow.id,
+                } as any).eq("id", rideRequestId);
+              }
+
+              setAssignedDriver(driverData);
+              setDriverEta(driverData.etaMin);
+              if (driverData.lat && driverData.lng) {
+                setDriverCoords({ lat: driverData.lat, lng: driverData.lng });
+              }
+              setViewStep("driver-assigned");
+              toast("Driver Found! 🚗", { description: `${driverData.name} is on the way. Arriving in ~${driverData.etaMin} min.` });
             }
           }
-        )
-        .subscribe();
+        }
+      );
 
       // 3. Call dispatch-start edge function to find and notify a driver
       if (!cancelled) setSearchPhase("waiting_response");
@@ -1294,7 +1292,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
     return () => {
       cancelled = true;
       clearInterval(elapsedTimer);
-      if (channel) supabase.removeChannel(channel);
+      if (unsubscribeJobUpdates) unsubscribeJobUpdates();
       if ((window as any).__dispatchRetryInterval) {
         clearInterval((window as any).__dispatchRetryInterval);
       }

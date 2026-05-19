@@ -11,6 +11,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { isAllowedPaymentUrl } from "@/lib/urlSafety";
 import { assessChatMessageRisk, sanitizeOutgoingMessage } from "@/lib/security/chatContentSafety";
+import { subscribeToPooledPostgresChanges } from "@/services/chatRealtimePool";
 
 interface StoreLiveChatProps {
   storeId: string;
@@ -272,7 +273,7 @@ function AdminChatList({
           <p className="text-sm font-bold text-foreground truncate">{storeName}</p>
           <p className="text-[10px] text-muted-foreground">Customer Chats</p>
         </div>
-        <button type="button" onClick={onClose} className="p-2 rounded-full hover:bg-muted transition-colors">
+        <button type="button" onClick={onClose} aria-label="Close chat list" title="Close chat list" className="p-2 rounded-full hover:bg-muted transition-colors">
           <X className="h-5 w-5 text-muted-foreground" />
         </button>
       </div>
@@ -333,6 +334,8 @@ function AdminChatList({
                     e.stopPropagation();
                     setDeleteConfirmId(chat.id);
                   }}
+                  aria-label="Delete chat"
+                  title="Delete chat"
                   className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-destructive/10 transition-all"
                 >
                   <Trash2 className="h-3.5 w-3.5 text-destructive" />
@@ -483,33 +486,35 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
   useEffect(() => {
     if (!chatId) return;
 
-    const channel = supabase
-      .channel(`store-chat-${chatId}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "store_chat_messages", filter: `chat_id=eq.${chatId}` },
-        (payload) => {
-          const msg = payload.new as ChatMessage;
-          void (async () => {
-            const shouldMarkRead = isAdmin ? msg.sender_type === "customer" : msg.sender_type === "store";
-            if (!shouldMarkRead) return;
-            await supabase
-              .from("store_chat_messages")
-              .update({ is_read: true })
-              .eq("id", msg.id)
-              .eq("is_read", false);
-          })();
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === msg.id)) return prev;
-            const shouldMarkRead = isAdmin ? msg.sender_type === "customer" : msg.sender_type === "store";
-            return [...prev, shouldMarkRead ? { ...msg, is_read: true } : msg];
-          });
-          setTimeout(scrollToBottom, 50);
-        }
-      )
-      .subscribe();
+    const unsubscribe = subscribeToPooledPostgresChanges(
+      {
+        poolKey: `store-chat:${chatId}`,
+        event: "INSERT",
+        schema: "public",
+        table: "store_chat_messages",
+        filter: `chat_id=eq.${chatId}`,
+      },
+      (payload) => {
+        const msg = payload.new as ChatMessage;
+        void (async () => {
+          const shouldMarkRead = isAdmin ? msg.sender_type === "customer" : msg.sender_type === "store";
+          if (!shouldMarkRead) return;
+          await supabase
+            .from("store_chat_messages")
+            .update({ is_read: true })
+            .eq("id", msg.id)
+            .eq("is_read", false);
+        })();
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === msg.id)) return prev;
+          const shouldMarkRead = isAdmin ? msg.sender_type === "customer" : msg.sender_type === "store";
+          return [...prev, shouldMarkRead ? { ...msg, is_read: true } : msg];
+        });
+        setTimeout(scrollToBottom, 50);
+      }
+    );
 
-    return () => { supabase.removeChannel(channel); };
+    return unsubscribe;
   }, [chatId, isAdmin, scrollToBottom]);
 
   const sendMessage = async () => {
@@ -603,6 +608,8 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
                   {isAdmin && (
                     <button type="button"
                       onClick={() => { setSelectedChat(null); setChatId(null); setMessages([]); }}
+                      aria-label="Back to customer chats"
+                      title="Back to customer chats"
                       className="p-1.5 rounded-full hover:bg-muted transition-colors"
                     >
                       <ChevronLeft className="h-5 w-5 text-muted-foreground" />
@@ -624,12 +631,14 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
                   {isAdmin && chatId && (
                     <button type="button"
                       onClick={() => setConfirmDeleteInChat(true)}
+                      aria-label="Delete current chat"
+                      title="Delete current chat"
                       className="p-2 rounded-full hover:bg-destructive/10 transition-colors"
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </button>
                   )}
-                  <button type="button" onClick={onClose} className="p-2 rounded-full hover:bg-muted transition-colors">
+                  <button type="button" onClick={onClose} aria-label="Close store chat" title="Close store chat" className="p-2 rounded-full hover:bg-muted transition-colors">
                     <X className="h-5 w-5 text-muted-foreground" />
                   </button>
                 </div>

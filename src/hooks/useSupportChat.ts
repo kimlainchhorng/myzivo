@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { assessChatMessageRisk, sanitizeOutgoingMessage } from "@/lib/security/chatContentSafety";
+import { subscribeToPooledPostgresChanges } from "@/services/chatRealtimePool";
 
 export interface TicketReply {
   id: string;
@@ -113,41 +114,36 @@ export function useTicketChatRealtime(
   useEffect(() => {
     if (!ticketId) return;
 
-    const channel = supabase
-      .channel(`ticket-chat-${ticketId}-${crypto.randomUUID()}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "ticket_replies",
-          filter: `ticket_id=eq.${ticketId}`,
-        },
-        (payload) => {
-          const newMessage = payload.new as TicketReply;
+    const unsubscribe = subscribeToPooledPostgresChanges(
+      {
+        poolKey: `ticket-chat:${ticketId}`,
+        event: "INSERT",
+        schema: "public",
+        table: "ticket_replies",
+        filter: `ticket_id=eq.${ticketId}`,
+      },
+      (payload) => {
+        const newMessage = payload.new as TicketReply;
 
-          // Update the messages cache
-          queryClient.setQueryData<TicketReply[]>(
-            ["ticket-messages", ticketId],
-            (old) => {
-              if (!old) return [newMessage];
-              // Avoid duplicates
-              if (old.some((m) => m.id === newMessage.id)) return old;
-              return [...old, newMessage];
-            }
-          );
-
-          // Callback for notifications
-          if (onNewMessage) {
-            onNewMessage(newMessage);
+        // Update the messages cache
+        queryClient.setQueryData<TicketReply[]>(
+          ["ticket-messages", ticketId],
+          (old) => {
+            if (!old) return [newMessage];
+            // Avoid duplicates
+            if (old.some((m) => m.id === newMessage.id)) return old;
+            return [...old, newMessage];
           }
-        }
-      )
-      .subscribe();
+        );
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+        // Callback for notifications
+        if (onNewMessage) {
+          onNewMessage(newMessage);
+        }
+      }
+    );
+
+    return unsubscribe;
   }, [ticketId, queryClient, onNewMessage]);
 }
 
@@ -158,29 +154,24 @@ export function useDispatchTicketsRealtime(
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const channel = supabase
-      .channel(`dispatch-tickets-realtime-${crypto.randomUUID()}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "support_tickets",
-        },
-        (payload) => {
-          // Invalidate the tickets list
-          queryClient.invalidateQueries({ queryKey: ["dispatch-tickets"] });
+    const unsubscribe = subscribeToPooledPostgresChanges(
+      {
+        poolKey: "dispatch-tickets",
+        event: "*",
+        schema: "public",
+        table: "support_tickets",
+      },
+      (payload) => {
+        // Invalidate the tickets list
+        queryClient.invalidateQueries({ queryKey: ["dispatch-tickets"] });
 
-          if (onTicketChange) {
-            onTicketChange(payload);
-          }
+        if (onTicketChange) {
+          onTicketChange(payload);
         }
-      )
-      .subscribe();
+      }
+    );
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return unsubscribe;
   }, [queryClient, onTicketChange]);
 }
 

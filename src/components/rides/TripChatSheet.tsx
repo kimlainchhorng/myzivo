@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import InTripCallButton from "./InTripCallButton";
 import { Badge } from "@/components/ui/badge";
+import { subscribeToPooledPostgresChanges } from "@/services/chatRealtimePool";
 
 interface Props {
   open: boolean;
@@ -72,18 +73,38 @@ export default function TripChatSheet({ open, onOpenChange, rideRequestId, count
     };
     fetchMessages();
 
-    const channel = supabase
-      .channel(`trip-chat-${rideRequestId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "trip_messages", filter: `ride_request_id=eq.${rideRequestId}` }, (payload) => {
-        if (payload.eventType === "INSERT") {
-          setMessages((prev) => prev.find((m) => m.id === (payload.new as any).id) ? prev : [...prev, payload.new as TripMessage]);
-        } else if (payload.eventType === "UPDATE") {
-          setMessages((prev) => prev.map((m) => m.id === (payload.new as any).id ? { ...m, ...(payload.new as any) } : m));
-        }
-      })
-      .subscribe();
+    const unsubscribeInsert = subscribeToPooledPostgresChanges(
+      {
+        poolKey: `trip-chat:${rideRequestId}`,
+        event: "INSERT",
+        schema: "public",
+        table: "trip_messages",
+        filter: `ride_request_id=eq.${rideRequestId}`,
+      },
+      (payload) => {
+        const next = payload.new as TripMessage;
+        setMessages((prev) => prev.find((m) => m.id === next.id) ? prev : [...prev, next]);
+      }
+    );
 
-    return () => { supabase.removeChannel(channel); };
+    const unsubscribeUpdate = subscribeToPooledPostgresChanges(
+      {
+        poolKey: `trip-chat:${rideRequestId}`,
+        event: "UPDATE",
+        schema: "public",
+        table: "trip_messages",
+        filter: `ride_request_id=eq.${rideRequestId}`,
+      },
+      (payload) => {
+        const next = payload.new as Partial<TripMessage> & { id: string };
+        setMessages((prev) => prev.map((m) => m.id === next.id ? { ...m, ...next } : m));
+      }
+    );
+
+    return () => {
+      unsubscribeInsert();
+      unsubscribeUpdate();
+    };
   }, [open, rideRequestId]);
 
   useEffect(() => {

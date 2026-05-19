@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { topicForPairSync } from "@/lib/security/channelName";
+import { subscribeToPooledPostgresChanges } from "@/services/chatRealtimePool";
 
 interface PresenceState {
   isTyping: boolean;
@@ -54,29 +55,24 @@ export function useChatPresence(userId: string | undefined, recipientId: string)
   // Subscribe to postgres_changes on profiles for real-time last_seen updates
   useEffect(() => {
     if (!recipientId) return;
-    const channel = supabase
-      .channel(`profile-lastseen-${recipientId}-${crypto.randomUUID()}`)
-      .on(
-        "postgres_changes" as any,
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "profiles",
-          filter: `user_id=eq.${recipientId}`,
-        },
-        (payload: any) => {
-          const newLastSeen = payload.new?.last_seen as string | null;
-          if (newLastSeen) {
-            rawLastSeenRef.current = newLastSeen;
-            setState((prev) => ({ ...prev, lastSeen: formatLastSeen(newLastSeen) }));
-          }
+    const unsubscribe = subscribeToPooledPostgresChanges(
+      {
+        poolKey: `profile-lastseen:${recipientId}`,
+        event: "UPDATE",
+        schema: "public",
+        table: "profiles",
+        filter: `user_id=eq.${recipientId}`,
+      },
+      (payload) => {
+        const newLastSeen = payload.new?.last_seen as string | null;
+        if (newLastSeen) {
+          rawLastSeenRef.current = newLastSeen;
+          setState((prev) => ({ ...prev, lastSeen: formatLastSeen(newLastSeen) }));
         }
-      )
-      .subscribe();
+      }
+    );
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return unsubscribe;
   }, [recipientId]);
 
   // Refresh the "X minutes ago" text every 30s so it stays accurate

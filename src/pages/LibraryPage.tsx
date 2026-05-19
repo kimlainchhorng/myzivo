@@ -1,14 +1,27 @@
 /**
  * LibraryPage — Your Library hub.
- * Unified entry point for everything the user has saved: bookmarks, posts,
- * searches, and favorites. IG-style cards with gradient icon tiles.
+ *
+ * v2 redesign: 40+ destinations grouped into 7 collapsible categories
+ * with an IG-gradient search filter. Reduces the wall-of-tiles problem
+ * by letting users scan headers first, then expand.
  */
+import { useState, useMemo, useDeferredValue } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowLeft, Bookmark, Search, Heart, ChevronRight, Library, Archive, Star, FolderHeart, Users, Vote, AtSign, Trophy, BookImage, Handshake, Smile, Ticket, Gift, Palette, Award, DollarSign, Bell, BarChart2, Shield, Tag, Flag, Gamepad2, UsersRound, MessageSquare, Music, TrendingUp, Wand2, MapPin } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ArrowLeft, Search, ChevronRight, ChevronDown,
+  // Group icons
+  Bookmark, Camera, UsersRound, Sparkles, DollarSign, Heart as HeartIcon, Settings,
+  // Tile icons
+  Library, Archive, Star, FolderHeart, Vote, AtSign, Trophy, BookImage, Handshake,
+  Smile, Ticket, Gift, Palette, Award, Bell, BarChart2, Shield, Tag, Flag, Gamepad2,
+  MessageSquare, Music, TrendingUp, Wand2, MapPin, NotebookPen, ClipboardList,
+  ArrowLeftRight, Hash, Coins, Image as ImageIcon, Receipt, Dumbbell, Unlock, Mic, Link2, ListTodo, ShoppingCart,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
 import { SwipeBackContainer } from "@/components/shared/SwipeBackContainer";
+import { cn } from "@/lib/utils";
 
 interface LibrarySection {
   icon: typeof Bookmark;
@@ -17,215 +30,170 @@ interface LibrarySection {
   path: string;
 }
 
-const sections: LibrarySection[] = [
+interface LibraryGroup {
+  id: string;
+  title: string;
+  icon: typeof Bookmark;
+  sections: LibrarySection[];
+}
+
+const GROUPS: LibraryGroup[] = [
   {
+    id: "saved",
+    title: "Saved & collections",
     icon: Bookmark,
-    title: "Saved Posts",
-    description: "Posts and reels you bookmarked from the feed",
-    path: "/saved-posts",
+    sections: [
+      { icon: Bookmark, title: "Saved Posts", description: "Posts and reels you bookmarked", path: "/saved-posts" },
+      { icon: Bookmark, title: "Bookmarks", description: "Everything you bookmarked in one place", path: "/saved" },
+      { icon: Search, title: "Saved Searches", description: "Searches you saved for later", path: "/saved-searches" },
+      { icon: HeartIcon, title: "Favorites", description: "Hotels, destinations, and creators", path: "/saved-favorites" },
+      { icon: FolderHeart, title: "Collections", description: "Bookmarks organized into folders", path: "/collections" },
+      { icon: BookImage, title: "Albums", description: "Your own posts grouped into albums", path: "/albums" },
+    ],
   },
   {
-    icon: Bookmark,
-    title: "Bookmarks",
-    description: "All your bookmarked content in one place",
-    path: "/saved",
-  },
-  {
-    icon: Search,
-    title: "Saved Searches",
-    description: "Searches you saved for later — flights, hotels, more",
-    path: "/saved-searches",
-  },
-  {
-    icon: Heart,
-    title: "Favorites",
-    description: "Your favorite hotels, destinations, and creators",
-    path: "/saved-favorites",
-  },
-  {
-    icon: Archive,
-    title: "Story Archive",
-    description: "Expired stories saved for repost and memory",
-    path: "/archive",
-  },
-  {
-    icon: Star,
-    title: "Highlights",
-    description: "Pin best stories to your profile in named collections",
-    path: "/highlights",
-  },
-  {
-    icon: FolderHeart,
-    title: "Collections",
-    description: "Organize bookmarked posts into named, color-tagged folders",
-    path: "/collections",
-  },
-  {
-    icon: Users,
-    title: "Close Friends",
-    description: "Pick who sees the stories you share privately",
-    path: "/close-friends",
-  },
-  {
-    icon: Vote,
-    title: "Polls",
-    description: "Create polls and track audience answers live",
-    path: "/polls",
-  },
-  {
-    icon: AtSign,
-    title: "Mentions",
-    description: "Posts where you've been @-tagged by others",
-    path: "/mentions",
-  },
-  {
-    icon: Trophy,
-    title: "Milestones",
-    description: "Creator achievements and what's coming next",
-    path: "/creator/milestones",
-  },
-  {
-    icon: BookImage,
-    title: "Albums",
-    description: "Group your posts into named portfolio albums",
-    path: "/albums",
-  },
-  {
-    icon: Handshake,
-    title: "Collabs",
-    description: "Co-author invites and accepted collaborations",
-    path: "/collabs",
-  },
-  {
-    icon: Smile,
-    title: "Sticker Store",
-    description: "Browse sticker packs for stories, reels, and messages",
-    path: "/stickers",
-  },
-  {
-    icon: Ticket,
-    title: "Coupons",
-    description: "Active discount codes — copy and apply at checkout",
-    path: "/coupons",
-  },
-  {
-    icon: Gift,
-    title: "Referrals",
-    description: "Generate shareable invite links and track uses",
-    path: "/referrals",
-  },
-  {
-    icon: Palette,
-    title: "Chat Themes",
-    description: "Pick a color theme for your chats",
-    path: "/chat-themes",
-  },
-  {
-    icon: Gift,
-    title: "Rewards Center",
-    description: "Track rewards you've earned and redeemed",
-    path: "/rewards-center",
-  },
-  {
-    icon: Award,
-    title: "Achievements",
-    description: "Full catalog of achievements you can unlock",
-    path: "/achievements",
-  },
-  {
-    icon: DollarSign,
-    title: "Earnings",
-    description: "Daily revenue breakdown across ads, sales, subs, tips",
-    path: "/creator/earnings",
-  },
-  {
-    icon: Bell,
-    title: "Notifications",
-    description: "Toggle which notification types you receive",
-    path: "/notifications/preferences",
-  },
-  {
-    icon: BarChart2,
-    title: "Story Insights",
-    description: "Per-story views and sticker interaction analytics",
-    path: "/story-insights",
-  },
-  {
-    icon: Shield,
-    title: "Logins & devices",
-    description: "Where you're signed in — sign out anything you don't recognize",
-    path: "/devices",
-  },
-  {
-    icon: Tag,
-    title: "Interests",
-    description: "Topics that personalize your content feed",
-    path: "/interests",
-  },
-  {
-    icon: Flag,
-    title: "Challenges",
-    description: "Join social challenges with hashtags and prizes",
-    path: "/challenges",
-  },
-  {
-    icon: Gamepad2,
-    title: "Game Scores",
-    description: "Your personal best scores across mini-games",
-    path: "/game-scores",
-  },
-  {
+    id: "social",
+    title: "Social & friends",
     icon: UsersRound,
-    title: "Clubs",
-    description: "Interest-based clubs to find your people",
-    path: "/clubs",
+    sections: [
+      { icon: UsersRound, title: "Clubs", description: "Interest-based clubs to find your people", path: "/clubs" },
+      { icon: MessageSquare, title: "Forums", description: "Community discussion boards", path: "/forums" },
+      { icon: AtSign, title: "Mentions", description: "Posts where you're @-tagged", path: "/mentions" },
+      { icon: Handshake, title: "Collabs", description: "Co-author invites and accepted posts", path: "/collabs" },
+      { icon: UsersRound, title: "Close Friends", description: "Pick who sees private stories", path: "/close-friends" },
+      { icon: Vote, title: "Polls", description: "Create polls and see results live", path: "/polls" },
+      { icon: Receipt, title: "Split Bills", description: "Group expenses and who owes who", path: "/split-bills" },
+      { icon: ListTodo, title: "Shared Todos", description: "Collaborative to-do lists with chat partners", path: "/shared-todos" },
+    ],
   },
   {
-    icon: MessageSquare,
-    title: "Forums",
-    description: "Community discussion boards and Q&A threads",
-    path: "/forums",
+    id: "stories",
+    title: "Stories & creation",
+    icon: Camera,
+    sections: [
+      { icon: Archive, title: "Story Archive", description: "Expired stories saved for repost", path: "/archive" },
+      { icon: Star, title: "Highlights", description: "Pin best stories to your profile", path: "/highlights" },
+      { icon: BarChart2, title: "Story Insights", description: "Per-story view + interaction analytics", path: "/story-insights" },
+      { icon: Wand2, title: "Reel Effects", description: "Effects catalog for your reels", path: "/reel-effects" },
+      { icon: Music, title: "Playlists", description: "Music and reel playlists you curate", path: "/playlists" },
+      { icon: Smile, title: "Sticker Store", description: "Sticker packs for stories & messages", path: "/stickers" },
+      { icon: HeartIcon, title: "Reaction Packs", description: "Reaction emoji packs", path: "/reaction-packs" },
+      { icon: ImageIcon, title: "GIFs", description: "Trending GIFs and your saved favorites", path: "/gifs" },
+      { icon: Mic, title: "Voice Notes", description: "Your voice messages with transcripts", path: "/voice-notes" },
+    ],
   },
   {
-    icon: Music,
-    title: "Playlists",
-    description: "Music and reel playlists you curate",
-    path: "/playlists",
+    id: "discover",
+    title: "Discover",
+    icon: Sparkles,
+    sections: [
+      { icon: TrendingUp, title: "Trending", description: "Hot topics by region and period", path: "/trending" },
+      { icon: Hash, title: "Hashtags", description: "Browse popular hashtags", path: "/hashtags" },
+      { icon: Flag, title: "Challenges", description: "Join social challenges", path: "/challenges" },
+      { icon: MapPin, title: "Places", description: "Discover venues and locations", path: "/places" },
+      { icon: Tag, title: "Interests", description: "Topics that personalize your feed", path: "/interests" },
+    ],
   },
   {
-    icon: TrendingUp,
-    title: "Trending",
-    description: "Hot topics by region and time period",
-    path: "/trending",
+    id: "creator",
+    title: "Creator",
+    icon: DollarSign,
+    sections: [
+      { icon: DollarSign, title: "Earnings", description: "Daily revenue across all streams", path: "/creator/earnings" },
+      { icon: Trophy, title: "Milestones", description: "Creator achievements & next steps", path: "/creator/milestones" },
+      { icon: Award, title: "Achievements", description: "Full achievement catalog", path: "/achievements" },
+      { icon: Gamepad2, title: "Game Scores", description: "Your mini-game leaderboard", path: "/game-scores" },
+      { icon: Award, title: "Fan Badges", description: "Badges earned by supporting creators", path: "/fan-badges" },
+    ],
   },
   {
-    icon: Wand2,
-    title: "Reel Effects",
-    description: "Effects catalog to use in your reels",
-    path: "/reel-effects",
+    id: "wallet",
+    title: "Wallet & rewards",
+    icon: Coins,
+    sections: [
+      { icon: Coins, title: "Coin Wallet", description: "Coin balance, transactions, purchases", path: "/coins" },
+      { icon: Unlock, title: "My Unlocks", description: "Paid content you've unlocked from creators", path: "/my-unlocks" },
+      { icon: Gift, title: "Rewards Center", description: "Rewards earned and redeemed", path: "/rewards-center" },
+      { icon: Ticket, title: "Coupons", description: "Active discount codes", path: "/coupons" },
+      { icon: Gift, title: "Referrals", description: "Generate shareable invite links", path: "/referrals" },
+      { icon: Link2, title: "Affiliate Links", description: "Track your link-in-bio clicks, conversions, earnings", path: "/affiliate-links" },
+      { icon: Gift, title: "Gift History", description: "Coin gifts sent + received in chat", path: "/gift-history" },
+      { icon: ShoppingCart, title: "Cart", description: "Marketplace items ready to checkout", path: "/marketplace-cart" },
+      { icon: ArrowLeftRight, title: "Exchange Rates", description: "Live currency conversion", path: "/exchange-rates" },
+    ],
   },
   {
-    icon: MapPin,
-    title: "Places",
-    description: "Discover venues and locations",
-    path: "/places",
+    id: "health",
+    title: "Health & travel",
+    icon: Dumbbell,
+    sections: [
+      { icon: Dumbbell, title: "Fitness", description: "Activity log with steps, distance, calories", path: "/fitness" },
+      { icon: NotebookPen, title: "Travel Journals", description: "Trip-by-trip diary", path: "/journals" },
+      { icon: ClipboardList, title: "Surveys", description: "Open feedback surveys", path: "/surveys" },
+    ],
   },
   {
-    icon: Heart,
-    title: "Reaction Packs",
-    description: "Browse and install reaction emoji packs",
-    path: "/reaction-packs",
+    id: "account",
+    title: "Account & privacy",
+    icon: Settings,
+    sections: [
+      { icon: Bell, title: "Notifications", description: "Toggle notification types you receive", path: "/notifications/preferences" },
+      { icon: Palette, title: "Chat Themes", description: "Pick chat color theme", path: "/chat-themes" },
+      { icon: Shield, title: "Logins & devices", description: "Where you're signed in", path: "/devices" },
+    ],
   },
 ];
 
+// Auto-open the first 2 groups by default so the page doesn't look empty.
+const DEFAULT_OPEN = new Set(GROUPS.slice(0, 2).map((g) => g.id));
+
 export default function LibraryPage() {
   const navigate = useNavigate();
+  const [query, setQuery] = useState("");
+  const deferredQuery = useDeferredValue(query);
+  const [openIds, setOpenIds] = useState<Set<string>>(DEFAULT_OPEN);
+
+  const toggleGroup = (id: string) => {
+    setOpenIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const expandAll = () => setOpenIds(new Set(GROUPS.map((g) => g.id)));
+  const collapseAll = () => setOpenIds(new Set());
+
+  // When the user is searching, automatically expand any group with a hit
+  // so they don't have to click through.
+  const { filteredGroups, totalHits } = useMemo(() => {
+    const q = deferredQuery.trim().toLowerCase();
+    if (!q) return { filteredGroups: GROUPS, totalHits: GROUPS.reduce((s, g) => s + g.sections.length, 0) };
+    let hits = 0;
+    const out: LibraryGroup[] = [];
+    for (const g of GROUPS) {
+      const matching = g.sections.filter((s) =>
+        s.title.toLowerCase().includes(q) ||
+        s.description.toLowerCase().includes(q) ||
+        g.title.toLowerCase().includes(q)
+      );
+      if (matching.length > 0) {
+        out.push({ ...g, sections: matching });
+        hits += matching.length;
+      }
+    }
+    return { filteredGroups: out, totalHits: hits };
+  }, [deferredQuery]);
+
+  const searching = deferredQuery.trim().length > 0;
+  const totalDestinations = GROUPS.reduce((s, g) => s + g.sections.length, 0);
 
   return (
     <SwipeBackContainer className="min-h-screen bg-background">
       <SEOHead title="Your Library · ZIVO" description="All your saved content in one place." noIndex />
 
-      <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
+      <div className="sticky top-0 safe-area-top z-40 bg-background/90 backdrop-blur-md border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <Button
             aria-label="Back"
@@ -236,42 +204,167 @@ export default function LibraryPage() {
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-1">
             <div className="h-7 w-7 rounded-lg bg-ig-gradient flex items-center justify-center">
               <Library className="h-4 w-4 text-white" />
             </div>
             <h1 className="text-lg font-bold tracking-tight text-ig-gradient">Your Library</h1>
           </div>
         </div>
+
+        {/* Search */}
+        <div className="px-4 pb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <input
+              type="search"
+              placeholder={`Search ${totalDestinations} destinations…`}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full h-10 pl-9 pr-3 rounded-xl bg-secondary border border-border/60 text-sm font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-rose-500/30"
+            />
+          </div>
+        </div>
       </div>
 
-      <div className="px-4 py-6 max-w-2xl mx-auto">
-        <div className="space-y-3">
-          {sections.map((section, idx) => {
-            const Icon = section.icon;
-            return (
-              <motion.button
-                key={section.path}
+      <div className="max-w-2xl mx-auto px-4 py-5 space-y-4">
+        {/* Stats banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl p-5 bg-ig-gradient text-white shadow-lg shadow-rose-500/20 relative overflow-hidden"
+        >
+          <div className="absolute -top-6 -right-6 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+          <Sparkles className="absolute top-3 right-3 h-5 w-5 text-white/40" />
+          <p className="text-xs font-semibold uppercase tracking-wider text-white/80">
+            {searching ? "Showing" : "Library"}
+          </p>
+          <p className="text-3xl font-bold mt-1">
+            {searching ? `${totalHits} ${totalHits === 1 ? "match" : "matches"}` : `${totalDestinations} destinations`}
+          </p>
+          <p className="text-sm text-white/80 mt-1">
+            {searching ? "across all categories" : `organized into ${GROUPS.length} categories`}
+          </p>
+        </motion.div>
+
+        {/* Expand/collapse toolbar */}
+        {!searching && (
+          <div className="flex items-center justify-between text-[11px] font-bold">
+            <span className="text-muted-foreground uppercase tracking-wider">Categories</span>
+            <div className="flex gap-1">
+              <button
                 type="button"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.04, duration: 0.18 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => navigate(section.path)}
-                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border hover:bg-secondary/60 active:scale-[0.99] transition-all text-left"
+                onClick={expandAll}
+                className="text-ig-gradient hover:opacity-80 active:opacity-60 transition-opacity"
               >
-                <div className="shrink-0 h-12 w-12 rounded-xl bg-ig-gradient flex items-center justify-center shadow-sm">
-                  <Icon className="h-5 w-5 text-white" />
+                Expand all
+              </button>
+              <span className="text-muted-foreground/60">·</span>
+              <button
+                type="button"
+                onClick={collapseAll}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                Collapse
+              </button>
+            </div>
+          </div>
+        )}
+
+        {filteredGroups.length === 0 && (
+          <div className="rounded-2xl border border-border bg-card p-8 text-center">
+            <div className="h-16 w-16 rounded-3xl bg-ig-gradient flex items-center justify-center mx-auto mb-4 shadow-lg shadow-rose-500/20">
+              <Search className="h-7 w-7 text-white" />
+            </div>
+            <p className="text-base font-bold text-foreground mb-1">No matches</p>
+            <p className="text-xs text-muted-foreground">Try a different keyword.</p>
+          </div>
+        )}
+
+        {filteredGroups.map((g, gIdx) => {
+          const isOpen = searching || openIds.has(g.id);
+          const GroupIcon = g.icon;
+          return (
+            <motion.div
+              key={g.id}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: gIdx * 0.03 }}
+              className="rounded-2xl bg-card border border-border overflow-hidden"
+            >
+              <button
+                type="button"
+                onClick={() => !searching && toggleGroup(g.id)}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 text-left transition-colors",
+                  isOpen ? "" : "hover:bg-secondary/40",
+                )}
+                aria-label={`${g.title}, ${isOpen ? "collapse" : "expand"}`}
+              >
+                <div className="shrink-0 h-9 w-9 rounded-xl bg-ig-gradient flex items-center justify-center shadow-sm">
+                  <GroupIcon className="h-4 w-4 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[15px] font-bold text-foreground">{section.title}</p>
-                  <p className="text-[13px] text-muted-foreground line-clamp-1">{section.description}</p>
+                  <p className="text-[15px] font-bold text-foreground">{g.title}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {g.sections.length} {g.sections.length === 1 ? "destination" : "destinations"}
+                  </p>
                 </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-              </motion.button>
-            );
-          })}
-        </div>
+                {!searching && (
+                  <motion.div animate={{ rotate: isOpen ? 90 : 0 }} className="shrink-0">
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  </motion.div>
+                )}
+              </button>
+
+              <AnimatePresence initial={false}>
+                {isOpen && (
+                  <motion.div
+                    key={`${g.id}-body`}
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-2 pb-2 space-y-1">
+                      {g.sections.map((section, idx) => {
+                        const Icon = section.icon;
+                        return (
+                          <motion.button
+                            key={section.path}
+                            type="button"
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.02, duration: 0.15 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => navigate(section.path)}
+                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-colors text-left"
+                          >
+                            <div className="shrink-0 h-8 w-8 rounded-lg bg-secondary flex items-center justify-center">
+                              <Icon className="h-4 w-4 text-foreground" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-foreground line-clamp-1">{section.title}</p>
+                              <p className="text-[11px] text-muted-foreground line-clamp-1">{section.description}</p>
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          );
+        })}
+
+        {!searching && (
+          <p className="text-[11px] text-muted-foreground text-center pt-2 pb-6">
+            <ChevronDown className="h-3 w-3 inline" /> Tap a category to expand · search above to jump anywhere
+          </p>
+        )}
       </div>
     </SwipeBackContainer>
   );

@@ -51,6 +51,15 @@ export function useGroupCall({
   const localStreamRef = useRef<MediaStream | null>(null);
   const peersRef = useRef<Map<string, PeerEntry>>(new Map());
   const startedRef = useRef(false);
+  const signalChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
+  const getSignalChannel = useCallback(() => {
+    if (signalChannelRef.current) return signalChannelRef.current;
+    if (!groupCallId) return null;
+    const channel = supabase.channel(topicForGroupSync(groupCallId, "group-signal"));
+    signalChannelRef.current = channel;
+    return channel;
+  }, [groupCallId]);
 
   // Get local media
   const getLocalStream = useCallback(async () => {
@@ -104,7 +113,8 @@ export function useGroupCall({
       // ICE candidates — broadcast via Supabase Realtime
       pc.onicecandidate = (e) => {
         if (!e.candidate) return;
-        const channel = supabase.channel(topicForGroupSync(groupCallId, "group-signal"));
+        const channel = getSignalChannel();
+        if (!channel) return;
         channel.send({
           type: "broadcast",
           event: "ice-candidate",
@@ -130,7 +140,8 @@ export function useGroupCall({
       if (isInitiator) {
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-        const channel = supabase.channel(topicForGroupSync(groupCallId, "group-signal"));
+        const channel = getSignalChannel();
+        if (!channel) return pc;
         channel.send({
           type: "broadcast",
           event: "offer",
@@ -218,8 +229,10 @@ export function useGroupCall({
   useEffect(() => {
     if (!groupCallId || !startedRef.current) return;
 
-    const channel = supabase
-      .channel(`group-signal-${groupCallId}`)
+    const channel = getSignalChannel();
+    if (!channel) return;
+
+    channel
       .on("broadcast", { event: "offer" }, async ({ payload }: any) => {
         if (payload.to !== userId) return;
         const pc = await createPeerConnection(payload.from, payload.from, false);
@@ -285,16 +298,19 @@ export function useGroupCall({
     });
 
     return () => {
-      supabase.removeChannel(channel);
+      if (signalChannelRef.current === channel) {
+        supabase.removeChannel(channel);
+        signalChannelRef.current = null;
+      }
     };
-  }, [groupCallId, userId, userName, createPeerConnection]);
+  }, [groupCallId, userId, userName, createPeerConnection, getSignalChannel]);
 
   // Watch for participant DB changes (join/leave)
   useEffect(() => {
     if (!groupCallId) return;
 
     const channel = supabase
-      .channel(`group-participants-${groupCallId}-${crypto.randomUUID()}`)
+      .channel(`group-participants-${groupCallId}`)
       .on("postgres_changes", {
         event: "UPDATE",
         schema: "public",
@@ -357,8 +373,8 @@ export function useGroupCall({
   // Leave call
   const leaveCall = useCallback(async () => {
     // Notify others
-    const channel = supabase.channel(topicForGroupSync(groupCallId, "group-signal"));
-    channel.send({
+    const channel = getSignalChannel();
+    channel?.send({
       type: "broadcast",
       event: "participant-left",
       payload: { userId },
@@ -381,11 +397,16 @@ export function useGroupCall({
     localStreamRef.current?.getTracks().forEach((t) => t.stop());
     localStreamRef.current = null;
 
+    if (signalChannelRef.current) {
+      supabase.removeChannel(signalChannelRef.current);
+      signalChannelRef.current = null;
+    }
+
     setCallState("ended");
     setParticipants([]);
     startedRef.current = false;
     onEnded();
-  }, [groupCallId, userId, onEnded]);
+  }, [groupCallId, userId, onEnded, getSignalChannel]);
 
   // Invite a user to the group call
   const inviteUser = useCallback(async (targetUserId: string) => {

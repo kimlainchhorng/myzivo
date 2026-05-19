@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { subscribeToPooledPostgresChanges } from '@/services/chatRealtimePool';
 
 const NOTIFICATIONS_MARK_ALL_READ_EVENT = 'zivo:notifications:mark-all-read';
 
@@ -283,110 +284,86 @@ export function useNotifications(limit = 50): UseNotificationsResult {
   // Subscribe to real-time updates
   useEffect(() => {
     let cancelled = false;
-    let activeChannel: ReturnType<typeof supabase.channel> | null = null;
+    let unsubscribe: (() => void) | null = null;
 
     (async () => {
       const { data: session } = await supabase.auth.getSession();
       if (cancelled || !session?.session?.user) return;
 
       const userId = session.session.user.id;
-      const channel = supabase.channel(
-        `notifications-realtime-${userId}-${crypto.randomUUID()}`,
-      );
-      activeChannel = channel;
-
-      // INSERT: prepend new notification, bump unread, show toast
-      channel.on(
-        'postgres_changes' as never,
+      unsubscribe = subscribeToPooledPostgresChanges(
         {
-          event: 'INSERT',
+          poolKey: `notifications:${userId}`,
+          event: '*',
           schema: 'public',
           table: 'notifications',
           filter: `user_id=eq.${userId}`,
         },
-        (payload: { new: unknown }) => {
-          const newNotification = payload.new as Notification;
-          if (newNotification.channel !== 'in_app') return;
-          setNotifications((prev) => {
-            // De-dupe — if dispatcher fired twice with same id, don't double-insert.
-            if (prev.some((n) => n.id === newNotification.id)) return prev;
-            return [newNotification, ...prev].slice(0, limit);
-          });
-          if (!newNotification.is_read) {
-            setUnreadCount((prev) => prev + 1);
+        (payload) => {
+          const eventType = (payload as any).eventType as string | undefined;
+
+          if (eventType === 'INSERT') {
+            const newNotification = payload.new as Notification;
+            if (newNotification.channel !== 'in_app') return;
+            setNotifications((prev) => {
+              // De-dupe — if dispatcher fired twice with same id, don't double-insert.
+              if (prev.some((n) => n.id === newNotification.id)) return prev;
+              return [newNotification, ...prev].slice(0, limit);
+            });
+            if (!newNotification.is_read) {
+              setUnreadCount((prev) => prev + 1);
+            }
+            toast({
+              title: newNotification.title,
+              description: newNotification.body.substring(0, 100),
+            });
+            return;
           }
-          toast({
-            title: newNotification.title,
-            description: newNotification.body.substring(0, 100),
-          });
+
+          if (eventType === 'UPDATE') {
+            const updated = payload.new as Notification;
+            const previous = payload.old as Notification | undefined;
+            const nowMs = Date.now();
+            const isCurrentlySnoozed = updated.snoozed_until && +new Date(updated.snoozed_until) > nowMs;
+
+            setNotifications((prev) => {
+              const exists = prev.some((n) => n.id === updated.id);
+              if (isCurrentlySnoozed) {
+                // Just got snoozed (or extended) — drop from view.
+                return prev.filter((n) => n.id !== updated.id);
+              }
+              if (!exists) {
+                // Resurfacing from snooze — prepend, keep date order.
+                return [updated, ...prev].slice(0, limit);
+              }
+              return prev.map((n) => (n.id === updated.id ? { ...n, ...updated } : n));
+            });
+
+            // Adjust unread count delta based on read-state transition.
+            const wasRead = previous?.is_read ?? false;
+            const isRead = updated.is_read;
+            if (wasRead && !isRead) setUnreadCount((c) => c + 1);
+            else if (!wasRead && isRead) setUnreadCount((c) => Math.max(0, c - 1));
+            return;
+          }
+
+          if (eventType === 'DELETE') {
+            const removed = payload.old as Notification;
+            let wasUnread = false;
+            setNotifications((prev) => {
+              const target = prev.find((n) => n.id === removed.id);
+              wasUnread = !!target && !target.is_read;
+              return prev.filter((n) => n.id !== removed.id);
+            });
+            if (wasUnread) setUnreadCount((c) => Math.max(0, c - 1));
+          }
         },
       );
-
-      // UPDATE: keep cross-device read-state in sync. If another device
-      // marks an item read, this device should reflect it without manual refresh.
-      channel.on(
-        'postgres_changes' as never,
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload: { new: unknown; old?: unknown }) => {
-          const updated = payload.new as Notification;
-          const previous = payload.old as Notification | undefined;
-          const nowMs = Date.now();
-          const isCurrentlySnoozed = updated.snoozed_until && +new Date(updated.snoozed_until) > nowMs;
-
-          setNotifications((prev) => {
-            const exists = prev.some((n) => n.id === updated.id);
-            if (isCurrentlySnoozed) {
-              // Just got snoozed (or extended) — drop from view.
-              return prev.filter((n) => n.id !== updated.id);
-            }
-            if (!exists) {
-              // Resurfacing from snooze — prepend, keep date order.
-              return [updated, ...prev].slice(0, limit);
-            }
-            return prev.map((n) => (n.id === updated.id ? { ...n, ...updated } : n));
-          });
-
-          // Adjust unread count delta based on read-state transition.
-          const wasRead = previous?.is_read ?? false;
-          const isRead = updated.is_read;
-          if (wasRead && !isRead) setUnreadCount((c) => c + 1);
-          else if (!wasRead && isRead) setUnreadCount((c) => Math.max(0, c - 1));
-        },
-      );
-
-      // DELETE: drop the row from local state. Decrement unread if the
-      // removed row was unread.
-      channel.on(
-        'postgres_changes' as never,
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload: { old: unknown }) => {
-          const removed = payload.old as Notification;
-          let wasUnread = false;
-          setNotifications((prev) => {
-            const target = prev.find((n) => n.id === removed.id);
-            wasUnread = !!target && !target.is_read;
-            return prev.filter((n) => n.id !== removed.id);
-          });
-          if (wasUnread) setUnreadCount((c) => Math.max(0, c - 1));
-        },
-      );
-
-      channel.subscribe();
     })();
 
     return () => {
       cancelled = true;
-      if (activeChannel) supabase.removeChannel(activeChannel);
+      if (unsubscribe) unsubscribe();
     };
   }, [limit, toast]);
 

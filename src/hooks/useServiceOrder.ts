@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { ServiceOrder, ServiceOrderEvent, ServiceOrderStatus } from "@/types/serviceOrder";
+import { subscribeToPooledPostgresChanges } from "@/services/chatRealtimePool";
 
 export interface DriverPin {
   lat: number;
@@ -28,7 +29,7 @@ export function useServiceOrder(orderId: string | null | undefined): UseServiceO
   const [driverLocation, setDriverLocation] = useState<DriverPin | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const driverChRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const driverUnsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (!orderId) { setOrder(null); setEvents([]); setIsLoading(false); return; }
@@ -53,24 +54,39 @@ export function useServiceOrder(orderId: string | null | undefined): UseServiceO
 
   useEffect(() => {
     if (!orderId) return;
-    const ch = supabase.channel(`zivo-order:${orderId}-${crypto.randomUUID()}`)
-      .on("postgres_changes",
-        { event: "UPDATE", schema: "public", table: "service_orders", filter: `id=eq.${orderId}` },
-        (p) => setOrder(p.new as unknown as ServiceOrder),
-      )
-      .on("postgres_changes",
-        { event: "INSERT", schema: "public", table: "service_order_events", filter: `order_id=eq.${orderId}` },
-        (p) => setEvents((prev) => [...prev, p.new as unknown as ServiceOrderEvent]),
-      )
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    const unsubscribeOrder = subscribeToPooledPostgresChanges(
+      {
+        poolKey: `service-order:${orderId}`,
+        event: "UPDATE",
+        schema: "public",
+        table: "service_orders",
+        filter: `id=eq.${orderId}`,
+      },
+      (p) => setOrder(p.new as unknown as ServiceOrder),
+    );
+
+    const unsubscribeEvents = subscribeToPooledPostgresChanges(
+      {
+        poolKey: `service-order:${orderId}`,
+        event: "INSERT",
+        schema: "public",
+        table: "service_order_events",
+        filter: `order_id=eq.${orderId}`,
+      },
+      (p) => setEvents((prev) => [...prev, p.new as unknown as ServiceOrderEvent]),
+    );
+
+    return () => {
+      unsubscribeOrder();
+      unsubscribeEvents();
+    };
   }, [orderId]);
 
   useEffect(() => {
     const driverId = order?.driver_id;
-    if (driverChRef.current) {
-      supabase.removeChannel(driverChRef.current);
-      driverChRef.current = null;
+    if (driverUnsubscribeRef.current) {
+      driverUnsubscribeRef.current();
+      driverUnsubscribeRef.current = null;
     }
     if (!driverId) { setDriverLocation(null); return; }
 
@@ -83,18 +99,28 @@ export function useServiceOrder(orderId: string | null | undefined): UseServiceO
         }
       });
 
-    const ch = supabase.channel(`zivo-driver-loc:${driverId}-${crypto.randomUUID()}`)
-      .on("postgres_changes",
-        { event: "UPDATE", schema: "public", table: "drivers", filter: `id=eq.${driverId}` },
-        (p) => {
-          const row = p.new as { current_lat: number | null; current_lng: number | null; updated_at: string };
-          if (row.current_lat != null && row.current_lng != null) {
-            setDriverLocation({ lat: row.current_lat, lng: row.current_lng, updated_at: row.updated_at });
-          }
-        })
-      .subscribe();
-    driverChRef.current = ch;
-    return () => { if (driverChRef.current) supabase.removeChannel(driverChRef.current); };
+    driverUnsubscribeRef.current = subscribeToPooledPostgresChanges(
+      {
+        poolKey: `service-order-driver:${driverId}`,
+        event: "UPDATE",
+        schema: "public",
+        table: "drivers",
+        filter: `id=eq.${driverId}`,
+      },
+      (p) => {
+        const row = p.new as { current_lat: number | null; current_lng: number | null; updated_at: string };
+        if (row.current_lat != null && row.current_lng != null) {
+          setDriverLocation({ lat: row.current_lat, lng: row.current_lng, updated_at: row.updated_at });
+        }
+      }
+    );
+
+    return () => {
+      if (driverUnsubscribeRef.current) {
+        driverUnsubscribeRef.current();
+        driverUnsubscribeRef.current = null;
+      }
+    };
   }, [order?.driver_id]);
 
   const cancel = useCallback(async (reason?: string) => {

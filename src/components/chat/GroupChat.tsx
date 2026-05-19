@@ -67,6 +67,7 @@ const PollCreator = lazy(() => import("./ChatPollCreator"));
 const ChatMessageBubble = lazy(() => import("./ChatMessageBubble"));
 import type { StickerSendPayload } from "./StickerKeyboard";
 import { suggestStickersFor } from "@/lib/stickerSuggest";
+import { subscribeToPooledPostgresChanges } from "@/services/chatRealtimePool";
 
 interface GroupChatProps {
   groupId: string;
@@ -412,15 +413,16 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
   // Realtime
   useEffect(() => {
     if (!user?.id) return;
-    const channel = supabase
-      .channel(`group-${groupId}`)
-      .on("postgres_changes", {
+    const unsubscribeInsert = subscribeToPooledPostgresChanges(
+      {
+        poolKey: `group-chat:${groupId}`,
         event: "INSERT",
         schema: "public",
         table: "group_messages",
         filter: `group_id=eq.${groupId}`,
-      }, (payload: GroupMessageInsertPayload) => {
-        const msg = payload.new as GroupMessage;
+      },
+      (payload) => {
+        const msg = (payload as GroupMessageInsertPayload).new as GroupMessage;
         setMessages((prev) => {
           if (prev.some((m) => m.id === msg.id)) return prev;
           // Prefer exact match on client_send_id stored in file_payload
@@ -457,19 +459,29 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
           return [...prev, msg];
         });
         scrollToBottom();
-      })
-      .on("postgres_changes", {
+      }
+    );
+
+    const unsubscribeDelete = subscribeToPooledPostgresChanges(
+      {
+        poolKey: `group-chat:${groupId}`,
         event: "DELETE",
         schema: "public",
         table: "group_messages",
-      }, (payload: GroupMessageDeletePayload) => {
-        if (payload.old?.id) {
-          setMessages((prev) => prev.filter((m) => m.id !== payload.old.id));
+        filter: `group_id=eq.${groupId}`,
+      },
+      (payload) => {
+        const deletePayload = payload as GroupMessageDeletePayload;
+        if (deletePayload.old?.id) {
+          setMessages((prev) => prev.filter((m) => m.id !== deletePayload.old.id));
         }
-      })
-      .subscribe();
+      }
+    );
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      unsubscribeInsert();
+      unsubscribeDelete();
+    };
   }, [groupId, user?.id, scrollToBottom]);
 
   const getSenderName = (senderId: string) => {

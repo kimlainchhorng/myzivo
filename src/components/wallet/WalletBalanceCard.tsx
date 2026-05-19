@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { subscribeToPooledPostgresChanges } from "@/services/chatRealtimePool";
 import Plus from "lucide-react/dist/esm/icons/plus";
 import ArrowDown from "lucide-react/dist/esm/icons/arrow-down";
 import Wallet from "lucide-react/dist/esm/icons/wallet";
@@ -39,10 +40,17 @@ export default function WalletBalanceCard() {
       if (!cancelled) setWallet(data ?? { available_cents: 0, pending_cents: 0, currency: "USD" });
     };
     void load();
-    const channel = supabase.channel(`wallet-${user.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "user_wallets", filter: `user_id=eq.${user.id}` }, () => void load())
-      .subscribe();
-    return () => { cancelled = true; supabase.removeChannel(channel); };
+    const unsubscribe = subscribeToPooledPostgresChanges(
+      {
+        poolKey: `wallet:${user.id}`,
+        event: "*",
+        schema: "public",
+        table: "user_wallets",
+        filter: `user_id=eq.${user.id}`,
+      },
+      () => void load(),
+    );
+    return () => { cancelled = true; unsubscribe(); };
   }, [user?.id]);
 
   const trigger = (action: WalletAction) => {

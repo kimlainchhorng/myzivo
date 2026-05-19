@@ -7,14 +7,16 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export function useBulkPresence(currentUserId: string | undefined, watchIds: string[]) {
   const [onlineIds, setOnlineIds] = useState<Set<string>>(new Set());
-  const watchKey = watchIds.slice().sort().join(",");
+  const sortedWatchIds = watchIds.slice().sort();
+  const watchSet = new Set(sortedWatchIds);
+  const watchKey = sortedWatchIds.join(",");
   const lastKey = useRef("");
 
   useEffect(() => {
     if (!currentUserId) return;
     lastKey.current = watchKey;
 
-    const channel = supabase.channel(`chat-list-presence-${crypto.randomUUID()}`, {
+    const channel = supabase.channel(`chat-list-presence-${currentUserId}`, {
       config: { presence: { key: currentUserId } },
     });
 
@@ -22,7 +24,7 @@ export function useBulkPresence(currentUserId: string | undefined, watchIds: str
       const state = channel.presenceState() as Record<string, any[]>;
       const next = new Set<string>();
       for (const key of Object.keys(state)) {
-        if (watchIds.includes(key)) next.add(key);
+        if (watchSet.has(key)) next.add(key);
       }
       setOnlineIds(next);
     };

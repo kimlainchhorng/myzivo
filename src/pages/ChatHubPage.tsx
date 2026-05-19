@@ -80,6 +80,14 @@ import { assessChatMessageRisk, sanitizeOutgoingMessage } from "@/lib/security/c
 import { validateExternalUrl } from "@/lib/urlSafety";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
+import { getChatRealtimePoolStats, subscribeToPooledPostgresChangesGroup } from "@/services/chatRealtimePool";
+import {
+  buildChatHubActionsFolderMembership,
+  buildChatHubFolderTabs,
+  buildChatHubUnreadMaps,
+  filterChatHubRows,
+  sortChatHubRowsByPinAndDate,
+} from "./chat/chatHubSelectors";
 
 // Lazy-load heavy sub-pages/components
 const GroupChat = lazy(() => import("@/components/chat/GroupChat"));
@@ -156,11 +164,11 @@ type PersistedOpenChat =
   | { kind: "ride"; rideRequestId: string; counterpartName?: string }
   | { kind: "support"; ticketId: string };
 
-function getChatLastSeenStorageKey(userId: string, category: "ride" | "support") {
+function getChatLastSeenStorageKey(userId: string, category: "group" | "ride" | "support") {
   return `${CHAT_LAST_SEEN_KEY_PREFIX}:${userId}:${category}`;
 }
 
-function readChatLastSeenMap(userId: string | undefined, category: "ride" | "support"): Record<string, string> {
+function readChatLastSeenMap(userId: string | undefined, category: "group" | "ride" | "support"): Record<string, string> {
   if (!userId) return {};
   try {
     const raw = localStorage.getItem(getChatLastSeenStorageKey(userId, category));
@@ -310,6 +318,9 @@ const personalHubMenu = [
 ] as const;
 
 export default function ChatHubPage({ embedded = false }: { embedded?: boolean } = {}) {
+  const fallbackRefreshMs = 45_000;
+  const invalidateDebounceMs = 350;
+  const [syncMode, setSyncMode] = useState<"live" | "fallback">("fallback");
   const [folder, setFolderState] = useState<string>(() => {
     try {
       const saved = localStorage.getItem(FOLDER_STORAGE_KEY);
@@ -398,6 +409,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const queryClient = useQueryClient();
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string; category: ChatCategory; isGroup?: boolean } | null>(null);
   const [swipedId, setSwipedId] = useState<string | null>(null);
+  const [groupLastSeen, setGroupLastSeen] = useState<Record<string, string>>({});
   const [rideLastSeen, setRideLastSeen] = useState<Record<string, string>>({});
   const [supportLastSeen, setSupportLastSeen] = useState<Record<string, string>>({});
   const [openShopChat, setOpenShopChat] = useState<{ storeId: string; name: string; logo?: string | null } | null>(null);
@@ -425,13 +437,23 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const fallbackPollInterval = syncMode === "fallback" && user ? fallbackRefreshMs : false;
+  const groupLastSeenSignature = useMemo(() => JSON.stringify(groupLastSeen), [groupLastSeen]);
   const rideLastSeenSignature = useMemo(() => JSON.stringify(rideLastSeen), [rideLastSeen]);
   const supportLastSeenSignature = useMemo(() => JSON.stringify(supportLastSeen), [supportLastSeen]);
 
   useEffect(() => {
+    setGroupLastSeen(readChatLastSeenMap(user?.id, "group"));
     setRideLastSeen(readChatLastSeenMap(user?.id, "ride"));
     setSupportLastSeen(readChatLastSeenMap(user?.id, "support"));
   }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      localStorage.setItem(getChatLastSeenStorageKey(user.id, "group"), JSON.stringify(groupLastSeen));
+    } catch {}
+  }, [groupLastSeen, user?.id]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -454,6 +476,11 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       return;
     }
     setSupportLastSeen((prev) => ({ ...prev, [chatId]: seenAt }));
+  }, []);
+
+  const markGroupChatSeen = useCallback((groupId: string) => {
+    const seenAt = new Date().toISOString();
+    setGroupLastSeen((prev) => ({ ...prev, [groupId]: seenAt }));
   }, []);
 
   // The embedded chat slideout (rendered by FeedSidebar) has no action toolbar
@@ -479,7 +506,15 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     setOpenShopChat(null);
     setOpenRideChat(null);
     setOpenSupportChat(null);
-  }, [openGroupChat]);
+    markGroupChatSeen(openGroupChat.id);
+    queryClient.setQueryData<any[]>(["chat-hub-groups", user?.id, groupLastSeenSignature], (previous = []) =>
+      previous.map((chat: any) =>
+        chat.id === openGroupChat.id
+          ? { ...chat, unread: 0 }
+          : chat
+      )
+    );
+  }, [groupLastSeenSignature, markGroupChatSeen, openGroupChat, queryClient, user?.id]);
 
   useEffect(() => {
     if (!openShopChat) return;
@@ -503,7 +538,14 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     setOpenShopChat(null);
     setOpenSupportChat(null);
     markOverlayChatSeen("ride", openRideChat.rideRequestId);
-  }, [markOverlayChatSeen, openRideChat]);
+    queryClient.setQueryData<any[]>(["chat-hub-ride", user?.id, rideLastSeenSignature], (previous = []) =>
+      previous.map((chat: any) =>
+        chat.rideRequestId === openRideChat.rideRequestId || chat.id === openRideChat.rideRequestId
+          ? { ...chat, unread: 0 }
+          : chat
+      )
+    );
+  }, [markOverlayChatSeen, openRideChat, queryClient, rideLastSeenSignature, user?.id]);
 
   useEffect(() => {
     if (!openSupportChat) return;
@@ -512,7 +554,14 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     setOpenShopChat(null);
     setOpenRideChat(null);
     markOverlayChatSeen("support", openSupportChat.ticketId);
-  }, [markOverlayChatSeen, openSupportChat]);
+    queryClient.setQueryData<any[]>(["chat-hub-support", user?.id, supportLastSeenSignature], (previous = []) =>
+      previous.map((chat: any) =>
+        chat.id === openSupportChat.ticketId
+          ? { ...chat, unread: 0 }
+          : chat
+      )
+    );
+  }, [markOverlayChatSeen, openSupportChat, queryClient, supportLastSeenSignature, user?.id]);
 
   // Share mode state
   const [sharePayload, setSharePayload] = useState<{ shareUrl: string; shareText: string } | null>(null);
@@ -778,43 +827,111 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   useEffect(() => {
     if (!user?.id) return;
 
+    const pendingInvalidations = new Map<string, ReturnType<typeof setTimeout>>();
+    const scheduleInvalidate = (key: string, run: () => void) => {
+      const existing = pendingInvalidations.get(key);
+      if (existing) clearTimeout(existing);
+      const timer = setTimeout(() => {
+        pendingInvalidations.delete(key);
+        run();
+      }, invalidateDebounceMs);
+      pendingInvalidations.set(key, timer);
+    };
+
     const invalidatePersonal = () => {
-      void queryClient.invalidateQueries({ queryKey: ["chat-hub-personal", user.id] });
-      void queryClient.invalidateQueries({ queryKey: ["chat-hub-groups", user.id] });
+      scheduleInvalidate("chat-hub-personal", () => {
+        void queryClient.invalidateQueries({ queryKey: ["chat-hub-personal", user.id] });
+      });
+      scheduleInvalidate("chat-hub-groups", () => {
+        void queryClient.invalidateQueries({ queryKey: ["chat-hub-groups", user.id] });
+      });
     };
     const invalidateShop = () => {
-      void queryClient.invalidateQueries({ queryKey: ["chat-hub-shop", user.id] });
+      scheduleInvalidate("chat-hub-shop", () => {
+        void queryClient.invalidateQueries({ queryKey: ["chat-hub-shop", user.id] });
+      });
     };
     const invalidateRide = () => {
-      void queryClient.invalidateQueries({ queryKey: ["chat-hub-ride", user.id] });
+      scheduleInvalidate("chat-hub-ride", () => {
+        void queryClient.invalidateQueries({ queryKey: ["chat-hub-ride", user.id] });
+      });
     };
     const invalidateSupport = () => {
-      void queryClient.invalidateQueries({ queryKey: ["chat-hub-support", user.id] });
+      scheduleInvalidate("chat-hub-support", () => {
+        void queryClient.invalidateQueries({ queryKey: ["chat-hub-support", user.id] });
+      });
     };
     const invalidateFolders = () => {
-      void queryClient.invalidateQueries({ queryKey: ["chat-folders", user.id] });
-      void queryClient.invalidateQueries({ queryKey: ["chat-folder-members", user.id] });
+      scheduleInvalidate("chat-folders", () => {
+        void queryClient.invalidateQueries({ queryKey: ["chat-folders", user.id] });
+      });
+      scheduleInvalidate("chat-folder-members", () => {
+        void queryClient.invalidateQueries({ queryKey: ["chat-folder-members", user.id] });
+      });
     };
 
-    const channel = supabase
-      .channel(`chat-hub-side-tabs-${user.id}-${crypto.randomUUID()}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "direct_messages" }, invalidatePersonal)
-      .on("postgres_changes", { event: "*", schema: "public", table: "group_messages" }, invalidatePersonal)
-      .on("postgres_changes", { event: "*", schema: "public", table: "chat_groups" }, invalidatePersonal)
-      .on("postgres_changes", { event: "*", schema: "public", table: "chat_group_members" }, invalidatePersonal)
-      .on("postgres_changes", { event: "*", schema: "public", table: "store_chats" }, invalidateShop)
-      .on("postgres_changes", { event: "*", schema: "public", table: "store_chat_messages" }, invalidateShop)
-      .on("postgres_changes", { event: "*", schema: "public", table: "trip_messages" }, invalidateRide)
-      .on("postgres_changes", { event: "*", schema: "public", table: "support_tickets" }, invalidateSupport)
-      .on("postgres_changes", { event: "*", schema: "public", table: "ticket_replies" }, invalidateSupport)
-      .on("postgres_changes", { event: "*", schema: "public", table: "chat_folders" }, invalidateFolders)
-      .on("postgres_changes", { event: "*", schema: "public", table: "chat_folder_members" }, invalidateFolders)
-      .subscribe();
+    const onPersonalTables = new Set(["direct_messages", "group_messages", "chat_groups", "chat_group_members"]);
+    const onShopTables = new Set(["store_chats", "store_chat_messages"]);
+    const onRideTables = new Set(["trip_messages"]);
+    const onSupportTables = new Set(["support_tickets", "ticket_replies"]);
+    const onFolderTables = new Set(["chat_folders", "chat_folder_members"]);
+
+    const unsubscribe = subscribeToPooledPostgresChangesGroup(
+      `chat-hub-side-tabs:${user.id}`,
+      [
+        { event: "*", schema: "public", table: "direct_messages" },
+        { event: "*", schema: "public", table: "group_messages" },
+        { event: "*", schema: "public", table: "chat_groups" },
+        { event: "*", schema: "public", table: "chat_group_members" },
+        { event: "*", schema: "public", table: "store_chats" },
+        { event: "*", schema: "public", table: "store_chat_messages" },
+        { event: "*", schema: "public", table: "trip_messages" },
+        { event: "*", schema: "public", table: "support_tickets" },
+        { event: "*", schema: "public", table: "ticket_replies" },
+        { event: "*", schema: "public", table: "chat_folders" },
+        { event: "*", schema: "public", table: "chat_folder_members" },
+      ],
+      ({ subscription }) => {
+        const table = subscription.table;
+        if (onPersonalTables.has(table)) {
+          invalidatePersonal();
+          return;
+        }
+        if (onShopTables.has(table)) {
+          invalidateShop();
+          return;
+        }
+        if (onRideTables.has(table)) {
+          invalidateRide();
+          return;
+        }
+        if (onSupportTables.has(table)) {
+          invalidateSupport();
+          return;
+        }
+        if (onFolderTables.has(table)) {
+          invalidateFolders();
+        }
+      },
+      {
+        onStatusChange: (status) => {
+          if (status === "SUBSCRIBED") {
+            setSyncMode((prev) => (prev === "live" ? prev : "live"));
+            return;
+          }
+          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+            setSyncMode((prev) => (prev === "fallback" ? prev : "fallback"));
+          }
+        },
+      }
+    );
 
     return () => {
-      supabase.removeChannel(channel);
+      pendingInvalidations.forEach((timer) => clearTimeout(timer));
+      pendingInvalidations.clear();
+      unsubscribe();
     };
-  }, [queryClient, user?.id]);
+  }, [invalidateDebounceMs, queryClient, user?.id]);
 
   // Send shared content as a DM to selected contact
   const handleShareToContact = async (contactId: string, contactName: string, contactAvatar?: string | null) => {
@@ -855,6 +972,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const { data: shopChats = [] } = useQuery({
     queryKey: ["chat-hub-shop", user?.id],
     enabled: !!user,
+    refetchInterval: fallbackPollInterval,
     queryFn: async () => {
       const { data } = await supabase
         .from("store_chats")
@@ -864,35 +982,53 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
       if (!data) return [];
 
-      const enriched = await Promise.all(
-        data.map(async (chat: any) => {
-          const { data: lastMsg } = await supabase
-            .from("store_chat_messages")
-            .select("content, created_at, is_read, sender_type")
-            .eq("chat_id", chat.id)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
+      const chatIds = data.map((chat: any) => chat.id).filter(Boolean);
+      if (chatIds.length === 0) return [];
 
-          const { count } = await supabase
-            .from("store_chat_messages")
-            .select("*", { count: "exact", head: true })
-            .eq("chat_id", chat.id)
-            .eq("sender_type", "store")
-            .eq("is_read", false);
+      const [messageRowsResult, unreadRowsResult] = await Promise.all([
+        supabase
+          .from("store_chat_messages")
+          .select("chat_id, content, created_at, is_read, sender_type")
+          .in("chat_id", chatIds)
+          .order("created_at", { ascending: false })
+          .limit(2500),
+        supabase
+          .from("store_chat_messages")
+          .select("chat_id, created_at")
+          .in("chat_id", chatIds)
+          .eq("sender_type", "store")
+          .eq("is_read", false)
+          .limit(2500),
+      ]);
 
-          return {
-            id: chat.id,
-            storeId: chat.store_id,
-            storeSlug: chat.store_profiles?.slug,
-            name: chat.store_profiles?.name || "Store",
-            avatar: chat.store_profiles?.logo_url,
-            lastMessage: lastMsg?.content || "No messages yet",
-            lastTime: lastMsg?.created_at || chat.created_at,
-            unread: count || 0,
-          };
-        })
-      );
+      const latestByChat = new Map<string, { content: string; created_at: string }>();
+      for (const row of (messageRowsResult.data || []) as any[]) {
+        if (!row?.chat_id || latestByChat.has(row.chat_id)) continue;
+        latestByChat.set(row.chat_id, {
+          content: row.content || "",
+          created_at: row.created_at,
+        });
+      }
+
+      const unreadByChat = new Map<string, number>();
+      for (const row of (unreadRowsResult.data || []) as any[]) {
+        if (!row?.chat_id) continue;
+        unreadByChat.set(row.chat_id, (unreadByChat.get(row.chat_id) || 0) + 1);
+      }
+
+      const enriched = data.map((chat: any) => {
+        const lastMsg = latestByChat.get(chat.id);
+        return {
+          id: chat.id,
+          storeId: chat.store_id,
+          storeSlug: chat.store_profiles?.slug,
+          name: chat.store_profiles?.name || "Store",
+          avatar: chat.store_profiles?.logo_url,
+          lastMessage: lastMsg?.content || "No messages yet",
+          lastTime: lastMsg?.created_at || chat.created_at,
+          unread: unreadByChat.get(chat.id) || 0,
+        };
+      });
       return enriched;
     },
   });
@@ -901,6 +1037,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const { data: rideChats = [] } = useQuery({
     queryKey: ["chat-hub-ride", user?.id, rideLastSeenSignature],
     enabled: !!user,
+    refetchInterval: fallbackPollInterval,
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from("trip_messages")
@@ -936,6 +1073,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const { data: supportChats = [] } = useQuery({
     queryKey: ["chat-hub-support", user?.id, supportLastSeenSignature],
     enabled: !!user,
+    refetchInterval: fallbackPollInterval,
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from("support_tickets")
@@ -946,31 +1084,58 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
         .limit(30);
 
       if (!data) return [];
-      const enriched = await Promise.all((data as any[]).map(async (ticket: any) => {
-        const seenAtIso = supportLastSeen[ticket.id] || null;
-        const [latestReplyResult, unreadCountResult] = await Promise.all([
-          (supabase as any)
-            .from("ticket_replies")
-            .select("message, created_at, is_admin")
-            .eq("ticket_id", ticket.id)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle(),
-          seenAtIso
-            ? (supabase as any)
-                .from("ticket_replies")
-                .select("*", { count: "exact", head: true })
-                .eq("ticket_id", ticket.id)
-                .eq("is_admin", true)
-                .gt("created_at", seenAtIso)
-            : (supabase as any)
-                .from("ticket_replies")
-                .select("*", { count: "exact", head: true })
-                .eq("ticket_id", ticket.id)
-                .eq("is_admin", true),
-        ]);
-        const reply = latestReplyResult.data;
-        const unreadCount = unreadCountResult.count || 0;
+      const tickets = data as any[];
+      const ticketIds = tickets.map((t) => t.id).filter(Boolean);
+      if (ticketIds.length === 0) return [];
+
+      const seenIsos = ticketIds
+        .map((ticketId) => supportLastSeen[ticketId])
+        .filter((value): value is string => !!value)
+        .sort();
+      const oldestSeenIso = seenIsos[0] || null;
+
+      const [latestRepliesResult, unreadRepliesResult] = await Promise.all([
+        (supabase as any)
+          .from("ticket_replies")
+          .select("ticket_id, message, created_at, is_admin")
+          .in("ticket_id", ticketIds)
+          .order("created_at", { ascending: false })
+          .limit(1200),
+        oldestSeenIso
+          ? (supabase as any)
+              .from("ticket_replies")
+              .select("ticket_id, created_at, is_admin")
+              .in("ticket_id", ticketIds)
+              .eq("is_admin", true)
+              .gt("created_at", oldestSeenIso)
+              .order("created_at", { ascending: false })
+              .limit(2000)
+          : (supabase as any)
+              .from("ticket_replies")
+              .select("ticket_id, created_at, is_admin")
+              .in("ticket_id", ticketIds)
+              .eq("is_admin", true)
+              .order("created_at", { ascending: false })
+              .limit(2000),
+      ]);
+
+      const latestReplyByTicket = new Map<string, { message?: string; created_at?: string; is_admin?: boolean }>();
+      for (const reply of (latestRepliesResult.data || []) as any[]) {
+        if (!reply?.ticket_id || latestReplyByTicket.has(reply.ticket_id)) continue;
+        latestReplyByTicket.set(reply.ticket_id, reply);
+      }
+
+      const unreadCountByTicket = new Map<string, number>();
+      for (const reply of (unreadRepliesResult.data || []) as any[]) {
+        if (!reply?.ticket_id || !reply?.created_at) continue;
+        const seenAtIso = supportLastSeen[reply.ticket_id] || null;
+        if (seenAtIso && new Date(reply.created_at).getTime() <= new Date(seenAtIso).getTime()) continue;
+        unreadCountByTicket.set(reply.ticket_id, (unreadCountByTicket.get(reply.ticket_id) || 0) + 1);
+      }
+
+      const enriched = tickets.map((ticket: any) => {
+        const reply = latestReplyByTicket.get(ticket.id);
+        const unreadCount = unreadCountByTicket.get(ticket.id) || 0;
 
         return {
           id: ticket.id,
@@ -981,7 +1146,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
           lastTime: reply?.created_at || ticket.last_message_at || ticket.updated_at || ticket.created_at,
           unread: unreadCount,
         };
-      }));
+      });
       return enriched;
     },
   });
@@ -990,6 +1155,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const { data: personalChats = [] } = useQuery({
     queryKey: ["chat-hub-personal", user?.id],
     enabled: !!user,
+    refetchInterval: fallbackPollInterval,
     queryFn: async () => {
       const { data } = await supabase
         .from("direct_messages")
@@ -1059,8 +1225,9 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
   // Fetch group chats
   const { data: groupChats = [] } = useQuery({
-    queryKey: ["chat-hub-groups", user?.id],
+    queryKey: ["chat-hub-groups", user?.id, groupLastSeenSignature],
     enabled: !!user,
+    refetchInterval: fallbackPollInterval,
     queryFn: async () => {
       const { data: memberships } = await (supabase as any)
         .from("chat_group_members")
@@ -1077,42 +1244,74 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
       if (!groups) return [];
 
-      const enriched = await Promise.all(
-        groups.map(async (g: any) => {
-          const { data: lastMsg } = await (supabase as any)
-            .from("group_messages")
-            .select("message, created_at, sender_id")
-            .eq("group_id", g.id)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
+      const { data: groupMessages } = await (supabase as any)
+        .from("group_messages")
+        .select("group_id, message, created_at, sender_id, message_type")
+        .in("group_id", groupIds)
+        .order("created_at", { ascending: false })
+        .limit(3000);
 
-          let lastSenderName: string | null = null;
-          if (lastMsg?.sender_id && lastMsg.sender_id !== user!.id) {
-            const { data: senderProf } = await supabase
-              .from("profiles")
-              .select("full_name")
-              .eq("user_id", lastMsg.sender_id)
-              .maybeSingle();
-            lastSenderName = (senderProf as any)?.full_name?.split(" ")[0] || null;
-          } else if (lastMsg?.sender_id === user!.id) {
-            lastSenderName = "You";
-          }
+      const latestByGroup = new Map<string, any>();
+      const unreadByGroup = new Map<string, number>();
 
-          return {
-            id: g.id,
-            name: g.name,
-            avatar: g.avatar_url,
-            lastMessage: lastMsg?.message_type === "voice"
+      for (const msg of (groupMessages || []) as any[]) {
+        if (!msg?.group_id) continue;
+        if (!latestByGroup.has(msg.group_id)) {
+          latestByGroup.set(msg.group_id, msg);
+        }
+
+        if (!msg.sender_id || msg.sender_id === user!.id) continue;
+        const seenAt = groupLastSeen[msg.group_id] ? new Date(groupLastSeen[msg.group_id]).getTime() : 0;
+        const createdAt = msg.created_at ? new Date(msg.created_at).getTime() : 0;
+        if (!seenAt || createdAt > seenAt) {
+          unreadByGroup.set(msg.group_id, (unreadByGroup.get(msg.group_id) || 0) + 1);
+        }
+      }
+
+      const latestSenderIds = Array.from(
+        new Set(
+          Array.from(latestByGroup.values())
+            .map((msg: any) => msg?.sender_id)
+            .filter((senderId: string | null) => !!senderId && senderId !== user!.id)
+        )
+      ) as string[];
+
+      const senderNameMap = new Map<string, string>();
+      if (latestSenderIds.length > 0) {
+        const { data: senderProfiles } = await supabase
+          .from("profiles")
+          .select("user_id, full_name")
+          .in("user_id", latestSenderIds);
+
+        for (const profile of (senderProfiles || []) as any[]) {
+          const fullName = String(profile?.full_name || "").trim();
+          if (!profile?.user_id || !fullName) continue;
+          senderNameMap.set(profile.user_id, fullName.split(" ")[0]);
+        }
+      }
+
+      const enriched = groups.map((g: any) => {
+        const lastMsg = latestByGroup.get(g.id);
+        let lastSenderName: string | null = null;
+        if (lastMsg?.sender_id === user!.id) {
+          lastSenderName = "You";
+        } else if (lastMsg?.sender_id) {
+          lastSenderName = senderNameMap.get(lastMsg.sender_id) || null;
+        }
+
+        return {
+          id: g.id,
+          name: g.name,
+          avatar: g.avatar_url,
+          lastMessage: lastMsg?.message_type === "voice"
             ? "🎤 Voice message"
             : lastMsg?.message || "Group created",
-            lastTime: lastMsg?.created_at || g.created_at,
-            unread: 0,
-            isGroup: true,
-            lastSenderName,
-          };
-        })
-      );
+          lastTime: lastMsg?.created_at || g.created_at,
+          unread: unreadByGroup.get(g.id) || 0,
+          isGroup: true,
+          lastSenderName,
+        };
+      });
       return enriched;
     },
   });
@@ -1165,31 +1364,18 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zivoOFMode, folder]);
 
-  const folderTabs = useMemo<FolderTab[]>(() => {
-    const customTabs = customFolders.map((f) => ({
-      id: `custom:${f.id}`,
-      label: `${f.icon || "📁"} ${f.name}`,
-      category: "personal" as ChatCategory,
-    }));
-    // OF mode: only personal/unread/all — no Groups, Shop, Support, Ride, custom folders.
-    if (zivoOFMode) {
-      return builtInFolders.filter((f) => f.id === "all" || f.id === "unread" || f.id === "personal");
-    }
-    return [...builtInFolders, ...customTabs];
-  }, [customFolders, zivoOFMode]);
+  const folderTabs = useMemo(
+    () => buildChatHubFolderTabs({ builtInFolders, customFolders, zivoOFMode }),
+    [customFolders, zivoOFMode],
+  );
 
   // Row actions sheet state — declared before actionsFolderMembership useMemo
   const [actionsTarget, setActionsTarget] = useState<ChatRowActionsTarget | null>(null);
 
-  const actionsFolderMembership = useMemo(() => {
-    if (!actionsTarget) return new Set<string>();
-    const set = new Set<string>();
-    for (const folderDef of customFolders) {
-      const members = customFolderMemberMap.get(folderDef.id);
-      if (members?.has(actionsTarget.id)) set.add(folderDef.id);
-    }
-    return set;
-  }, [actionsTarget, customFolders, customFolderMemberMap]);
+  const actionsFolderMembership = useMemo(
+    () => buildChatHubActionsFolderMembership({ actionsTargetId: actionsTarget?.id || null, customFolders, customFolderMemberMap }),
+    [actionsTarget?.id, customFolders, customFolderMemberMap],
+  );
 
   const currentCategory = categories.find((c) => c.id === active)!;
   const { prefs, isPinned, isMuted, isArchived, isMarkedUnread, togglePin, toggleMute, toggleArchive, toggleMarkUnread, setMarkedUnread, setPrefs } = useChatPrefs(user?.id);
@@ -1255,10 +1441,26 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const pendingRequests = useMemo(() => allIncomingRequests.filter((r) => r.status === "pending"), [allIncomingRequests]);
 
   // Compute unread counts per tab
-  const personalUnread = personalChats.reduce((sum: number, c: any) => sum + (c.unread || 0), 0);
-  const shopUnread = shopChats.reduce((sum: number, c: any) => sum + (c.unread || 0), 0);
-  const rideUnread = rideChats.reduce((sum: number, c: any) => sum + (c.unread || 0), 0);
-  const supportUnread = supportChats.reduce((sum: number, c: any) => sum + (c.unread || 0), 0);
+  const {
+    personalUnread,
+    shopUnread,
+    rideUnread,
+    supportUnread,
+    builtInFolderUnreadMap,
+    customFolderUnreadMap,
+    folderUnreadMap,
+  } = useMemo(
+    () => buildChatHubUnreadMaps({
+      personalChats: personalChats as any[],
+      groupChats: groupChats as any[],
+      shopChats: shopChats as any[],
+      supportChats: supportChats as any[],
+      rideChats: rideChats as any[],
+      customFolders,
+      customFolderMemberMap,
+    }),
+    [customFolders, customFolderMemberMap, groupChats, personalChats, rideChats, shopChats, supportChats],
+  );
   const unreadMap: Record<ChatCategory, number> = {
     personal: personalUnread,
     shop: shopUnread,
@@ -1267,7 +1469,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   };
 
   const mergedPersonalList = active === "personal"
-    ? [...personalChats, ...groupChats].sort((a: any, b: any) => new Date(b.lastTime).getTime() - new Date(a.lastTime).getTime())
+    ? sortChatHubRowsByPinAndDate([...personalChats, ...groupChats] as any[], isPinned)
     : [];
 
   const rawChatList =
@@ -1277,66 +1479,16 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     mergedPersonalList;
 
   // Apply folder-level filtering on top of category data
-  const folderFiltered = (rawChatList as any[]).filter((c) => {
-    // OF mode: never show groups or business/system chats, regardless of folder.
-    if (zivoOFMode && ((c as any).isGroup || (c as any).isBusiness)) return false;
-    if (folder.startsWith("custom:")) {
-      const customFolderId = folder.slice("custom:".length);
-      const members = customFolderMemberMap.get(customFolderId);
-      return members?.has(c.id) === true;
-    }
-    if (folder === "unread") return (c.unread || 0) > 0 || isMarkedUnread(c.id);
-    if (folder === "personal") return !(c as any).isGroup;
-    if (folder === "groups") return !!(c as any).isGroup;
-    return true;
+  const { folderFiltered, archivedList, visibleList } = filterChatHubRows({
+    rows: rawChatList as any[],
+    folder,
+    zivoOFMode,
+    customFolderMemberMap,
+    isMarkedUnread,
+    isArchived,
   });
 
-  // Split archived vs visible
-  const archivedList = folderFiltered.filter((c: any) => isArchived(c.id));
-  const visibleList = folderFiltered.filter((c: any) => !isArchived(c.id));
-
-  // Per-folder unread badges (for the pill bar)
-  const builtInFolderUnreadMap: Record<BuiltInChatFolder, number> = {
-    all: personalUnread,
-    unread: personalUnread,
-    personal: personalChats.filter((c: any) => !c.isGroup).reduce((s: number, c: any) => s + (c.unread || 0), 0),
-    groups: groupChats.reduce((s: number, c: any) => s + (c.unread || 0), 0),
-    shop: shopUnread,
-    support: supportUnread,
-    ride: rideUnread,
-  };
-
-  const customFolderUnreadMap = useMemo(() => {
-    const map: Record<string, number> = {};
-    const personalPool = [...personalChats, ...groupChats] as any[];
-    for (const folderDef of customFolders) {
-      const members = customFolderMemberMap.get(folderDef.id);
-      if (!members) {
-        map[`custom:${folderDef.id}`] = 0;
-        continue;
-      }
-      map[`custom:${folderDef.id}`] = personalPool
-        .filter((chat) => members.has(chat.id))
-        .reduce((sum, chat) => sum + (chat.unread || 0), 0);
-    }
-    return map;
-  }, [customFolders, customFolderMemberMap, groupChats, personalChats]);
-
-  const folderUnreadMap: Record<string, number> = {
-    ...builtInFolderUnreadMap,
-    ...customFolderUnreadMap,
-  };
-
-  // Pinned-first sort
-  const sortByPin = (list: any[]) =>
-    [...list].sort((a, b) => {
-      const pa = isPinned(a.id) ? 1 : 0;
-      const pb = isPinned(b.id) ? 1 : 0;
-      if (pa !== pb) return pb - pa;
-      return new Date(b.lastTime).getTime() - new Date(a.lastTime).getTime();
-    });
-
-  const sortedVisible = sortByPin(visibleList);
+  const sortedVisible = sortChatHubRowsByPinAndDate(visibleList as any[], isPinned);
   const archivedUnread = archivedList.reduce((s: number, c: any) => s + (c.unread || 0), 0);
 
   const normalizedSearch = search.trim().toLowerCase();
@@ -1413,6 +1565,25 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
   const hasOverlayChatOpen = Boolean(openShopChat || openPersonalChat || openGroupChat || openRideChat || openSupportChat);
   const showListShell = !embedded || !hasOverlayChatOpen;
+
+  useEffect(() => {
+    if (!import.meta.env.DEV || !user?.id) return;
+
+    const emitPoolStats = () => {
+      const stats = getChatRealtimePoolStats();
+      console.debug("[ChatHub][RealtimePool]", {
+        activeFolder: folder,
+        activeCategory: active,
+        hasOverlayChatOpen,
+        syncMode,
+        ...stats,
+      });
+    };
+
+    emitPoolStats();
+    const intervalId = window.setInterval(emitPoolStats, 10_000);
+    return () => window.clearInterval(intervalId);
+  }, [active, folder, hasOverlayChatOpen, syncMode, user?.id]);
 
   // Desktop only: when a chat is open we keep the conversation list pinned as
   // a left sidebar (Telegram / Discord pattern). The list width is exposed
@@ -1977,6 +2148,20 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                       buttonLabel="Chat notifications"
                       dialogLabel="Chat notifications"
                     />
+                  )}
+                  {!selectionMode && (
+                    <div
+                      className={cn(
+                        "flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-1 rounded-full border text-[10px] font-semibold",
+                        syncMode === "live"
+                          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600"
+                          : "border-amber-500/30 bg-amber-500/10 text-amber-700"
+                      )}
+                      title={syncMode === "live" ? "Realtime connected" : "Realtime degraded, fallback refresh active"}
+                    >
+                      <span className={cn("w-1.5 h-1.5 rounded-full", syncMode === "live" ? "bg-emerald-500" : "bg-amber-500")} />
+                      <span className="hidden sm:inline">{syncMode === "live" ? "Live" : "Fallback"}</span>
+                    </div>
                   )}
                 </div>
               </div>

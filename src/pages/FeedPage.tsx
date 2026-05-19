@@ -1620,10 +1620,10 @@ function ReelCard({
               onClick={handleFollow}
               disabled={followLoading}
               className={cn(
-                "shrink-0 px-3 py-1 rounded-md text-xs font-semibold transition-all active:scale-95 border backdrop-blur-sm",
+                "shrink-0 px-3 py-1 rounded-md text-xs font-bold transition-all active:scale-95 border backdrop-blur-sm hover:opacity-90",
                 isFollowing
                   ? "bg-white/10 border-white/30 text-white"
-                  : "bg-primary border-primary text-primary-foreground"
+                  : "bg-ig-gradient border-transparent text-white shadow-sm shadow-rose-500/25"
               )}
             >
               {followLoading ? (
@@ -1640,7 +1640,7 @@ function ReelCard({
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onNavigate(post.store_slug!); }}
-              className="shrink-0 px-3 py-1 rounded-md text-xs font-semibold transition-all active:scale-95 border backdrop-blur-sm bg-primary border-primary text-primary-foreground inline-flex items-center gap-1"
+              className="shrink-0 px-3 py-1 rounded-md text-xs font-bold transition-all active:scale-95 border-transparent backdrop-blur-sm bg-ig-gradient text-white shadow-sm shadow-rose-500/25 hover:opacity-90 inline-flex items-center gap-1"
             >
               <Store className="w-3.5 h-3.5" />
               Visit shop
