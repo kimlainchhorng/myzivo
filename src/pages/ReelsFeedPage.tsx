@@ -922,22 +922,9 @@ export default function ReelsFeedPage() {
             store_slug: store?.slug || null,
             created_at: post.created_at,
           });
-
-          useEffect(() => {
-            if (!hasGridError || !gridError) return;
-            reportFeedQueryError(
-              {
-                scope: "reels-feed-grid",
-                queryKey: "reels-feed-grid",
-                userId,
-                tab: feedTab,
-                pageSize,
-              },
-              gridError,
-            );
-          }, [feedTab, gridError, hasGridError, pageSize, userId]);
         }
       }
+
 
       // Fetch user posts
       try {
@@ -1318,6 +1305,16 @@ export default function ReelsFeedPage() {
     gcTime: 5 * 60_000,
     refetchOnWindowFocus: false,
   });
+
+  useEffect(() => {
+    if (!hasGridError || !gridError) return;
+    reportFeedQueryError(
+      { scope: "reels-feed-grid", queryKey: "reels-feed-grid", userId, tab: feedTab, pageSize },
+      gridError,
+    );
+  }, [feedTab, gridError, hasGridError, pageSize, userId]);
+
+
 
   useEffect(() => {
     const postId = new URLSearchParams(location.search).get("post");
