@@ -5,9 +5,10 @@
  */
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Bookmark, Search, Heart, ChevronRight, Library, Archive, Star, FolderHeart, Users, Vote, AtSign, Trophy, BookImage, Handshake, Smile } from "lucide-react";
+import { ArrowLeft, Bookmark, Search, Heart, ChevronRight, Library, Archive, Star, FolderHeart, Users, Vote, AtSign, Trophy, BookImage, Handshake, Smile, Ticket, Gift, Palette, Award, DollarSign, Bell, BarChart2, Shield, Tag, Flag, Gamepad2, UsersRound, MessageSquare, Music, TrendingUp, Wand2, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
+import { SwipeBackContainer } from "@/components/shared/SwipeBackContainer";
 
 interface LibrarySection {
   icon: typeof Bookmark;
@@ -101,13 +102,127 @@ const sections: LibrarySection[] = [
     description: "Browse sticker packs for stories, reels, and messages",
     path: "/stickers",
   },
+  {
+    icon: Ticket,
+    title: "Coupons",
+    description: "Active discount codes — copy and apply at checkout",
+    path: "/coupons",
+  },
+  {
+    icon: Gift,
+    title: "Referrals",
+    description: "Generate shareable invite links and track uses",
+    path: "/referrals",
+  },
+  {
+    icon: Palette,
+    title: "Chat Themes",
+    description: "Pick a color theme for your chats",
+    path: "/chat-themes",
+  },
+  {
+    icon: Gift,
+    title: "Rewards Center",
+    description: "Track rewards you've earned and redeemed",
+    path: "/rewards-center",
+  },
+  {
+    icon: Award,
+    title: "Achievements",
+    description: "Full catalog of achievements you can unlock",
+    path: "/achievements",
+  },
+  {
+    icon: DollarSign,
+    title: "Earnings",
+    description: "Daily revenue breakdown across ads, sales, subs, tips",
+    path: "/creator/earnings",
+  },
+  {
+    icon: Bell,
+    title: "Notifications",
+    description: "Toggle which notification types you receive",
+    path: "/notifications/preferences",
+  },
+  {
+    icon: BarChart2,
+    title: "Story Insights",
+    description: "Per-story views and sticker interaction analytics",
+    path: "/story-insights",
+  },
+  {
+    icon: Shield,
+    title: "Logins & devices",
+    description: "Where you're signed in — sign out anything you don't recognize",
+    path: "/devices",
+  },
+  {
+    icon: Tag,
+    title: "Interests",
+    description: "Topics that personalize your content feed",
+    path: "/interests",
+  },
+  {
+    icon: Flag,
+    title: "Challenges",
+    description: "Join social challenges with hashtags and prizes",
+    path: "/challenges",
+  },
+  {
+    icon: Gamepad2,
+    title: "Game Scores",
+    description: "Your personal best scores across mini-games",
+    path: "/game-scores",
+  },
+  {
+    icon: UsersRound,
+    title: "Clubs",
+    description: "Interest-based clubs to find your people",
+    path: "/clubs",
+  },
+  {
+    icon: MessageSquare,
+    title: "Forums",
+    description: "Community discussion boards and Q&A threads",
+    path: "/forums",
+  },
+  {
+    icon: Music,
+    title: "Playlists",
+    description: "Music and reel playlists you curate",
+    path: "/playlists",
+  },
+  {
+    icon: TrendingUp,
+    title: "Trending",
+    description: "Hot topics by region and time period",
+    path: "/trending",
+  },
+  {
+    icon: Wand2,
+    title: "Reel Effects",
+    description: "Effects catalog to use in your reels",
+    path: "/reel-effects",
+  },
+  {
+    icon: MapPin,
+    title: "Places",
+    description: "Discover venues and locations",
+    path: "/places",
+  },
+  {
+    icon: Heart,
+    title: "Reaction Packs",
+    description: "Browse and install reaction emoji packs",
+    path: "/reaction-packs",
+  },
 ];
 
 export default function LibraryPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background">
+    <SwipeBackContainer className="min-h-screen bg-background">
       <SEOHead title="Your Library · ZIVO" description="All your saved content in one place." noIndex />
 
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -158,6 +273,6 @@ export default function LibraryPage() {
           })}
         </div>
       </div>
-    </div>
+    </SwipeBackContainer>
   );
 }

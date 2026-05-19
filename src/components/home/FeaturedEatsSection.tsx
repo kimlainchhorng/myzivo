@@ -136,7 +136,7 @@ export default function FeaturedEatsSection() {
                     )}
                     <button type="button"
                       onClick={(e) => handleQuickOrder(e, store.name)}
-                      className="absolute bottom-3 right-3 w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-primary text-primary-foreground flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:scale-110 active:scale-90 shadow-lg touch-manipulation"
+                      className="absolute bottom-3 right-3 w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-ig-gradient text-white flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:scale-110 active:scale-90 shadow-lg shadow-rose-500/25 touch-manipulation"
                       aria-label={`Order from ${store.name}`}
                     >
                       <ShoppingCart className="w-4 h-4" />
@@ -197,7 +197,7 @@ export default function FeaturedEatsSection() {
                     )}
                     <button type="button"
                       onClick={(e) => handleQuickOrder(e, food.name)}
-                      className="absolute bottom-3 right-3 w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-primary text-primary-foreground flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:scale-110 active:scale-90 shadow-lg touch-manipulation"
+                      className="absolute bottom-3 right-3 w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-ig-gradient text-white flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:scale-110 active:scale-90 shadow-lg shadow-rose-500/25 touch-manipulation"
                     >
                       <ShoppingCart className="w-4 h-4" />
                     </button>

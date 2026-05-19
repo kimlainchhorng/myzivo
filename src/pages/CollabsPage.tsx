@@ -11,6 +11,7 @@ import { ArrowLeft, Handshake, Check, X, Film, Image as ImageIcon, ChevronRight,
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import SEOHead from "@/components/SEOHead";
+import { SwipeBackContainer } from "@/components/shared/SwipeBackContainer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -182,7 +183,7 @@ export default function CollabsPage() {
   const filtered = collabs.filter((c) => c.status === tab);
 
   return (
-    <div className="min-h-screen bg-background pb-12">
+    <SwipeBackContainer className="min-h-screen bg-background pb-12">
       <SEOHead title="Collaborations · ZIVO" description="Posts you've been invited to co-author." noIndex />
 
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -355,6 +356,6 @@ export default function CollabsPage() {
           </div>
         )}
       </div>
-    </div>
+    </SwipeBackContainer>
   );
 }

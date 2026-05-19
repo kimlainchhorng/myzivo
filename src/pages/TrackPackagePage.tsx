@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Package, Search, Truck, MapPin, CheckCircle2, Clock, AlertCircle, Box, Plane } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
+import { SwipeBackContainer } from "@/components/shared/SwipeBackContainer";
 import { cn } from "@/lib/utils";
 
 interface TrackingEvent {
@@ -69,7 +70,7 @@ export default function TrackPackagePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <SwipeBackContainer className="min-h-screen bg-background">
       <SEOHead title="Track Package · ZIVO" description="Live tracking for your deliveries and shipments." noIndex />
 
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -218,6 +219,6 @@ export default function TrackPackagePage() {
           </div>
         )}
       </div>
-    </div>
+    </SwipeBackContainer>
   );
 }

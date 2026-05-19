@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Sparkles, Star, Wand2, Smile, Sun, Snowflake, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
+import { SwipeBackContainer } from "@/components/shared/SwipeBackContainer";
 import { cn } from "@/lib/utils";
 
 type Category = "Trending" | "Beauty" | "Vintage" | "Effects" | "Fun";
@@ -50,7 +51,7 @@ export default function ARFiltersPage() {
   const filtered = FILTERS.filter((f) => f.category === active);
 
   return (
-    <div className="min-h-screen bg-background pb-12">
+    <SwipeBackContainer className="min-h-screen bg-background pb-12">
       <SEOHead title="AR Filters · ZIVO" description="Browse and apply AR effects in stories, reels, and live streams." />
 
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -144,6 +145,6 @@ export default function ARFiltersPage() {
           Saved filters open in the camera tray. Live AR rendering rolls out in beta.
         </p>
       </div>
-    </div>
+    </SwipeBackContainer>
   );
 }

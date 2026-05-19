@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 export interface ChatRowActionsTarget {
   id: string;
   name: string;
+  isGroup?: boolean;
   isPinned: boolean;
   isMuted: boolean;
   isArchived: boolean;
@@ -28,6 +29,9 @@ interface Props {
   target: ChatRowActionsTarget | null;
   customFolders?: { id: string; name: string; icon: string | null }[];
   folderMembership?: Set<string>;
+  canManageFolders?: boolean;
+  canToggleReadState?: boolean;
+  canClearHistory?: boolean;
   onClose: () => void;
   onTogglePin: () => void;
   onToggleMute: () => void;
@@ -43,6 +47,9 @@ interface Props {
 export default function ChatRowActionsSheet({
   customFolders = [],
   folderMembership,
+  canManageFolders = true,
+  canToggleReadState = true,
+  canClearHistory = true,
   target, onClose, onTogglePin, onToggleMute, onMarkRead, onMarkUnread,
   onToggleArchive, onClearHistory, onDelete, onAddToFolder, onRemoveFromFolder,
 }: Props) {
@@ -62,8 +69,8 @@ export default function ChatRowActionsSheet({
 
   // Show "Mark as read" when the chat actually has unread messages or is manually flagged.
   // Show "Mark as unread" otherwise — Telegram parity for "come back to this later".
-  const showMarkUnread = !target.hasUnread && !target.isMarkedUnread && !!onMarkUnread;
-  const showMarkRead = target.hasUnread || target.isMarkedUnread;
+  const showMarkUnread = canToggleReadState && !target.hasUnread && !target.isMarkedUnread && !!onMarkUnread;
+  const showMarkRead = canToggleReadState && (target.hasUnread || target.isMarkedUnread);
   const items = [
     { key: "pin", label: target.isPinned ? "Unpin" : "Pin to top", icon: Pin, onClick: onTogglePin },
     { key: "mute", label: target.isMuted ? "Unmute" : "Mute notifications", icon: target.isMuted ? Bell : BellOff, onClick: onToggleMute },
@@ -74,7 +81,7 @@ export default function ChatRowActionsSheet({
       ? [{ key: "unread", label: "Mark as unread", icon: Circle, onClick: onMarkUnread }]
       : []),
     { key: "archive", label: target.isArchived ? "Unarchive" : "Archive chat", icon: target.isArchived ? ArchiveRestore : Archive, onClick: onToggleArchive },
-    { key: "clear", label: "Clear history", icon: Eraser, onClick: onClearHistory },
+    ...(canClearHistory ? [{ key: "clear", label: "Clear history", icon: Eraser, onClick: onClearHistory }] : []),
     { key: "delete", label: "Delete chat", icon: Trash2, onClick: onDelete, destructive: true },
   ];
 
@@ -95,7 +102,7 @@ export default function ChatRowActionsSheet({
           <SheetTitle className="text-base truncate">{target.name}</SheetTitle>
         </SheetHeader>
 
-        {customFolders.length > 0 && (
+        {canManageFolders && customFolders.length > 0 && (
           <div className="mt-3 rounded-xl border border-border/50 bg-muted/20 p-2">
             <button type="button"
               onClick={() => setShowFolderMenu((v) => !v)}

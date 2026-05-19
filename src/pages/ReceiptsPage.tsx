@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Receipt, Download, Search, Plane, Hotel, Car, UtensilsCrossed, ShoppingBag, FileText, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
+import { SwipeBackContainer } from "@/components/shared/SwipeBackContainer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -124,7 +125,7 @@ export default function ReceiptsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <SwipeBackContainer className="min-h-screen bg-background">
       <SEOHead title="Receipts · ZIVO" description="Past payments and order receipts." noIndex />
 
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -261,6 +262,6 @@ export default function ReceiptsPage() {
           </div>
         )}
       </div>
-    </div>
+    </SwipeBackContainer>
   );
 }

@@ -11,6 +11,7 @@ import { ArrowLeft, Star, Search, Check, X, Users, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import SEOHead from "@/components/SEOHead";
+import { SwipeBackContainer } from "@/components/shared/SwipeBackContainer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -165,7 +166,7 @@ export default function CloseFriendsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-12">
+    <SwipeBackContainer className="min-h-screen bg-background pb-12">
       <SEOHead title="Close Friends · ZIVO" description="Pick who sees the stories you share privately." noIndex />
 
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -307,6 +308,6 @@ export default function CloseFriendsPage() {
           </div>
         )}
       </div>
-    </div>
+    </SwipeBackContainer>
   );
 }

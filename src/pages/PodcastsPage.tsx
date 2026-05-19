@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Headphones, Play, Pause, Clock, Search, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
+import { SwipeBackContainer } from "@/components/shared/SwipeBackContainer";
 import { cn } from "@/lib/utils";
 
 interface Show {
@@ -54,7 +55,7 @@ export default function PodcastsPage() {
   const filteredShows = activeCategory === "All" ? SHOWS : SHOWS.filter((s) => s.category === activeCategory);
 
   return (
-    <div className="min-h-screen bg-background">
+    <SwipeBackContainer className="min-h-screen bg-background">
       <SEOHead title="Podcasts · ZIVO" description="Listen to ZIVO podcasts on the go." />
 
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -199,6 +200,6 @@ export default function PodcastsPage() {
           Showcasing featured shows. Audio playback rolls out as more episodes publish.
         </p>
       </div>
-    </div>
+    </SwipeBackContainer>
   );
 }

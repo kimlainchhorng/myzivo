@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { FeedIncidentSummaryCard } from "@/components/admin/FeedIncidentSummaryCard";
 import {
   ArrowLeft, Download, DollarSign, Activity, TrendingUp,
   BarChart3, Loader2, Target, Zap, Users,
@@ -148,7 +149,7 @@ export default function AdminLaunchDashboard() {
 
       <div className="sticky top-0 safe-area-top z-30 bg-background/95 backdrop-blur-md border-b border-border/30 px-4 py-3">
         <div className="flex items-center gap-3">
-          <button type="button" onClick={() => navigate(-1)}>
+          <button type="button" onClick={() => navigate(-1)} aria-label="Go back" title="Go back">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <BarChart3 className="h-5 w-5 text-primary" />
@@ -162,6 +163,8 @@ export default function AdminLaunchDashboard() {
         </div>
       ) : (
         <div className="px-4 pt-4 space-y-5 max-w-4xl mx-auto">
+          <FeedIncidentSummaryCard range="24h" title="Feed Incident Command" compact />
+
           {/* KPI Grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {stats.map((s) => (

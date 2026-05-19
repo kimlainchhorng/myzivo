@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { FeedIncidentSummaryCard } from "@/components/admin/FeedIncidentSummaryCard";
 import {
   Activity, CheckCircle, AlertTriangle, XCircle, Server, Clock,
   ShieldAlert, RefreshCw, Database, Wifi, Zap, CreditCard,
@@ -255,6 +256,8 @@ export default function AdminSystemHealth() {
             </CardContent>
           </Card>
         </div>
+
+        <FeedIncidentSummaryCard range="24h" title="Feed Incident Health" />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 

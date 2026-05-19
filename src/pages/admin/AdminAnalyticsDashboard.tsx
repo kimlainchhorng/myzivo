@@ -18,6 +18,7 @@ import {
 } from "recharts";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { FeedIncidentSummaryCard } from "@/components/admin/FeedIncidentSummaryCard";
 import { cn } from "@/lib/utils";
 
 type TimeRange = "7d" | "30d" | "90d" | "1y";
@@ -1349,6 +1350,8 @@ export default function AdminAnalyticsDashboard() {
           </div>
         </div>
 
+        <FeedIncidentSummaryCard range="24h" title="Incident Radar" />
+
         {/* ── Section 1: Travel & Bookings ── */}
         <section className="space-y-3">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
@@ -1637,6 +1640,8 @@ export default function AdminAnalyticsDashboard() {
             <button type="button"
               onClick={() => navigate("/admin/drivers/verification")}
               className="text-left"
+              aria-label="Open drivers pending verification queue"
+              title="Open drivers pending verification queue"
             >
               <StatCard
                 title="Drivers Pending"
@@ -1649,6 +1654,8 @@ export default function AdminAnalyticsDashboard() {
             <button type="button"
               onClick={() => navigate("/admin/payments/refunds")}
               className="text-left"
+              aria-label="Open queued refunds"
+              title="Open queued refunds"
             >
               <StatCard
                 title="Refunds Queued"
@@ -1661,6 +1668,8 @@ export default function AdminAnalyticsDashboard() {
             <button type="button"
               onClick={() => navigate("/admin/moderation")}
               className="text-left"
+              aria-label="Open pending moderation reports"
+              title="Open pending moderation reports"
             >
               <StatCard
                 title="Open Reports"

@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Image as ImageIcon, Film, Plus, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
+import { SwipeBackContainer } from "@/components/shared/SwipeBackContainer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -59,7 +60,7 @@ export default function MediaLibraryPage() {
   const videoCount = posts.filter((p) => p.media_type?.startsWith("video")).length;
 
   return (
-    <div className="min-h-screen bg-background">
+    <SwipeBackContainer className="min-h-screen bg-background">
       <SEOHead title="Your Media Library · ZIVO" description="All your photos and videos in one place." noIndex />
 
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -192,6 +193,6 @@ export default function MediaLibraryPage() {
           </div>
         )}
       </div>
-    </div>
+    </SwipeBackContainer>
   );
 }

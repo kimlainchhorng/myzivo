@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Music2, Play, Pause, Plus, TrendingUp, Filter, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
+import { SwipeBackContainer } from "@/components/shared/SwipeBackContainer";
 import { cn } from "@/lib/utils";
 
 interface Sound {
@@ -44,7 +45,7 @@ export default function SoundsPage() {
   const trending = SOUNDS.filter((s) => s.trending);
 
   return (
-    <div className="min-h-screen bg-background">
+    <SwipeBackContainer className="min-h-screen bg-background">
       <SEOHead title="Sounds · ZIVO" description="Trending audio for your reels and stories." />
 
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -205,6 +206,6 @@ export default function SoundsPage() {
           Sounds preview in-browser. Full library connects when audio uploads roll out.
         </p>
       </div>
-    </div>
+    </SwipeBackContainer>
   );
 }

@@ -10,6 +10,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, FolderHeart, Plus, Pencil, Trash2, Check, X, Lock, ChevronRight, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
+import { SwipeBackContainer } from "@/components/shared/SwipeBackContainer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -146,7 +147,7 @@ export default function CollectionsPage() {
   const totalItems = collections.reduce((sum, c) => sum + (c.item_count ?? 0), 0);
 
   return (
-    <div className="min-h-screen bg-background pb-12">
+    <SwipeBackContainer className="min-h-screen bg-background pb-12">
       <SEOHead title="Collections · ZIVO" description="Organize your saved posts into named collections." noIndex />
 
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -370,6 +371,6 @@ export default function CollectionsPage() {
           </p>
         )}
       </div>
-    </div>
+    </SwipeBackContainer>
   );
 }

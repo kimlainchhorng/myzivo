@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Pill, Plus, Clock, Bell, Check, X, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
+import { SwipeBackContainer } from "@/components/shared/SwipeBackContainer";
 import { cn } from "@/lib/utils";
 
 interface Medication {
@@ -89,7 +90,7 @@ export default function MedicationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-12">
+    <SwipeBackContainer className="min-h-screen bg-background pb-12">
       <SEOHead title="Medications · ZIVO" description="Track meds, doses, and refills with reminders." noIndex />
 
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -248,6 +249,6 @@ export default function MedicationsPage() {
           Medications save on this device only. We never send your health data to ZIVO servers.
         </p>
       </div>
-    </div>
+    </SwipeBackContainer>
   );
 }

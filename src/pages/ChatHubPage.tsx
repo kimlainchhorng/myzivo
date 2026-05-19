@@ -86,6 +86,8 @@ const GroupChat = lazy(() => import("@/components/chat/GroupChat"));
 const CreateGroupModal = lazy(() => import("@/components/chat/CreateGroupModal"));
 const StoreLiveChat = lazy(() => import("@/components/grocery/StoreLiveChat"));
 const PersonalChat = lazy(() => import("@/components/chat/PersonalChat"));
+const TripChatSheet = lazy(() => import("@/components/rides/TripChatSheet"));
+const SupportTicketChatSheet = lazy(() => import("@/components/support/SupportTicketChatSheet"));
 const ChatStories = lazy(() => import("@/components/chat/ChatStories"));
 const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
 
@@ -140,6 +142,7 @@ const builtInFolders: FolderTab[] = [
 
 const FOLDER_STORAGE_KEY = "zivo:chat-folder";
 const LAST_OPEN_CHAT_KEY = "zivo:last-open-chat";
+const CHAT_LAST_SEEN_KEY_PREFIX = "zivo:chat-last-seen";
 
 function BodyPortal({ children }: { children: ReactNode }) {
   if (typeof document === "undefined") return <>{children}</>;
@@ -149,7 +152,25 @@ function BodyPortal({ children }: { children: ReactNode }) {
 type PersistedOpenChat =
   | { kind: "personal"; id: string; name: string; avatar?: string | null; isVerified?: boolean }
   | { kind: "group"; id: string; name: string; avatar?: string | null }
-  | { kind: "shop"; storeId: string; name: string; logo?: string | null };
+  | { kind: "shop"; storeId: string; name: string; logo?: string | null }
+  | { kind: "ride"; rideRequestId: string; counterpartName?: string }
+  | { kind: "support"; ticketId: string };
+
+function getChatLastSeenStorageKey(userId: string, category: "ride" | "support") {
+  return `${CHAT_LAST_SEEN_KEY_PREFIX}:${userId}:${category}`;
+}
+
+function readChatLastSeenMap(userId: string | undefined, category: "ride" | "support"): Record<string, string> {
+  if (!userId) return {};
+  try {
+    const raw = localStorage.getItem(getChatLastSeenStorageKey(userId, category));
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed as Record<string, string> : {};
+  } catch {
+    return {};
+  }
+}
 
 type OpenChatState = {
   recipientId?: string;
@@ -375,8 +396,10 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string; category: ChatCategory } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string; category: ChatCategory; isGroup?: boolean } | null>(null);
   const [swipedId, setSwipedId] = useState<string | null>(null);
+  const [rideLastSeen, setRideLastSeen] = useState<Record<string, string>>({});
+  const [supportLastSeen, setSupportLastSeen] = useState<Record<string, string>>({});
   const [openShopChat, setOpenShopChat] = useState<{ storeId: string; name: string; logo?: string | null } | null>(null);
   const [openPersonalChat, _setOpenPersonalChat] = useState<{ id: string; name: string; avatar?: string | null; isVerified?: boolean; prefillInput?: string } | null>(null);
   // Wrap the raw setter so every call site automatically picks up a pending
@@ -396,10 +419,42 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     _setOpenPersonalChat(next);
   };
   const [openGroupChat, setOpenGroupChat] = useState<{ id: string; name: string; avatar?: string | null; autoStartCall?: "audio" | "video" | null } | null>(null);
+  const [openRideChat, setOpenRideChat] = useState<{ rideRequestId: string; counterpartName?: string } | null>(null);
+  const [openSupportChat, setOpenSupportChat] = useState<{ ticketId: string } | null>(null);
   const [showGroupCallPicker, setShowGroupCallPicker] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const rideLastSeenSignature = useMemo(() => JSON.stringify(rideLastSeen), [rideLastSeen]);
+  const supportLastSeenSignature = useMemo(() => JSON.stringify(supportLastSeen), [supportLastSeen]);
+
+  useEffect(() => {
+    setRideLastSeen(readChatLastSeenMap(user?.id, "ride"));
+    setSupportLastSeen(readChatLastSeenMap(user?.id, "support"));
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      localStorage.setItem(getChatLastSeenStorageKey(user.id, "ride"), JSON.stringify(rideLastSeen));
+    } catch {}
+  }, [rideLastSeen, user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      localStorage.setItem(getChatLastSeenStorageKey(user.id, "support"), JSON.stringify(supportLastSeen));
+    } catch {}
+  }, [supportLastSeen, user?.id]);
+
+  const markOverlayChatSeen = useCallback((category: "ride" | "support", chatId: string) => {
+    const seenAt = new Date().toISOString();
+    if (category === "ride") {
+      setRideLastSeen((prev) => ({ ...prev, [chatId]: seenAt }));
+      return;
+    }
+    setSupportLastSeen((prev) => ({ ...prev, [chatId]: seenAt }));
+  }, []);
 
   // The embedded chat slideout (rendered by FeedSidebar) has no action toolbar
   // of its own, so it dispatches `zivo-chat-new-group` to ask the hub to open
@@ -414,19 +469,50 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     if (!openPersonalChat) return;
     setOpenGroupChat(null);
     setOpenShopChat(null);
+    setOpenRideChat(null);
+    setOpenSupportChat(null);
   }, [openPersonalChat]);
 
   useEffect(() => {
     if (!openGroupChat) return;
     _setOpenPersonalChat(null);
     setOpenShopChat(null);
+    setOpenRideChat(null);
+    setOpenSupportChat(null);
   }, [openGroupChat]);
 
   useEffect(() => {
     if (!openShopChat) return;
     _setOpenPersonalChat(null);
     setOpenGroupChat(null);
+    setOpenRideChat(null);
+    setOpenSupportChat(null);
+    queryClient.setQueryData<any[]>(["chat-hub-shop", user?.id], (previous = []) =>
+      previous.map((chat: any) =>
+        chat.storeId === openShopChat.storeId
+          ? { ...chat, unread: 0 }
+          : chat
+      )
+    );
   }, [openShopChat]);
+
+  useEffect(() => {
+    if (!openRideChat) return;
+    _setOpenPersonalChat(null);
+    setOpenGroupChat(null);
+    setOpenShopChat(null);
+    setOpenSupportChat(null);
+    markOverlayChatSeen("ride", openRideChat.rideRequestId);
+  }, [markOverlayChatSeen, openRideChat]);
+
+  useEffect(() => {
+    if (!openSupportChat) return;
+    _setOpenPersonalChat(null);
+    setOpenGroupChat(null);
+    setOpenShopChat(null);
+    setOpenRideChat(null);
+    markOverlayChatSeen("support", openSupportChat.ticketId);
+  }, [markOverlayChatSeen, openSupportChat]);
 
   // Share mode state
   const [sharePayload, setSharePayload] = useState<{ shareUrl: string; shareText: string } | null>(null);
@@ -594,6 +680,12 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       } else if (persisted.kind === "shop") {
         setActive("shop");
         setOpenShopChat({ storeId: persisted.storeId, name: persisted.name, logo: persisted.logo || null });
+      } else if (persisted.kind === "ride") {
+        setActive("ride");
+        setOpenRideChat({ rideRequestId: persisted.rideRequestId, counterpartName: persisted.counterpartName });
+      } else if (persisted.kind === "support") {
+        setActive("support");
+        setOpenSupportChat({ ticketId: persisted.ticketId });
       }
     } catch {}
   }, [location.state, searchParams, user?.id]);
@@ -633,9 +725,26 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
         localStorage.setItem(storageKey, JSON.stringify(payload));
         return;
       }
+      if (openRideChat) {
+        const payload: PersistedOpenChat = {
+          kind: "ride",
+          rideRequestId: openRideChat.rideRequestId,
+          counterpartName: openRideChat.counterpartName,
+        };
+        localStorage.setItem(storageKey, JSON.stringify(payload));
+        return;
+      }
+      if (openSupportChat) {
+        const payload: PersistedOpenChat = {
+          kind: "support",
+          ticketId: openSupportChat.ticketId,
+        };
+        localStorage.setItem(storageKey, JSON.stringify(payload));
+        return;
+      }
       localStorage.removeItem(storageKey);
     } catch {}
-  }, [openGroupChat, openPersonalChat, openShopChat, user?.id]);
+  }, [openGroupChat, openPersonalChat, openRideChat, openShopChat, openSupportChat, user?.id]);
 
   useEffect(() => {
     if (!user?.id || !openPersonalChat?.id) return;
@@ -665,6 +774,47 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       await queryClient.invalidateQueries({ queryKey: ["chat-hub-personal", user.id] });
     })();
   }, [openPersonalChat?.id, queryClient, user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const invalidatePersonal = () => {
+      void queryClient.invalidateQueries({ queryKey: ["chat-hub-personal", user.id] });
+      void queryClient.invalidateQueries({ queryKey: ["chat-hub-groups", user.id] });
+    };
+    const invalidateShop = () => {
+      void queryClient.invalidateQueries({ queryKey: ["chat-hub-shop", user.id] });
+    };
+    const invalidateRide = () => {
+      void queryClient.invalidateQueries({ queryKey: ["chat-hub-ride", user.id] });
+    };
+    const invalidateSupport = () => {
+      void queryClient.invalidateQueries({ queryKey: ["chat-hub-support", user.id] });
+    };
+    const invalidateFolders = () => {
+      void queryClient.invalidateQueries({ queryKey: ["chat-folders", user.id] });
+      void queryClient.invalidateQueries({ queryKey: ["chat-folder-members", user.id] });
+    };
+
+    const channel = supabase
+      .channel(`chat-hub-side-tabs-${user.id}-${crypto.randomUUID()}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "direct_messages" }, invalidatePersonal)
+      .on("postgres_changes", { event: "*", schema: "public", table: "group_messages" }, invalidatePersonal)
+      .on("postgres_changes", { event: "*", schema: "public", table: "chat_groups" }, invalidatePersonal)
+      .on("postgres_changes", { event: "*", schema: "public", table: "chat_group_members" }, invalidatePersonal)
+      .on("postgres_changes", { event: "*", schema: "public", table: "store_chats" }, invalidateShop)
+      .on("postgres_changes", { event: "*", schema: "public", table: "store_chat_messages" }, invalidateShop)
+      .on("postgres_changes", { event: "*", schema: "public", table: "trip_messages" }, invalidateRide)
+      .on("postgres_changes", { event: "*", schema: "public", table: "support_tickets" }, invalidateSupport)
+      .on("postgres_changes", { event: "*", schema: "public", table: "ticket_replies" }, invalidateSupport)
+      .on("postgres_changes", { event: "*", schema: "public", table: "chat_folders" }, invalidateFolders)
+      .on("postgres_changes", { event: "*", schema: "public", table: "chat_folder_members" }, invalidateFolders)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient, user?.id]);
 
   // Send shared content as a DM to selected contact
   const handleShareToContact = async (contactId: string, contactName: string, contactAvatar?: string | null) => {
@@ -704,7 +854,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   // Fetch store chats for "shop" tab
   const { data: shopChats = [] } = useQuery({
     queryKey: ["chat-hub-shop", user?.id],
-    enabled: !!user && active === "shop",
+    enabled: !!user,
     queryFn: async () => {
       const { data } = await supabase
         .from("store_chats")
@@ -749,29 +899,33 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
   // Fetch ride chats via chat_messages with trip_id
   const { data: rideChats = [] } = useQuery({
-    queryKey: ["chat-hub-ride", user?.id],
-    enabled: !!user && active === "ride",
+    queryKey: ["chat-hub-ride", user?.id, rideLastSeenSignature],
+    enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("chat_messages")
-        .select("id, chat_id, order_id, trip_id, sender_id, sender_type, message, created_at, is_read")
-        .eq("sender_id", user!.id)
+      const { data } = await (supabase as any)
+        .from("trip_messages")
+        .select("id, ride_request_id, trip_id, sender_id, sender_role, content, created_at, moderation_status")
         .order("created_at", { ascending: false })
-        .limit(50);
+        .limit(100);
 
       if (!data || data.length === 0) return [];
 
       const grouped = new Map<string, any>();
       for (const msg of data as any[]) {
-        const key = msg.chat_id || msg.order_id || msg.id;
+        const key = msg.ride_request_id || msg.trip_id || msg.id;
+        const seenAt = rideLastSeen[key] ? new Date(rideLastSeen[key]).getTime() : 0;
         if (!grouped.has(key)) {
           grouped.set(key, {
             id: key,
+            rideRequestId: msg.ride_request_id || msg.trip_id || msg.id,
             name: `Ride #${key.slice(0, 6).toUpperCase()}`,
-            lastMessage: msg.message || "",
+            lastMessage: msg.content || "",
             lastTime: msg.created_at,
-            unread: (!msg.is_read && msg.sender_id !== user!.id) ? 1 : 0,
+            unread: 0,
           });
+        }
+        if (msg.sender_id && msg.sender_id !== user!.id && new Date(msg.created_at).getTime() > seenAt) {
+          grouped.get(key).unread += 1;
         }
       }
       return Array.from(grouped.values());
@@ -780,31 +934,62 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
   // Support chats from ai_conversations
   const { data: supportChats = [] } = useQuery({
-    queryKey: ["chat-hub-support", user?.id],
-    enabled: !!user && active === "support",
+    queryKey: ["chat-hub-support", user?.id, supportLastSeenSignature],
+    enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("ai_conversations")
-        .select("id, question, answer, created_at")
+      const { data } = await (supabase as any)
+        .from("support_tickets")
+        .select("id, subject, status, ticket_number, created_at, updated_at, last_message_at")
         .eq("user_id", user!.id)
-        .order("created_at", { ascending: false })
-        .limit(20);
+        .order("last_message_at", { ascending: false, nullsFirst: false })
+        .order("updated_at", { ascending: false })
+        .limit(30);
 
       if (!data) return [];
-      return data.map((c: any) => ({
-        id: c.id,
-        name: "ZIVO Support",
-        lastMessage: c.answer || c.question || "Conversation",
-        lastTime: c.created_at,
-        unread: 0,
+      const enriched = await Promise.all((data as any[]).map(async (ticket: any) => {
+        const seenAtIso = supportLastSeen[ticket.id] || null;
+        const [latestReplyResult, unreadCountResult] = await Promise.all([
+          (supabase as any)
+            .from("ticket_replies")
+            .select("message, created_at, is_admin")
+            .eq("ticket_id", ticket.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+          seenAtIso
+            ? (supabase as any)
+                .from("ticket_replies")
+                .select("*", { count: "exact", head: true })
+                .eq("ticket_id", ticket.id)
+                .eq("is_admin", true)
+                .gt("created_at", seenAtIso)
+            : (supabase as any)
+                .from("ticket_replies")
+                .select("*", { count: "exact", head: true })
+                .eq("ticket_id", ticket.id)
+                .eq("is_admin", true),
+        ]);
+        const reply = latestReplyResult.data;
+        const unreadCount = unreadCountResult.count || 0;
+
+        return {
+          id: ticket.id,
+          name: ticket.subject || `Support ${ticket.ticket_number || "ticket"}`,
+          status: ticket.status,
+          ticketNumber: ticket.ticket_number,
+          lastMessage: reply?.message || ticket.subject || "Support ticket",
+          lastTime: reply?.created_at || ticket.last_message_at || ticket.updated_at || ticket.created_at,
+          unread: unreadCount,
+        };
       }));
+      return enriched;
     },
   });
 
   // Fetch personal chats from direct_messages
   const { data: personalChats = [] } = useQuery({
     queryKey: ["chat-hub-personal", user?.id],
-    enabled: !!user && active === "personal",
+    enabled: !!user,
     queryFn: async () => {
       const { data } = await supabase
         .from("direct_messages")
@@ -875,7 +1060,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   // Fetch group chats
   const { data: groupChats = [] } = useQuery({
     queryKey: ["chat-hub-groups", user?.id],
-    enabled: !!user && active === "personal",
+    enabled: !!user,
     queryFn: async () => {
       const { data: memberships } = await (supabase as any)
         .from("chat_group_members")
@@ -935,7 +1120,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   // User-defined folder tabs and conversation membership
   const { data: customFolders = [] } = useQuery({
     queryKey: ["chat-folders", user?.id],
-    enabled: !!user?.id && active === "personal",
+    enabled: !!user?.id,
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from("chat_folders")
@@ -950,7 +1135,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
   const { data: customFolderMembers = [] } = useQuery({
     queryKey: ["chat-folder-members", user?.id, customFolderIds.join(",")],
-    enabled: !!user?.id && customFolderIds.length > 0 && active === "personal",
+    enabled: !!user?.id && customFolderIds.length > 0,
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from("chat_folder_members")
@@ -1226,7 +1411,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     return { count: selected.length, unread };
   }, [bulkSelectableList, selectedChatIds]);
 
-  const hasOverlayChatOpen = Boolean(openShopChat || openPersonalChat || openGroupChat);
+  const hasOverlayChatOpen = Boolean(openShopChat || openPersonalChat || openGroupChat || openRideChat || openSupportChat);
   const showListShell = !embedded || !hasOverlayChatOpen;
 
   // Desktop only: when a chat is open we keep the conversation list pinned as
@@ -1293,17 +1478,47 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     }
   }, [navigate]);
 
-  const handleDeleteChat = async (chatId: string, category: ChatCategory) => {
+  const handleDeleteChat = async (chatId: string, category: ChatCategory, isGroup = false) => {
     try {
-      if (category === "shop") {
+      if (category === "personal") {
+        if (isGroup) {
+          await (supabase as any)
+            .from("chat_group_members")
+            .delete()
+            .eq("group_id", chatId)
+            .eq("user_id", user!.id);
+          if (openGroupChat?.id === chatId) setOpenGroupChat(null);
+          queryClient.invalidateQueries({ queryKey: ["chat-hub-groups", user!.id] });
+        } else {
+          await supabase
+            .from("direct_messages")
+            .delete()
+            .or(`and(sender_id.eq.${user!.id},receiver_id.eq.${chatId}),and(sender_id.eq.${chatId},receiver_id.eq.${user!.id})`);
+          if (openPersonalChat?.id === chatId) setOpenPersonalChat(null);
+          queryClient.invalidateQueries({ queryKey: ["chat-hub-personal", user!.id] });
+        }
+
+        const nextPinned = { ...(prefs.pinned || {}) };
+        const nextMuted = { ...(prefs.muted || {}) };
+        const nextArchived = { ...(prefs.archived || {}) };
+        delete nextPinned[chatId];
+        delete nextMuted[chatId];
+        delete nextArchived[chatId];
+        setPrefs({ ...prefs, pinned: nextPinned, muted: nextMuted, archived: nextArchived });
+
+        await (supabase as any)
+          .from("chat_folder_members")
+          .delete()
+          .eq("conversation_id", chatId);
+      } else if (category === "shop") {
         await supabase.from("store_chat_messages").delete().eq("chat_id", chatId);
         await supabase.from("store_chats").delete().eq("id", chatId).eq("user_id", user!.id);
         queryClient.invalidateQueries({ queryKey: ["chat-hub-shop"] });
       } else if (category === "support") {
-        await supabase.from("ai_conversations").delete().eq("id", chatId).eq("user_id", user!.id);
+        await supabase.from("support_tickets").delete().eq("id", chatId).eq("user_id", user!.id);
         queryClient.invalidateQueries({ queryKey: ["chat-hub-support"] });
       } else if (category === "ride") {
-        await supabase.from("chat_messages").delete().eq("chat_id", chatId).eq("sender_id", user!.id);
+        await (supabase as any).from("trip_messages").delete().eq("ride_request_id", chatId).eq("sender_id", user!.id);
         queryClient.invalidateQueries({ queryKey: ["chat-hub-ride"] });
       }
       toast.success("Chat deleted");
@@ -2167,8 +2382,10 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                           } else {
                             setOpenPersonalChat({ id: chat.id, name: chat.name, avatar: chat.avatar, isVerified: (chat as any).isVerified === true });
                           }
+                        } else if (active === "ride") {
+                          setOpenRideChat({ rideRequestId: chat.rideRequestId || chat.id, counterpartName: chat.name });
                         } else if (active === "support") {
-                          navigate(`/support`);
+                          setOpenSupportChat({ ticketId: chat.id });
                         }
                       };
 
@@ -2218,29 +2435,21 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                   key: "delete",
                                   label: "Delete",
                                   icon: <Trash2 className="w-4 h-4" />,
-                                  onPress: () => setDeleteConfirm({ id: chat.id, name: chat.name, category: active }),
+                                  onPress: () => setDeleteConfirm({ id: chat.id, name: chat.name, category: active, isGroup: !!chat.isGroup }),
                                   className: "bg-destructive text-destructive-foreground",
                                 },
                               ] : []}
                             >
                               <div
-                                role="button"
-                                tabIndex={0}
-                                aria-label={`Open chat with ${chat.name}`}
                                 className={cn(
                                   "w-full flex items-center gap-3 text-left transition-all",
                                   embedded ? "px-3 py-2.5" : "px-4 py-3",
-                                  "cursor-pointer outline-none active:bg-muted/60 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-primary/30",
+                                  "cursor-pointer active:bg-muted/60 active:scale-[0.99]",
                                   chat.unread > 0 && !muted && "bg-primary/[0.02]",
                                   collapsedRail && "lg:px-2 lg:py-1.5 lg:justify-center lg:gap-0"
                                 )}
                                 title={chat.name}
                                 onClick={openChat}
-                                onKeyDown={(event) => {
-                                  if (event.key !== "Enter" && event.key !== " ") return;
-                                  event.preventDefault();
-                                  openChat();
-                                }}
                               >
                                 <div className="relative flex-shrink-0">
                                   {selectionMode && isPersonalChat && (
@@ -2309,9 +2518,9 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                       )}>
                                         {formatChatTime(chat.lastTime)}
                                       </span>
-                                      {isPersonalChat && !chat.isGroup && !selectionMode && (
+                                      {!selectionMode && (
                                         <>
-                                          {zivoOFMode && (
+                                          {isPersonalChat && !chat.isGroup && zivoOFMode && (
                                             <button
                                               type="button"
                                               aria-label="Send a tip request"
@@ -2331,7 +2540,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                               <DollarSign className="w-3.5 h-3.5 text-[#00AEEF]" />
                                             </button>
                                           )}
-                                          {!zivoOFMode && (
+                                          {isPersonalChat && !chat.isGroup && !zivoOFMode && (
                                             <button
                                               type="button"
                                               aria-label="Voice call"
@@ -2355,6 +2564,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                               setActionsTarget({
                                                 id: chat.id,
                                                 name: chat.name,
+                                                isGroup: !!chat.isGroup,
                                                 isPinned: pinned,
                                                 isMuted: muted,
                                                 isArchived: isArchived(chat.id),
@@ -2674,6 +2884,9 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
         target={actionsTarget}
         customFolders={customFolders}
         folderMembership={actionsFolderMembership}
+        canManageFolders={active === "personal"}
+        canToggleReadState={active === "personal"}
+        canClearHistory={active === "personal"}
         onClose={() => setActionsTarget(null)}
         onTogglePin={() => actionsTarget && (togglePin(actionsTarget.id), toast.success(actionsTarget.isPinned ? "Unpinned" : "Pinned to top"))}
         onToggleMute={() => actionsTarget && (toggleMute(actionsTarget.id), toast.success(actionsTarget.isMuted ? "Unmuted" : "Muted"))}
@@ -2699,7 +2912,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
           localClearChatBefore(actionsTarget.id);
           toast.success("History cleared on this device");
         }}
-        onDelete={() => actionsTarget && setDeleteConfirm({ id: actionsTarget.id, name: actionsTarget.name, category: "personal" })}
+        onDelete={() => actionsTarget && setDeleteConfirm({ id: actionsTarget.id, name: actionsTarget.name, category: active, isGroup: actionsTarget.isGroup === true })}
         onAddToFolder={(folderId) => { if (actionsTarget) void handleAddChatToFolder(folderId, actionsTarget.id); }}
         onRemoveFromFolder={(folderId) => { if (actionsTarget) void handleRemoveChatFromFolder(folderId, actionsTarget.id); }}
       />
@@ -2788,7 +3001,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                     Cancel
                   </button>
                   <button type="button"
-                    onClick={() => handleDeleteChat(deleteConfirm.id, deleteConfirm.category)}
+                    onClick={() => handleDeleteChat(deleteConfirm.id, deleteConfirm.category, deleteConfirm.isGroup === true)}
                     className="flex-1 h-11 rounded-xl bg-destructive text-destructive-foreground text-sm font-bold active:scale-[0.97] transition-transform"
                   >
                     Delete
@@ -2809,6 +3022,26 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
             storeLogo={openShopChat.logo}
             open={true}
             onClose={() => setOpenShopChat(null)}
+          />
+        </Suspense>
+      )}
+      {openRideChat && (
+        <Suspense fallback={null}>
+          <TripChatSheet
+            open={true}
+            onOpenChange={(open) => { if (!open) setOpenRideChat(null); }}
+            rideRequestId={openRideChat.rideRequestId}
+            counterpartName={openRideChat.counterpartName}
+            senderRole="rider"
+          />
+        </Suspense>
+      )}
+      {openSupportChat && (
+        <Suspense fallback={null}>
+          <SupportTicketChatSheet
+            open={true}
+            onOpenChange={(open) => { if (!open) setOpenSupportChat(null); }}
+            ticketId={openSupportChat.ticketId}
           />
         </Suspense>
       )}
@@ -3113,11 +3346,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   }
 
   return (
-    // The CSS var --chat-sidebar-w is the single source of truth for the
-    // desktop two-column layout: the conversation-list shell reads it as its
-    // width, and the GroupChat / PersonalChat overlays read it as their
-    // left offset. PullToRefresh doesn't forward style, so we put it here.
-    <div style={desktopTwoColumn ? ({ ["--chat-sidebar-w" as never]: `${desktopSidebarWidth}px` } as React.CSSProperties) : undefined}>
+    <div>
       <PullToRefresh
         onRefresh={handlePullRefresh}
         enabled={!hasOverlayChatOpen}

@@ -85,7 +85,7 @@ export default function ServiceFlowBanner() {
         >
           <Link
             to="/flights"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.97] touch-manipulation"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-ig-gradient text-white rounded-xl font-bold hover:opacity-90 hover:shadow-lg hover:shadow-rose-500/25 transition-all active:scale-[0.97] touch-manipulation"
           >
             Start Planning Your Trip
             <ArrowRight className="w-4 h-4" />

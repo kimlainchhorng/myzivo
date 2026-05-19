@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, BookImage, Plus, Pencil, Trash2, X, ImageIcon, Check, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
+import { SwipeBackContainer } from "@/components/shared/SwipeBackContainer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -233,7 +234,7 @@ export default function PostAlbumsPage() {
   const totalItems = Array.from(itemsByAlbum.values()).reduce((s, n) => s + n, 0);
 
   return (
-    <div className="min-h-screen bg-background pb-12">
+    <SwipeBackContainer className="min-h-screen bg-background pb-12">
       <SEOHead title="Albums · ZIVO" description="Curate your posts into named albums." noIndex />
 
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -465,6 +466,6 @@ export default function PostAlbumsPage() {
           </p>
         )}
       </div>
-    </div>
+    </SwipeBackContainer>
   );
 }

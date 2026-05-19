@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, FileText, Download, AlertCircle, ShieldCheck, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
+import { SwipeBackContainer } from "@/components/shared/SwipeBackContainer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -110,7 +111,7 @@ export default function TaxInfoPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-12">
+    <SwipeBackContainer className="min-h-screen bg-background pb-12">
       <SEOHead title="Tax Info · ZIVO" description="Tax forms, 1099s, and reporting." noIndex />
 
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -266,6 +267,6 @@ export default function TaxInfoPage() {
           )}
         </div>
       </div>
-    </div>
+    </SwipeBackContainer>
   );
 }

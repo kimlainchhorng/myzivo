@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Handshake, Sparkles, Users, CheckCircle2, DollarSign, Filter, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
+import { SwipeBackContainer } from "@/components/shared/SwipeBackContainer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -144,7 +145,7 @@ export default function BrandDealsPage() {
     .reduce((sum, c) => sum + c.payout, 0);
 
   return (
-    <div className="min-h-screen bg-background">
+    <SwipeBackContainer className="min-h-screen bg-background">
       <SEOHead title="Brand Deals · ZIVO" description="Connect with brands for sponsorships and partnerships." noIndex />
 
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -302,6 +303,6 @@ export default function BrandDealsPage() {
           Showcasing partnership opportunities. Brand applications open in beta.
         </p>
       </div>
-    </div>
+    </SwipeBackContainer>
   );
 }

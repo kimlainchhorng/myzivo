@@ -370,6 +370,16 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
+  const markThreadRead = useCallback(async (targetChatId: string) => {
+    const unreadSenderType = isAdmin ? "customer" : "store";
+    await supabase
+      .from("store_chat_messages")
+      .update({ is_read: true })
+      .eq("chat_id", targetChatId)
+      .eq("sender_type", unreadSenderType)
+      .eq("is_read", false);
+  }, [isAdmin]);
+
   // Reset state on close
   useEffect(() => {
     if (!open) {
@@ -424,8 +434,12 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
         .eq("chat_id", id)
         .order("created_at", { ascending: true });
 
+      await markThreadRead(id);
+
       if (!cancelled) {
-        setMessages(msgs || []);
+        setMessages((msgs || []).map((msg) => (
+          msg.sender_type === "store" ? { ...msg, is_read: true } : msg
+        )));
         setLoading(false);
         setTimeout(scrollToBottom, 100);
       }
@@ -433,7 +447,7 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
 
     initChat();
     return () => { cancelled = true; };
-  }, [open, storeId, isAdmin, onClose, scrollToBottom]);
+  }, [markThreadRead, open, storeId, isAdmin, onClose, scrollToBottom]);
 
   // Admin mode: load messages for selected chat
   useEffect(() => {
@@ -450,8 +464,12 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
         .eq("chat_id", selectedChat.id)
         .order("created_at", { ascending: true });
 
+      await markThreadRead(selectedChat.id);
+
       if (!cancelled) {
-        setMessages(msgs || []);
+        setMessages((msgs || []).map((msg) => (
+          msg.sender_type === "customer" ? { ...msg, is_read: true } : msg
+        )));
         setLoading(false);
         setTimeout(scrollToBottom, 100);
       }
@@ -459,7 +477,7 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
 
     loadMessages();
     return () => { cancelled = true; };
-  }, [selectedChat, isAdmin, scrollToBottom]);
+  }, [markThreadRead, selectedChat, isAdmin, scrollToBottom]);
 
   // Realtime subscription
   useEffect(() => {
@@ -472,9 +490,19 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
         { event: "INSERT", schema: "public", table: "store_chat_messages", filter: `chat_id=eq.${chatId}` },
         (payload) => {
           const msg = payload.new as ChatMessage;
+          void (async () => {
+            const shouldMarkRead = isAdmin ? msg.sender_type === "customer" : msg.sender_type === "store";
+            if (!shouldMarkRead) return;
+            await supabase
+              .from("store_chat_messages")
+              .update({ is_read: true })
+              .eq("id", msg.id)
+              .eq("is_read", false);
+          })();
           setMessages((prev) => {
             if (prev.some((m) => m.id === msg.id)) return prev;
-            return [...prev, msg];
+            const shouldMarkRead = isAdmin ? msg.sender_type === "customer" : msg.sender_type === "store";
+            return [...prev, shouldMarkRead ? { ...msg, is_read: true } : msg];
           });
           setTimeout(scrollToBottom, 50);
         }
@@ -482,7 +510,7 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [chatId, scrollToBottom]);
+  }, [chatId, isAdmin, scrollToBottom]);
 
   const sendMessage = async () => {
     if (!input.trim() || !chatId || sending) return;

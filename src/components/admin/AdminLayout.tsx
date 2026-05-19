@@ -18,6 +18,7 @@ import {
   Compass, BedDouble, KeyRound, CreditCard, Sparkles, Layers, Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FeedIncidentCommandCenter } from "@/components/admin/FeedIncidentCommandCenter";
 import { cn } from "@/lib/utils";
 import {
   Collapsible,
@@ -342,6 +343,7 @@ export default function AdminLayout({ children, title, brandLabel }: AdminLayout
               </Button>
               <h1 className="text-lg font-bold text-foreground">{title}</h1>
             </div>
+            <FeedIncidentCommandCenter />
           </header>
 
           <main className="flex-1 p-4 sm:p-6">

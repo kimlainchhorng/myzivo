@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Trophy, Users, Image as ImageIcon, Heart, MessageCircle, Sparkles, Check, PartyPopper, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
+import { SwipeBackContainer } from "@/components/shared/SwipeBackContainer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -153,7 +154,7 @@ export default function CreatorMilestonesPage() {
   const nextUp = ladderState.find((r) => !r.reached);
 
   return (
-    <div className="min-h-screen bg-background pb-12">
+    <SwipeBackContainer className="min-h-screen bg-background pb-12">
       <SEOHead title="Milestones · ZIVO" description="Your creator achievements and what's coming next." noIndex />
 
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -266,6 +267,6 @@ export default function CreatorMilestonesPage() {
           Milestones unlock automatically as you grow. Custom celebrations sync to your profile.
         </p>
       </div>
-    </div>
+    </SwipeBackContainer>
   );
 }

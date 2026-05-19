@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Sparkles, Play, Moon, Wind, Brain, Heart, Clock, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
+import { SwipeBackContainer } from "@/components/shared/SwipeBackContainer";
 import { cn } from "@/lib/utils";
 
 type Category = "All" | "Meditation" | "Breathing" | "Sleep" | "Focus" | "Stress";
@@ -59,7 +60,7 @@ export default function MindfulnessPage() {
   const filtered = activeCategory === "All" ? SESSIONS : SESSIONS.filter((s) => s.category === activeCategory);
 
   return (
-    <div className="min-h-screen bg-background">
+    <SwipeBackContainer className="min-h-screen bg-background">
       <SEOHead title="Mindfulness · ZIVO" description="Guided meditation, breathing, and sleep stories." noIndex />
 
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -194,6 +195,6 @@ export default function MindfulnessPage() {
           Audio playback rolls out as the Mindfulness library publishes.
         </p>
       </div>
-    </div>
+    </SwipeBackContainer>
   );
 }

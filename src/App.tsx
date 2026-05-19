@@ -579,6 +579,25 @@ const MentionsPage = lazy(() => import("./pages/MentionsPage"));
 const PostAlbumsPage = lazy(() => import("./pages/PostAlbumsPage"));
 const CollabsPage = lazy(() => import("./pages/CollabsPage"));
 const StickerStorePage = lazy(() => import("./pages/StickerStorePage"));
+const CouponsPage = lazy(() => import("./pages/CouponsPage"));
+const ReferralsPage = lazy(() => import("./pages/ReferralsPage"));
+const ChatThemesPage = lazy(() => import("./pages/ChatThemesPage"));
+const RewardsCenterPage = lazy(() => import("./pages/RewardsCenterPage"));
+const AchievementsPage = lazy(() => import("./pages/AchievementsPage"));
+const CreatorEarningsPage = lazy(() => import("./pages/CreatorEarningsPage"));
+const NotificationPrefsPage = lazy(() => import("./pages/NotificationPrefsPage"));
+const StoryInsightsPage = lazy(() => import("./pages/StoryInsightsPage"));
+const DevicesPage = lazy(() => import("./pages/DevicesPage"));
+const InterestsPage = lazy(() => import("./pages/InterestsPage"));
+const ChallengesPage = lazy(() => import("./pages/ChallengesPage"));
+const GameScoresPage = lazy(() => import("./pages/GameScoresPage"));
+const ClubsPage = lazy(() => import("./pages/ClubsPage"));
+const ForumsPage = lazy(() => import("./pages/ForumsPage"));
+const PlaylistsPage = lazy(() => import("./pages/PlaylistsPage"));
+const TrendingTopicsPage = lazy(() => import("./pages/TrendingTopicsPage"));
+const ReelEffectsPage = lazy(() => import("./pages/ReelEffectsPage"));
+const PlacesPage = lazy(() => import("./pages/PlacesPage"));
+const ReactionPacksPage = lazy(() => import("./pages/ReactionPacksPage"));
 
 const Vision = lazy(() => import("./pages/Vision"));
 const BrandMission = lazy(() => import("./pages/BrandMission"));
@@ -1537,6 +1556,25 @@ const App = () => (
                 <Route path="/albums" element={<ProtectedRoute><PostAlbumsPage /></ProtectedRoute>} />
                 <Route path="/collabs" element={<ProtectedRoute><CollabsPage /></ProtectedRoute>} />
                 <Route path="/stickers" element={<StickerStorePage />} />
+                <Route path="/coupons" element={<CouponsPage />} />
+                <Route path="/referrals" element={<ProtectedRoute><ReferralsPage /></ProtectedRoute>} />
+                <Route path="/chat-themes" element={<ProtectedRoute><ChatThemesPage /></ProtectedRoute>} />
+                <Route path="/rewards-center" element={<ProtectedRoute><RewardsCenterPage /></ProtectedRoute>} />
+                <Route path="/achievements" element={<AchievementsPage />} />
+                <Route path="/creator/earnings" element={<ProtectedRoute><CreatorEarningsPage /></ProtectedRoute>} />
+                <Route path="/notifications/preferences" element={<ProtectedRoute><NotificationPrefsPage /></ProtectedRoute>} />
+                <Route path="/story-insights" element={<ProtectedRoute><StoryInsightsPage /></ProtectedRoute>} />
+                <Route path="/devices" element={<ProtectedRoute><DevicesPage /></ProtectedRoute>} />
+                <Route path="/interests" element={<ProtectedRoute><InterestsPage /></ProtectedRoute>} />
+                <Route path="/challenges" element={<ChallengesPage />} />
+                <Route path="/game-scores" element={<ProtectedRoute><GameScoresPage /></ProtectedRoute>} />
+                <Route path="/clubs" element={<ClubsPage />} />
+                <Route path="/forums" element={<ForumsPage />} />
+                <Route path="/playlists" element={<ProtectedRoute><PlaylistsPage /></ProtectedRoute>} />
+                <Route path="/trending" element={<TrendingTopicsPage />} />
+                <Route path="/reel-effects" element={<ReelEffectsPage />} />
+                <Route path="/places" element={<PlacesPage />} />
+                <Route path="/reaction-packs" element={<ReactionPacksPage />} />
                 <Route path="/podcasts" element={<PodcastsPage />} />
                 <Route path="/sounds" element={<SoundsPage />} />
                 <Route path="/media-library" element={<ProtectedRoute><MediaLibraryPage /></ProtectedRoute>} />

@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { Bell, Search, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import { FeedIncidentCommandCenter } from "@/components/admin/FeedIncidentCommandCenter";
 import type { AdminVertical } from "./useAdminContext";
 
 interface AdminTopbarProps {
@@ -98,9 +99,7 @@ export function AdminTopbar({ vertical }: AdminTopbarProps) {
               onClick={() => setSearchOpen(true)}>
               <Search className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="icon" aria-label="Notifications" className="h-8 w-8">
-              <Bell className="w-4 h-4" />
-            </Button>
+            <FeedIncidentCommandCenter compact />
           </div>
         </>
       )}

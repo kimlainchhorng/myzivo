@@ -8,6 +8,7 @@ import AppHeader from "./AppHeader";
 import SystemStatusBanner from "@/components/shared/SystemStatusBanner";
 import OfflineBanner from "@/components/shared/OfflineBanner";
 import SafeAreaDebugOverlay from "@/components/dev/SafeAreaDebugOverlay";
+import { SwipeBackContainer } from "@/components/shared/SwipeBackContainer";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { cn } from "@/lib/utils";
 
@@ -39,12 +40,16 @@ const AppLayout = ({
   const { isOnline } = useNetworkStatus();
 
   return (
-    <div className={cn(
-      "bg-background flex flex-col overscroll-none tap-highlight-none",
-      fixedHeight ? "h-[100dvh] overflow-hidden" : "min-h-screen"
-    )}>
+    <SwipeBackContainer
+      disabled={!showBack}
+      onBack={onBack}
+      className={cn(
+        "bg-background flex flex-col overscroll-none tap-highlight-none",
+        fixedHeight ? "h-[100dvh] overflow-hidden" : "min-h-screen"
+      )}
+    >
       {!hideHeader && (
-        <AppHeader 
+        <AppHeader
           title={title}
           showBack={showBack}
           onBack={onBack}
@@ -78,7 +83,7 @@ const AppLayout = ({
       {!hideNav && <ZivoMobileNav />}
 
       <SafeAreaDebugOverlay />
-    </div>
+    </SwipeBackContainer>
   );
 };
 

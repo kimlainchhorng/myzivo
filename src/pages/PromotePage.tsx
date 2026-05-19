@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Megaphone, Sparkles, TrendingUp, Eye, Image as ImageIcon, Film, Zap, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
+import { SwipeBackContainer } from "@/components/shared/SwipeBackContainer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -113,7 +114,7 @@ export default function PromotePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-32">
+    <SwipeBackContainer className="min-h-screen bg-background pb-32">
       <SEOHead title="Promote · ZIVO" description="Boost reach for your posts, reels, and stories." noIndex />
 
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -311,6 +312,6 @@ export default function PromotePage() {
           </Button>
         </div>
       </div>
-    </div>
+    </SwipeBackContainer>
   );
 }

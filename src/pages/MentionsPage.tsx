@@ -10,6 +10,7 @@ import { ArrowLeft, AtSign, MessageCircle, Heart, Film, Image as ImageIcon, Chev
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import SEOHead from "@/components/SEOHead";
+import { SwipeBackContainer } from "@/components/shared/SwipeBackContainer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -148,7 +149,7 @@ export default function MentionsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-background pb-12">
+    <SwipeBackContainer className="min-h-screen bg-background pb-12">
       <SEOHead title="Mentions · ZIVO" description="Posts where you've been tagged." noIndex />
 
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -261,6 +262,6 @@ export default function MentionsPage() {
           </div>
         )}
       </div>
-    </div>
+    </SwipeBackContainer>
   );
 }

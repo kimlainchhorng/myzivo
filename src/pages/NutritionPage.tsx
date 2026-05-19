@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Apple, Plus, Droplets, Minus, X, Coffee, Soup, Pizza, Cookie } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
+import { SwipeBackContainer } from "@/components/shared/SwipeBackContainer";
 import { cn } from "@/lib/utils";
 
 type MealSlot = "breakfast" | "lunch" | "dinner" | "snack";
@@ -116,7 +117,7 @@ export default function NutritionPage() {
   const caloriePct = Math.min(100, Math.round((totals.calories / TARGETS.calories) * 100));
 
   return (
-    <div className="min-h-screen bg-background pb-12">
+    <SwipeBackContainer className="min-h-screen bg-background pb-12">
       <SEOHead title="Nutrition · ZIVO" description="Log meals, calories, macros, and water intake." noIndex />
 
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -302,6 +303,6 @@ export default function NutritionPage() {
           Nutrition logs save on this device. Targets are defaults — adjust per your dietitian.
         </p>
       </div>
-    </div>
+    </SwipeBackContainer>
   );
 }
