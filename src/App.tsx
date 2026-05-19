@@ -613,6 +613,7 @@ const AffiliateLinksPage = lazy(() => import("./pages/AffiliateLinksPage"));
 const GiftHistoryPage = lazy(() => import("./pages/GiftHistoryPage"));
 const SharedTodosPage = lazy(() => import("./pages/SharedTodosPage"));
 const MarketplaceCartPage = lazy(() => import("./pages/MarketplaceCartPage"));
+const PointsHistoryPage = lazy(() => import("./pages/PointsHistoryPage"));
 
 const Vision = lazy(() => import("./pages/Vision"));
 const BrandMission = lazy(() => import("./pages/BrandMission"));
@@ -1605,6 +1606,7 @@ const App = () => (
                 <Route path="/gift-history" element={<ProtectedRoute><GiftHistoryPage /></ProtectedRoute>} />
                 <Route path="/shared-todos" element={<ProtectedRoute><SharedTodosPage /></ProtectedRoute>} />
                 <Route path="/marketplace-cart" element={<ProtectedRoute><MarketplaceCartPage /></ProtectedRoute>} />
+                <Route path="/points-history" element={<ProtectedRoute><PointsHistoryPage /></ProtectedRoute>} />
                 <Route path="/podcasts" element={<PodcastsPage />} />
                 <Route path="/sounds" element={<SoundsPage />} />
                 <Route path="/media-library" element={<ProtectedRoute><MediaLibraryPage /></ProtectedRoute>} />

@@ -1,4 +1,4 @@
-import type { ChatCategory } from "../ChatHubPage";
+export type ChatCategory = "personal" | "shop" | "support" | "ride";
 
 export interface FolderTab {
   id: string;

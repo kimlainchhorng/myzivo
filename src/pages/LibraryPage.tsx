@@ -119,6 +119,7 @@ const GROUPS: LibraryGroup[] = [
       { icon: Link2, title: "Affiliate Links", description: "Track your link-in-bio clicks, conversions, earnings", path: "/affiliate-links" },
       { icon: Gift, title: "Gift History", description: "Coin gifts sent + received in chat", path: "/gift-history" },
       { icon: ShoppingCart, title: "Cart", description: "Marketplace items ready to checkout", path: "/marketplace-cart" },
+      { icon: Coins, title: "Points History", description: "Loyalty points earned, redeemed, expired", path: "/points-history" },
       { icon: ArrowLeftRight, title: "Exchange Rates", description: "Live currency conversion", path: "/exchange-rates" },
     ],
   },

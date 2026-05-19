@@ -546,6 +546,19 @@ export default function ReelsFeedPage() {
   useEffect(() => {
     try { localStorage.setItem("zivo:feed-tab-v1", feedTab); } catch { /* ignore */ }
   }, [feedTab]);
+  // Defensive: if the user is stuck on a Friends/Following tab but their social
+  // graph is empty (new account, never followed anyone), the feed looks broken
+  // — it isn't, the tab just filters out everything. Kick them back to For You
+  // once we've confirmed both sets are loaded and empty.
+  const socialGraphLoadedRef = useRef(false);
+  useEffect(() => {
+    if (!sidebarDataReady) return;
+    if (socialGraphLoadedRef.current) return;
+    socialGraphLoadedRef.current = true;
+    if ((feedTab === "Friends" || feedTab === "Following") && friendIds.size === 0 && followingIds.size === 0) {
+      setFeedTab("For You");
+    }
+  }, [feedTab, friendIds, followingIds, sidebarDataReady]);
   // Scroll to top when the user actually switches tabs or hashtag scope — skip the
   // initial mount so a remembered tab from localStorage doesn't yank the page.
   const tabMountedRef = useRef(false);
@@ -928,12 +941,20 @@ export default function ReelsFeedPage() {
 
       // Fetch user posts
       try {
-        const { data: userPosts } = await withSupabaseAbortSignal((supabase as any)
+        const { data: userPosts, error: userPostsError } = await withSupabaseAbortSignal((supabase as any)
           .from("user_posts")
           .select("id, media_url, media_urls, media_type, caption, likes_count, comments_count, shares_count, views_count, created_at, user_id, shared_from_post_id, shared_from_user_id, location, is_pinned")
           .eq("is_published", true)
           .order("created_at", { ascending: false })
           .limit(pageSize), signal);
+
+        // Diagnostic: surface RLS or query failures the outer catch{} swallows.
+        // Open dev console to see how many user_posts the RLS policies returned
+        // — "I don't see other users' posts" usually means RLS filtered them.
+        if (typeof window !== "undefined") {
+          // eslint-disable-next-line no-console
+          console.info("[feed] user_posts →", { rows: userPosts?.length ?? 0, error: userPostsError ?? null });
+        }
 
         if (userPosts?.length) {
           const userIds = [...new Set(userPosts.map((p: any) => p.user_id))] as string[];

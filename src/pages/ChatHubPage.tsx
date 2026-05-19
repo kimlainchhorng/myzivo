@@ -80,7 +80,7 @@ import { assessChatMessageRisk, sanitizeOutgoingMessage } from "@/lib/security/c
 import { validateExternalUrl } from "@/lib/urlSafety";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
-import { getChatRealtimePoolStats, subscribeToPooledPostgresChangesGroup } from "@/services/chatRealtimePool";
+import { getChatRealtimePoolStats } from "@/services/chatRealtimePool";
 import {
   buildChatHubActionsFolderMembership,
   buildChatHubFolderTabs,
@@ -88,6 +88,9 @@ import {
   filterChatHubRows,
   sortChatHubRowsByPinAndDate,
 } from "./chat/chatHubSelectors";
+import { useChatHubSearchResults } from "./chat/useChatHubSearchResults";
+import { useChatHubRealtimeInvalidation } from "./chat/useChatHubRealtimeInvalidation";
+import { useMarkOpenPersonalChatRead } from "./chat/useMarkOpenPersonalChatRead";
 
 // Lazy-load heavy sub-pages/components
 const GroupChat = lazy(() => import("@/components/chat/GroupChat"));
@@ -795,143 +798,18 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     } catch {}
   }, [openGroupChat, openPersonalChat, openRideChat, openShopChat, openSupportChat, user?.id]);
 
-  useEffect(() => {
-    if (!user?.id || !openPersonalChat?.id) return;
+  useMarkOpenPersonalChatRead({
+    userId: user?.id,
+    recipientId: openPersonalChat?.id,
+    queryClient,
+  });
 
-    const recipientId = openPersonalChat.id;
-
-    queryClient.setQueryData<any[]>(["chat-hub-personal", user.id], (previous = []) =>
-      previous.map((chat: any) =>
-        chat.id === recipientId
-          ? { ...chat, unread: 0, isRead: true }
-          : chat
-      )
-    );
-
-    void (async () => {
-      const { error } = await supabase
-        .from("direct_messages")
-        .update({ is_read: true })
-        .eq("receiver_id", user.id)
-        .eq("sender_id", recipientId)
-        .eq("is_read", false);
-
-      if (error) {
-        console.error("[ChatHub] Failed to mark conversation as read:", error);
-      }
-
-      await queryClient.invalidateQueries({ queryKey: ["chat-hub-personal", user.id] });
-    })();
-  }, [openPersonalChat?.id, queryClient, user?.id]);
-
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const pendingInvalidations = new Map<string, ReturnType<typeof setTimeout>>();
-    const scheduleInvalidate = (key: string, run: () => void) => {
-      const existing = pendingInvalidations.get(key);
-      if (existing) clearTimeout(existing);
-      const timer = setTimeout(() => {
-        pendingInvalidations.delete(key);
-        run();
-      }, invalidateDebounceMs);
-      pendingInvalidations.set(key, timer);
-    };
-
-    const invalidatePersonal = () => {
-      scheduleInvalidate("chat-hub-personal", () => {
-        void queryClient.invalidateQueries({ queryKey: ["chat-hub-personal", user.id] });
-      });
-      scheduleInvalidate("chat-hub-groups", () => {
-        void queryClient.invalidateQueries({ queryKey: ["chat-hub-groups", user.id] });
-      });
-    };
-    const invalidateShop = () => {
-      scheduleInvalidate("chat-hub-shop", () => {
-        void queryClient.invalidateQueries({ queryKey: ["chat-hub-shop", user.id] });
-      });
-    };
-    const invalidateRide = () => {
-      scheduleInvalidate("chat-hub-ride", () => {
-        void queryClient.invalidateQueries({ queryKey: ["chat-hub-ride", user.id] });
-      });
-    };
-    const invalidateSupport = () => {
-      scheduleInvalidate("chat-hub-support", () => {
-        void queryClient.invalidateQueries({ queryKey: ["chat-hub-support", user.id] });
-      });
-    };
-    const invalidateFolders = () => {
-      scheduleInvalidate("chat-folders", () => {
-        void queryClient.invalidateQueries({ queryKey: ["chat-folders", user.id] });
-      });
-      scheduleInvalidate("chat-folder-members", () => {
-        void queryClient.invalidateQueries({ queryKey: ["chat-folder-members", user.id] });
-      });
-    };
-
-    const onPersonalTables = new Set(["direct_messages", "group_messages", "chat_groups", "chat_group_members"]);
-    const onShopTables = new Set(["store_chats", "store_chat_messages"]);
-    const onRideTables = new Set(["trip_messages"]);
-    const onSupportTables = new Set(["support_tickets", "ticket_replies"]);
-    const onFolderTables = new Set(["chat_folders", "chat_folder_members"]);
-
-    const unsubscribe = subscribeToPooledPostgresChangesGroup(
-      `chat-hub-side-tabs:${user.id}`,
-      [
-        { event: "*", schema: "public", table: "direct_messages" },
-        { event: "*", schema: "public", table: "group_messages" },
-        { event: "*", schema: "public", table: "chat_groups" },
-        { event: "*", schema: "public", table: "chat_group_members" },
-        { event: "*", schema: "public", table: "store_chats" },
-        { event: "*", schema: "public", table: "store_chat_messages" },
-        { event: "*", schema: "public", table: "trip_messages" },
-        { event: "*", schema: "public", table: "support_tickets" },
-        { event: "*", schema: "public", table: "ticket_replies" },
-        { event: "*", schema: "public", table: "chat_folders" },
-        { event: "*", schema: "public", table: "chat_folder_members" },
-      ],
-      ({ subscription }) => {
-        const table = subscription.table;
-        if (onPersonalTables.has(table)) {
-          invalidatePersonal();
-          return;
-        }
-        if (onShopTables.has(table)) {
-          invalidateShop();
-          return;
-        }
-        if (onRideTables.has(table)) {
-          invalidateRide();
-          return;
-        }
-        if (onSupportTables.has(table)) {
-          invalidateSupport();
-          return;
-        }
-        if (onFolderTables.has(table)) {
-          invalidateFolders();
-        }
-      },
-      {
-        onStatusChange: (status) => {
-          if (status === "SUBSCRIBED") {
-            setSyncMode((prev) => (prev === "live" ? prev : "live"));
-            return;
-          }
-          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
-            setSyncMode((prev) => (prev === "fallback" ? prev : "fallback"));
-          }
-        },
-      }
-    );
-
-    return () => {
-      pendingInvalidations.forEach((timer) => clearTimeout(timer));
-      pendingInvalidations.clear();
-      unsubscribe();
-    };
-  }, [invalidateDebounceMs, queryClient, user?.id]);
+  useChatHubRealtimeInvalidation({
+    userId: user?.id,
+    queryClient,
+    invalidateDebounceMs,
+    setSyncMode,
+  });
 
   // Send shared content as a DM to selected contact
   const handleShareToContact = async (contactId: string, contactName: string, contactAvatar?: string | null) => {
@@ -1491,66 +1369,15 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const sortedVisible = sortChatHubRowsByPinAndDate(visibleList as any[], isPinned);
   const archivedUnread = archivedList.reduce((s: number, c: any) => s + (c.unread || 0), 0);
 
-  const normalizedSearch = search.trim().toLowerCase();
-  const filtered = normalizedSearch
-    ? sortedVisible.filter((c: any) => {
-        const preview = parseRichMessagePreview(c.lastMessage || "");
-        const searchable = `${String(c.name || "")} ${String(preview || "")}`.toLowerCase();
-        if (!searchable.includes(normalizedSearch)) return false;
-
-        const type = detectPreviewType(preview);
-        if (searchFilter === "media") return type.hasMedia;
-        if (searchFilter === "links") return type.hasLink;
-        if (searchFilter === "files") return type.hasFile;
-        return true;
-      })
-    : sortedVisible;
-
-  const [profileResults, setProfileResults] = useState<any[]>([]);
-  const [searchingProfiles, setSearchingProfiles] = useState(false);
-
-  useEffect(() => {
-    if (active !== "personal" || search.trim().length < 2) {
-      setProfileResults([]);
-      return;
-    }
-    let alive = true;
-    const timeout = setTimeout(async () => {
-      setSearchingProfiles(true);
-      try {
-        const term = `%${search.trim()}%`;
-        const { data } = await (supabase as any)
-          .from("profiles")
-          .select("user_id, full_name, avatar_url, email, is_verified")
-          .or(`full_name.ilike.${term},email.ilike.${term}`)
-          .neq("user_id", user!.id)
-          .eq("is_of_creator", false)
-          .limit(15);
-        if (alive && data) {
-          setProfileResults(
-            data.map((p: any) => ({
-              id: p.user_id,
-              name: p.full_name || p.email || "User",
-              avatar: p.avatar_url,
-              isVerified: p.is_verified === true,
-              lastMessage: "Tap to chat",
-              lastTime: new Date().toISOString(),
-              unread: 0,
-            }))
-          );
-        }
-      } catch { /* ignore */ }
-      finally { if (alive) setSearchingProfiles(false); }
-    }, 350);
-    return () => { alive = false; clearTimeout(timeout); };
-  }, [search, active, user]);
-
-  const displayList = active === "personal" && searchFilter === "chats" && search.trim().length >= 2
-    ? [
-        ...filtered,
-        ...profileResults.filter((profile) => !filtered.some((chat: any) => chat.id === profile.id)),
-      ]
-    : filtered;
+  const { searchingProfiles, filtered, displayList } = useChatHubSearchResults({
+    active,
+    search,
+    searchFilter,
+    sortedVisible: sortedVisible as any[],
+    userId: user?.id,
+    parseRichMessagePreview,
+    detectPreviewType,
+  });
 
   const bulkSelectableList = useMemo<BulkSelectableChat[]>(
     () => displayList as BulkSelectableChat[],

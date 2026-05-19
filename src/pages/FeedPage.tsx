@@ -4053,17 +4053,21 @@ export default function FeedPage() {
       // Page size grows with `pageMultiplier` so "load more" reveals additional content.
       const STORE_PAGE = FEED_STORE_PAGE_SIZE;
       const USER_PAGE  = FEED_USER_PAGE_SIZE;
+      // Reels is a videos-only surface. Filter media_type='video' server-side
+      // so the empty state isn't misleadingly populated by photo-only posts.
       const [storePostsResult, userPostsResult] = await Promise.all([
         withSupabaseAbortSignal(supabase
           .from("store_posts")
           .select("id, store_id, caption, media_urls, media_type, is_published, created_at, likes_count, comments_count, shares_count, reposts_count, view_count, audio_name, location")
           .eq("is_published", true)
+          .eq("media_type", "video")
           .order("created_at", { ascending: false })
           .limit(STORE_PAGE * pageMultiplier), signal),
         withSupabaseAbortSignal((supabase as any)
           .from("user_posts")
           .select("id, user_id, media_url, media_urls, media_type, caption, likes_count, comments_count, shares_count, views_count, created_at, audio_name, location")
           .eq("is_published", true)
+          .eq("media_type", "video")
           .order("created_at", { ascending: false })
           .limit(USER_PAGE * pageMultiplier), signal),
       ]);
@@ -4096,6 +4100,7 @@ export default function FeedPage() {
                   .select("id, store_id, caption, media_urls, media_type, is_published, created_at, likes_count, comments_count, shares_count, reposts_count, view_count, audio_name, location")
                   .eq("id", requestedRawId)
                   .eq("is_published", true)
+                  .eq("media_type", "video")
                   .maybeSingle()
               : Promise.resolve({ data: null, error: null } as any),
             (supabase as any)
@@ -4103,6 +4108,7 @@ export default function FeedPage() {
               .select("id, user_id, media_url, media_urls, media_type, caption, likes_count, comments_count, shares_count, views_count, created_at, audio_name, location")
               .eq("id", requestedRawId)
               .eq("is_published", true)
+              .eq("media_type", "video")
               .maybeSingle(),
           ]);
 
@@ -4692,7 +4698,7 @@ export default function FeedPage() {
         <div>
           <p className="text-white font-semibold">No reels yet</p>
           <p className="mt-1 text-white/50 text-sm">
-            People and stores with photos or videos will show here. Create a reel or check back after new posts publish.
+            Reels are videos from people and stores. Record one or check back after new videos publish.
           </p>
         </div>
         <div className="flex flex-wrap justify-center gap-2">
@@ -4782,8 +4788,8 @@ export default function FeedPage() {
   if (feedSource !== "all" && visiblePosts.length === 0) {
     const emptyTitle = feedSource === "people" ? "No people reels yet" : "No shop reels yet";
     const emptyDescription = feedSource === "people"
-      ? "People posts with photos or videos will show here. Switch back to All to keep watching."
-      : "Store posts with photos or videos will show here. Switch back to All to keep watching.";
+      ? "Videos from people will show here. Switch back to All to keep watching."
+      : "Videos from stores will show here. Switch back to All to keep watching.";
     return (
       <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
         <EmptyState
