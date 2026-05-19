@@ -214,9 +214,9 @@ const DeliveryChatPage = lazy(() => import("./pages/DeliveryChatPage"));
 const GroceryMarketplace = lazy(() => import("./pages/GroceryMarketplace"));
 // Historical names are inverted: ReelsFeedPage renders the main social feed,
 // while FeedPage renders the fullscreen reels experience on /reels.
-const FeedPage = lazy(() => import("./pages/FeedPage"));
-const ReelsFeedPage = lazy(() => import("./pages/ReelsFeedPage"));
-const SocialFeedPage = lazy(() => import("./pages/SocialFeedPage"));
+const FeedPage = lazyWithRetry(() => import("./pages/FeedPage"));
+const ReelsFeedPage = lazyWithRetry(() => import("./pages/ReelsFeedPage"));
+const SocialFeedPage = lazyWithRetry(() => import("./pages/SocialFeedPage"));
 const SoundPage = lazy(() => import("./pages/SoundPage"));
 const ChatHubPage = lazyWithRetry(() => import("./pages/ChatHubPage"));
 const ContactsPage = lazyWithRetry(() => import("./pages/chat/ContactsPage"));
