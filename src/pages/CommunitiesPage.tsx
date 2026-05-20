@@ -8,6 +8,8 @@ import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import SafeCaption from "@/components/social/SafeCaption";
 import { confirmContentSafe } from "@/lib/security/contentLinkValidation";
 import SEOHead from "@/components/SEOHead";
+import DegradedDataBanner from "@/components/reliability/DegradedDataBanner";
+import LoadFailureCard from "@/components/reliability/LoadFailureCard";
 import { ArrowLeft, Plus, Users, Shield, Globe, Lock, Search, MessageSquare, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,7 +26,7 @@ export default function CommunitiesPage() {
   const [tab, setTab] = useState<"discover" | "joined">("discover");
   const [newCommunity, setNewCommunity] = useState({ name: "", description: "", category: "General", privacy: "public" });
 
-  const { data: communities = [], isLoading } = useQuery({
+  const { data: communities = [], isLoading, isFetching, isError: hasCommunitiesError, refetch } = useQuery({
     queryKey: ["communities"],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
@@ -109,12 +111,12 @@ export default function CommunitiesPage() {
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/80 backdrop-blur-xl border-b border-border/30">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button type="button" onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-muted/50">
+          <button type="button" aria-label="Go back" title="Go back" onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-muted/50">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-bold flex-1">Communities</h1>
           {user && (
-            <button type="button" onClick={() => setShowCreate(true)} className="p-2 rounded-full bg-primary text-primary-foreground">
+            <button type="button" aria-label="Create community" title="Create community" onClick={() => setShowCreate(true)} className="p-2 rounded-full bg-primary text-primary-foreground">
               <Plus className="h-4 w-4" />
             </button>
           )}
@@ -151,7 +153,42 @@ export default function CommunitiesPage() {
 
       {/* List */}
       <div className="px-4 py-4 space-y-3">
-        {isLoading ? (
+        {hasCommunitiesError && communities.length > 0 && (
+          <DegradedDataBanner
+            className="mb-3"
+            message="Showing cached communities. Refresh failed."
+            onRetry={() => {
+              void refetch();
+            }}
+            trackingContext="communities"
+            rightSlot={
+              <button
+                type="button"
+                onClick={() => {
+                  void refetch();
+                }}
+                disabled={isFetching}
+                className="shrink-0 rounded-full bg-foreground px-3 py-1 text-[11px] font-bold text-background disabled:opacity-50"
+              >
+                {isFetching ? "Refreshing..." : "Retry"}
+              </button>
+            }
+          />
+        )}
+
+        {hasCommunitiesError && communities.length === 0 && !isLoading ? (
+          <LoadFailureCard
+            className="py-4"
+            title="Could not load communities"
+            description="We could not fetch communities right now. Retry to reconnect and load fresh results."
+            onRetry={() => {
+              void refetch();
+            }}
+            onSecondary={() => navigate("/")}
+            secondaryLabel="Go Home"
+            trackingContext="communities"
+          />
+        ) : isLoading ? (
           <div className="text-center py-12 text-muted-foreground text-sm">Loading...</div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-12">

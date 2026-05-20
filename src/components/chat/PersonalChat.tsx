@@ -47,13 +47,10 @@ import FileText from "lucide-react/dist/esm/icons/file-text";
 import Bookmark from "lucide-react/dist/esm/icons/bookmark";
 import Timer from "lucide-react/dist/esm/icons/timer";
 import Languages from "lucide-react/dist/esm/icons/languages";
-import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import Ban from "lucide-react/dist/esm/icons/ban";
 import Flag from "lucide-react/dist/esm/icons/flag";
 import Eraser from "lucide-react/dist/esm/icons/eraser";
-import MoreVertical from "lucide-react/dist/esm/icons/more-vertical";
 import PhoneCall from "lucide-react/dist/esm/icons/phone-call";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -102,7 +99,6 @@ const CallScreen = lazy(() => import("./CallScreen"));
 const CallPiP = lazy(() => import("./CallPiP"));
 const VoiceMessagePlayer = lazy(() => import("./VoiceMessagePlayer"));
 const LocationShareBubble = lazy(() => import("./LocationShareBubble"));
-const ChatSearch = lazy(() => import("./ChatSearch"));
 const ChatNotificationSettings = lazy(() => import("./ChatNotificationSettings"));
 const ChatMediaGallery = lazy(() => import("./ChatMediaGallery"));
 const ChatPersonalization = lazy(() => import("./ChatPersonalization"));
@@ -132,7 +128,6 @@ const StickerKeyboard = lazy(() => import("./StickerKeyboard"));
 // Phase 3B–3D wired components
 import MessageReactionsBar from "./MessageReactionsBar";
 import PinnedMessageBanner from "./PinnedMessageBanner";
-import SelfDestructPicker from "./SelfDestructPicker";
 import SmartReplyChips from "./SmartReplyChips";
 import Flame from "lucide-react/dist/esm/icons/flame";
 import Clock from "lucide-react/dist/esm/icons/clock";
@@ -379,7 +374,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [replyTo, setReplyTo] = useState<{ id: string; message: string; isMe: boolean } | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [uploadingMedia, setUploadingMedia] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
   const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   // Auto-delete (chat-wide disappearing). null = off, otherwise seconds. Cycles 1d→7d→30d→off.
@@ -416,18 +410,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     try {
       setAutoTranslate(localStorage.getItem(autoTranslateStorageKey) === "1");
     } catch { /* ignore */ }
-  }, [autoTranslateStorageKey]);
-  const toggleAutoTranslate = useCallback(() => {
-    setAutoTranslate((v) => {
-      const next = !v;
-      if (autoTranslateStorageKey) {
-        try {
-          if (next) localStorage.setItem(autoTranslateStorageKey, "1");
-          else localStorage.removeItem(autoTranslateStorageKey);
-        } catch { /* ignore */ }
-      }
-      return next;
-    });
   }, [autoTranslateStorageKey]);
 
   // Cycle Off → 1d → 7d → 30d → Off (Telegram parity).
@@ -505,7 +487,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
   // Desktop keyboard shortcuts:
   //   ⌘/Ctrl+K → Quick Replies
-  //   ⌘/Ctrl+F → in-chat message search
+  //   ⌘/Ctrl+F → global chat search
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey)) return;
@@ -515,7 +497,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         setShowQuickReplies(true);
       } else if (key === "f") {
         e.preventDefault();
-        setShowSearch(true);
+        navigate("/chat/search");
       }
     };
     window.addEventListener("keydown", handler);
@@ -1785,43 +1767,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     if (ok) toast.success("Saved");
   }, [forwardMessage, messages, user?.id]);
 
-  // Block & report — duplicates the logic in ChatContactInfo so users can block/report
-  // in one tap from the chat header without first opening the contact sheet.
-  const handleBlockContact = useCallback(() => {
-    if (!user?.id) return;
-    toast.info(`Block ${recipientName}?`, {
-      action: {
-        label: "Block",
-        onClick: async () => {
-          const { error } = await dbFrom("blocked_users")
-            .insert({ blocker_id: user.id, blocked_id: recipientId });
-          if (error) { toast.error("Could not block"); return; }
-          toast.success(`${recipientName} blocked`);
-          onClose?.();
-        },
-      },
-    });
-  }, [user?.id, recipientId, recipientName, onClose]);
-
-  const handleReportContact = useCallback(() => {
-    if (!user?.id) return;
-    toast.info(`Report ${recipientName}?`, {
-      action: {
-        label: "Report",
-        onClick: async () => {
-          const { error } = await dbFrom("user_reports").insert({
-            reporter_id: user.id,
-            reported_id: recipientId,
-            reason: "chat_profile",
-            details: `Reported from chat header for ${recipientName}`,
-          });
-          if (error) { toast.error("Could not submit report"); return; }
-          toast.success("Report submitted");
-        },
-      },
-    });
-  }, [user?.id, recipientId, recipientName]);
-
   // Pin/unpin
   const handlePin = useCallback(async (id: string, pinned: boolean) => {
     setMessages((prev) => prev.map((m) => m.id === id ? { ...m, is_pinned: pinned } : m));
@@ -2221,106 +2166,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 <Gift className="h-5 w-5 text-[#00AEEF]" />
               </motion.button>
             )}
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button type="button" className="h-11 w-11 rounded-full flex items-center justify-center hover:bg-muted/50 active:scale-90 transition-all" aria-label="More chat options" title="More chat options">
-                  <MoreVertical className="h-5 w-5 text-foreground/50" />
-                </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" sideOffset={8} className="w-52 bg-background/95 backdrop-blur-xl border-border/30 shadow-xl shadow-black/10 rounded-xl p-1.5">
-              <DropdownMenuItem onClick={() => setShowSearch(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
-                <Search className="w-[18px] h-[18px] text-muted-foreground" /> Search this chat
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/chat/search")} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
-                <Search className="w-[18px] h-[18px] text-muted-foreground" /> Search everywhere
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowMediaGallery(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
-                <ImageIcon className="w-[18px] h-[18px] text-muted-foreground" /> Media & Files
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowCallHistory(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
-                <History className="w-[18px] h-[18px] text-muted-foreground" /> Call History
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/chat/recordings")} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
-                <Video className="w-[18px] h-[18px] text-muted-foreground" /> Recordings
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowMiniApps(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
-                <Zap className="w-[18px] h-[18px] text-muted-foreground" /> Mini Apps
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="my-1.5 bg-border/15" />
-              <DropdownMenuItem onClick={() => setShowPinnedPanel(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
-                <Pin className="w-[18px] h-[18px] text-muted-foreground" /> Pinned Messages
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowPersonalization(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
-                <Palette className="w-[18px] h-[18px] text-muted-foreground" /> Theme
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowNotifSettings(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
-                <Settings className="w-[18px] h-[18px] text-muted-foreground" /> Notifications
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowSecurity(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
-                <Shield className="w-[18px] h-[18px] text-muted-foreground" /> Privacy
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={toggleAutoTranslate}
-                className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer"
-                onSelect={(e) => { e.preventDefault(); }}
-              >
-                <Languages className="w-[18px] h-[18px] text-muted-foreground" />
-                <span className="flex-1">Auto-translate</span>
-                <span className={`text-[11px] font-semibold ${autoTranslate ? "text-emerald-500" : "text-muted-foreground"}`}>
-                  {autoTranslate ? "On" : "Off"}
-                </span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={async () => {
-                  // Spin up an ad-hoc LiveKit room. Pre-fill the DM composer
-                  // with the join link so the recipient can tap-to-join.
-                  const room = `dm-${user?.id?.slice(0, 6) || "x"}-${Date.now().toString(36)}`;
-                  const url = `${window.location.origin}/chat/call/group/${room}`;
-                  try {
-                    await navigator.clipboard?.writeText(url);
-                  } catch { /* clipboard may be blocked */ }
-                  setInput((prev) => (prev ? `${prev}\n${url}` : `Join my call: ${url}`));
-                  toast.success("Invite link added to composer. Send it to start the call.");
-                }}
-                className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer"
-                onSelect={(e) => { e.preventDefault(); }}
-              >
-                <Video className="w-[18px] h-[18px] text-muted-foreground" />
-                <span className="flex-1">Start group call</span>
-                <span className="text-[10px] text-muted-foreground">+ invite</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={cycleAutoDelete}
-                className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer"
-                onSelect={(e) => { e.preventDefault(); }}
-              >
-                <Timer className="w-[18px] h-[18px] text-muted-foreground" />
-                <span className="flex-1">Auto-Delete Timer</span>
-                <span className={`text-[11px] tabular-nums ${disappearingMode ? "text-amber-500 font-semibold" : "text-muted-foreground"}`}>{autoDeleteLabel}</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowScheduledSheet(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
-                <Clock className="w-[18px] h-[18px] text-muted-foreground" /> Scheduled
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowContactInfo(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
-                <FileText className="w-[18px] h-[18px] text-muted-foreground" /> Contact Info
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowClearConfirm(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
-                <Eraser className="w-[18px] h-[18px] text-muted-foreground" /> Clear history
-              </DropdownMenuItem>
-              {!isSelfChat && (
-                <>
-                  <DropdownMenuSeparator className="my-1.5 bg-border/15" />
-                  <DropdownMenuItem onClick={handleReportContact} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer text-destructive focus:text-destructive">
-                    <Flag className="w-[18px] h-[18px]" /> Report
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleBlockContact} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer text-destructive focus:text-destructive">
-                    <Ban className="w-[18px] h-[18px]" /> Block contact
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
 
@@ -2387,15 +2232,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           </button>
         )}
       </div>
-
-      {/* Search bar */}
-      <AnimatePresence>
-        {showSearch && (
-          <Suspense fallback={null}>
-            <ChatSearch messages={messages} onClose={() => setShowSearch(false)} onScrollToMessage={scrollToMessage} currentUserId={user?.id} />
-          </Suspense>
-        )}
-      </AnimatePresence>
 
       {/* Fullscreen media gallery */}
       <MediaGalleryLightbox
@@ -2981,7 +2817,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               <div className="relative shrink-0">
                 <button type="button"
                   data-attach-trigger
-                  onClick={() => setShowAttachMenu(!showAttachMenu)}
+                  onClick={() => {
+                    setShowQuickReplies(false);
+                    setShowAttachMenu((prev) => !prev);
+                  }}
                   disabled={uploadingMedia}
                   className={`h-11 w-11 rounded-full flex items-center justify-center transition-all shrink-0 ${
                     showAttachMenu ? "bg-primary text-primary-foreground rotate-45" : "text-muted-foreground/60 hover:bg-muted/50"
@@ -3021,18 +2860,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 />
               </div>
 
-              {/* Quick replies — saved canned responses */}
-              {!zivoOFMode && (
-                <button type="button"
-                  onClick={() => setShowQuickReplies(true)}
-                  className="h-11 w-11 rounded-full flex items-center justify-center transition-all shrink-0 text-muted-foreground/60 hover:bg-muted/50 hover:text-amber-500"
-                  aria-label="Quick replies"
-                  title="Quick replies"
-                >
-                  <Zap className="h-5 w-5" />
-                </button>
-              )}
-
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} title="Choose image" aria-label="Choose image" />
               <input ref={videoInputRef} type="file" accept="video/*,.gif" className="hidden" onChange={handleVideoSelect} title="Choose video" aria-label="Choose video" />
               <input ref={lockedImageInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleLockedMediaSelect} title="Choose locked media" aria-label="Choose locked media" />
@@ -3048,12 +2875,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 </Suspense>
               )}
 
-              {/* Self-destruct picker — always visible so user can toggle timer */}
-              {!zivoOFMode && (
-                <div className="shrink-0">
-                  <SelfDestructPicker value={selfDestructSec} onChange={setSelfDestructSec} />
-                </div>
-              )}
             </div>
 
             {/* Document/file upload — trigger stored in ref, opened via attach menu */}
@@ -3129,60 +2950,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 }`}
               />
               <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center">
-                {!zivoOFMode && (
-                <div className="relative">
-                  <button type="button"
-                    onClick={() => setShowEffectPicker((s) => !s)}
-                    className={`h-9 w-9 rounded-full flex items-center justify-center transition-all active:scale-90 ${
-                      pendingEffect ? "text-amber-500 bg-amber-500/10" : "text-muted-foreground/40 hover:text-muted-foreground"
-                    }`}
-                    aria-label="Send effect"
-                    title={pendingEffect ? `Effect: ${pendingEffect}` : "Send effect"}
-                  >
-                    {pendingEffect === "celebration" ? <span className="text-base">🎉</span>
-                      : pendingEffect === "fireworks" ? <span className="text-base">🎆</span>
-                      : pendingEffect === "hearts" ? <span className="text-base">❤️</span>
-                      : pendingEffect === "confetti" ? <span className="text-base">🎊</span>
-                      : pendingEffect === "lasers" ? <span className="text-base">⚡</span>
-                      : <Sparkles className="h-5 w-5" />}
-                  </button>
-                  {showEffectPicker && (
-                    <>
-                      <div className="fixed inset-0 z-30" onClick={() => setShowEffectPicker(false)} />
-                      <div className="absolute bottom-full right-0 mb-2 w-48 bg-background/95 backdrop-blur-xl border border-border/40 rounded-xl shadow-lg shadow-black/10 overflow-hidden z-40">
-                        <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/30">
-                          Send with effect
-                        </div>
-                        {([
-                          { id: "celebration", emoji: "🎉", label: "Celebration" },
-                          { id: "fireworks", emoji: "🎆", label: "Fireworks" },
-                          { id: "hearts", emoji: "❤️", label: "Hearts" },
-                          { id: "confetti", emoji: "🎊", label: "Confetti" },
-                          { id: "lasers", emoji: "⚡", label: "Lasers" },
-                        ] as const).map((opt) => (
-                          <button type="button"
-                            key={opt.id}
-                            onClick={() => { setPendingEffect(opt.id); setShowEffectPicker(false); }}
-                            className={`w-full flex items-center gap-2.5 px-3 py-2 text-left text-[14px] transition-colors ${pendingEffect === opt.id ? "bg-amber-500/10 text-amber-700 font-medium" : "hover:bg-muted/50 text-foreground"}`}
-                          >
-                            <span className="text-base">{opt.emoji}</span>
-                            <span>{opt.label}</span>
-                          </button>
-                        ))}
-                        {pendingEffect && (
-                          <button
-                            type="button"
-                            onClick={() => { setPendingEffect(null); setShowEffectPicker(false); }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[13px] text-muted-foreground hover:bg-muted/50 border-t border-border/30"
-                          >
-                            Clear effect
-                          </button>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-                )}
                 <button type="button"
                   onClick={() => setShowStickerKeyboard(!showStickerKeyboard)}
                   className={`h-9 w-9 rounded-full flex items-center justify-center transition-all active:scale-90 ${
@@ -3369,7 +3136,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             onClose={() => setShowContactInfo(false)}
             onStartCall={(type) => { setShowContactInfo(false); void handleStartCall(type); }}
             onOpenMediaGallery={() => { setMediaGalleryTab("photos"); setShowContactInfo(false); setShowMediaGallery(true); }}
-            onOpenSearch={() => { setShowContactInfo(false); setShowSearch(true); }}
+            onOpenSearch={() => { setShowContactInfo(false); navigate("/chat/search"); }}
             onOpenCallHistory={() => { setShowContactInfo(false); setShowCallHistory(true); }}
             onOpenPersonalization={() => { setShowContactInfo(false); setShowPersonalization(true); }}
             onOpenSecurity={() => { setShowContactInfo(false); setShowSecurity(true); }}

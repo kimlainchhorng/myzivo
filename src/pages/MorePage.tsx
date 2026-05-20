@@ -574,48 +574,8 @@ export default function MorePage() {
   };
   const blurClass = privacyMode ? "blur-sm select-none" : "";
 
-  // ===== Currency switcher (localStorage) =====
-  const CURRENCY_KEY = "zivo:more:currency";
-  const [currency, setCurrency] = useState<string>(() => {
-    if (typeof window === "undefined") return "USD";
-    return window.localStorage.getItem(CURRENCY_KEY) || "USD";
-  });
-  const setCurrencyCode = (code: string) => {
-    setCurrency(code);
-    try { window.localStorage.setItem(CURRENCY_KEY, code); } catch {}
-  };
-  const currencies = [
-    { code: "USD", symbol: "$", label: "US Dollar" },
-    { code: "EUR", symbol: "€", label: "Euro" },
-    { code: "GBP", symbol: "£", label: "Pound" },
-    { code: "JPY", symbol: "¥", label: "Yen" },
-    { code: "INR", symbol: "₹", label: "Rupee" },
-    { code: "KRW", symbol: "₩", label: "Won" },
-    { code: "BRL", symbol: "R$", label: "Real" },
-    { code: "AUD", symbol: "A$", label: "AUD" },
-    { code: "CAD", symbol: "C$", label: "CAD" },
-    { code: "MXN", symbol: "MX$", label: "Peso" },
-  ];
-
   // ===== Help FAB sheet =====
   const [showHelpSheet, setShowHelpSheet] = useState(false);
-
-  // ===== Haptics toggle (Capacitor / browser vibrate) =====
-  const HAPTICS_KEY = "zivo:more:haptics";
-  const [hapticsOn, setHapticsOn] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true;
-    return window.localStorage.getItem(HAPTICS_KEY) !== "0";
-  });
-  const toggleHaptics = () => {
-    setHapticsOn((p) => {
-      const n = !p;
-      try { window.localStorage.setItem(HAPTICS_KEY, n ? "1" : "0"); } catch {}
-      if (n && typeof navigator !== "undefined" && (navigator as any).vibrate) {
-        (navigator as any).vibrate(15);
-      }
-      return n;
-    });
-  };
 
   // ===== Quick share-profile dialog =====
   // Only the toggle state lives here; the URL + copy helper depend on `handle`,
@@ -660,42 +620,6 @@ export default function MorePage() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  // ===== Accessibility: font size + reduced motion =====
-  const FONT_SIZE_KEY = "zivo:more:fontSize";
-  const REDUCED_MOTION_KEY = "zivo:more:reducedMotion";
-  const fontSizes = [
-    { code: "S", scale: 0.92, label: "Small" },
-    { code: "M", scale: 1, label: "Medium" },
-    { code: "L", scale: 1.1, label: "Large" },
-    { code: "XL", scale: 1.22, label: "X-Large" },
-  ];
-  const [fontSize, setFontSize] = useState<string>(() => {
-    if (typeof window === "undefined") return "M";
-    return window.localStorage.getItem(FONT_SIZE_KEY) || "M";
-  });
-  const [reducedMotion, setReducedMotion] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return window.localStorage.getItem(REDUCED_MOTION_KEY) === "1";
-  });
-  const setFontSizeCode = (code: string) => {
-    setFontSize(code);
-    try { window.localStorage.setItem(FONT_SIZE_KEY, code); } catch {}
-  };
-  const toggleReducedMotion = () => {
-    setReducedMotion((p) => {
-      const n = !p;
-      try { window.localStorage.setItem(REDUCED_MOTION_KEY, n ? "1" : "0"); } catch {}
-      return n;
-    });
-  };
-  const fontScaleClass = fontSize === "S"
-    ? "[font-size:0.92rem]"
-    : fontSize === "L"
-      ? "[font-size:1.1rem]"
-      : fontSize === "XL"
-        ? "[font-size:1.22rem]"
-        : "[font-size:1rem]";
 
   // ===== Device info (UA-based, lightweight) =====
   const deviceInfo = useMemo(() => {
@@ -796,27 +720,6 @@ export default function MorePage() {
   const toggleVoiceFallback = () => {
     // No-op when speech is unavailable; would log telemetry in prod
   };
-
-  // ===== Language switcher (localStorage) =====
-  const LANG_KEY = "zivo:more:lang";
-  const [lang, setLang] = useState<string>(() => {
-    if (typeof window === "undefined") return "en";
-    return window.localStorage.getItem(LANG_KEY) || "en";
-  });
-  const setLanguage = (code: string) => {
-    setLang(code);
-    try { window.localStorage.setItem(LANG_KEY, code); } catch {}
-  };
-  const languages = [
-    { code: "en", flag: "🇺🇸", label: "English" },
-    { code: "es", flag: "🇪🇸", label: "Español" },
-    { code: "fr", flag: "🇫🇷", label: "Français" },
-    { code: "pt", flag: "🇵🇹", label: "Português" },
-    { code: "de", flag: "🇩🇪", label: "Deutsch" },
-    { code: "ja", flag: "🇯🇵", label: "日本語" },
-    { code: "zh", flag: "🇨🇳", label: "中文" },
-    { code: "ar", flag: "🇸🇦", label: "العربية" },
-  ];
 
   // ===== PWA install prompt (beforeinstallprompt) =====
   const [installPrompt, setInstallPrompt] = useState<any>(null);
@@ -1820,8 +1723,6 @@ export default function MorePage() {
         <main
           className={cn(
             "flex-1 flex flex-col px-5 pb-28 pt-4 lg:pt-6 lg:pb-8 lg:max-w-3xl lg:mx-auto zivo-aurora",
-            fontScaleClass,
-            reducedMotion && "[&_*]:!transition-none [&_*]:!animate-none",
           )}
         >
           {hasMoreRefreshError && (
@@ -2086,145 +1987,6 @@ export default function MorePage() {
                 </div>
               </button>
             </motion.div>
-          )}
-
-          {/* Accessibility: font size + reduced motion */}
-          {user && (
-            <div className="mb-4">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-1.5 px-1">Display</p>
-            <motion.div
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="zivo-card-organic flex items-center gap-3 p-2.5"
-            >
-              <Sliders className="w-4 h-4 text-muted-foreground shrink-0" />
-              <div className="flex items-center gap-1 shrink-0">
-                {fontSizes.map((f) => (
-                  <button type="button"
-                    key={f.code}
-                    onClick={() => setFontSizeCode(f.code)}
-                    aria-label={`${f.label} text`}
-                    className={cn(
-                      "w-7 h-7 rounded-lg flex items-center justify-center font-bold transition active:scale-95",
-                      f.code === "S" && "text-[9px]",
-                      f.code === "M" && "text-[11px]",
-                      f.code === "L" && "text-[13px]",
-                      f.code === "XL" && "text-[15px]",
-                      fontSize === f.code
-                        ? "bg-primary/15 text-primary border border-primary/30"
-                        : "bg-muted/50 text-foreground/70 hover:bg-muted",
-                    )}
-                  >
-                    A
-                  </button>
-                ))}
-              </div>
-              <div className="h-6 w-px bg-border/50 shrink-0" />
-              <button type="button"
-                onClick={toggleReducedMotion}
-                className={cn(
-                  "flex items-center justify-between gap-1.5 px-2 py-1 rounded-lg transition flex-1",
-                  reducedMotion ? "bg-emerald-500/10" : "hover:bg-muted/50",
-                )}
-                title={reducedMotion ? "Reduce motion enabled" : "Reduce motion disabled"}
-              >
-                <span className="text-[11px] font-semibold text-foreground/80 truncate">
-                  Reduce motion
-                </span>
-                <span
-                  className={cn(
-                    "shrink-0 w-7 h-4 rounded-full relative transition",
-                    reducedMotion ? "bg-emerald-500" : "bg-muted-foreground/30",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all",
-                      reducedMotion ? "left-3.5" : "left-0.5",
-                    )}
-                  />
-                </span>
-              </button>
-              <div className="h-6 w-px bg-border/50 shrink-0" />
-              <button type="button"
-                onClick={toggleHaptics}
-                className={cn(
-                  "flex items-center justify-between gap-1.5 px-2 py-1 rounded-lg transition flex-1",
-                  hapticsOn ? "bg-fuchsia-500/10" : "hover:bg-muted/50",
-                )}
-                title={hapticsOn ? "Haptics enabled" : "Haptics disabled"}
-              >
-                <span className="text-[11px] font-semibold text-foreground/80 truncate">
-                  Haptics
-                </span>
-                <span
-                  className={cn(
-                    "shrink-0 w-7 h-4 rounded-full relative transition",
-                    hapticsOn ? "bg-fuchsia-500" : "bg-muted-foreground/30",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all",
-                      hapticsOn ? "left-3.5" : "left-0.5",
-                    )}
-                  />
-                </span>
-              </button>
-            </motion.div>
-            </div>
-          )}
-
-          {/* Language switcher chips */}
-          {user && (
-            <div className="flex items-center gap-1.5 mb-4 overflow-x-auto scrollbar-hide -mx-1 px-1">
-              <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider shrink-0">
-                <Languages className="w-3 h-3 inline mr-1 -mt-0.5" />
-                Language
-              </span>
-              {languages.map((l) => (
-                <button type="button"
-                  key={l.code}
-                  onClick={() => setLanguage(l.code)}
-                  className={cn(
-                    "shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold transition active:scale-95",
-                    lang === l.code
-                      ? "bg-primary/15 text-primary border border-primary/30"
-                      : "bg-muted/50 text-foreground/70 hover:bg-muted",
-                  )}
-                  aria-label={`Switch to ${l.label}`}
-                >
-                  <span className="text-base leading-none">{l.flag}</span>
-                  <span className="hidden sm:inline">{l.label}</span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Currency switcher chips */}
-          {user && (
-            <div className="flex items-center gap-1.5 mb-4 overflow-x-auto scrollbar-hide -mx-1 px-1">
-              <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider shrink-0">
-                <DollarSign className="w-3 h-3 inline mr-1 -mt-0.5" />
-                Currency
-              </span>
-              {currencies.map((c) => (
-                <button type="button"
-                  key={c.code}
-                  onClick={() => setCurrencyCode(c.code)}
-                  className={cn(
-                    "shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold transition active:scale-95",
-                    currency === c.code
-                      ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
-                      : "bg-muted/50 text-foreground/70 hover:bg-muted",
-                  )}
-                  aria-label={`Switch to ${c.label}`}
-                >
-                  <span className="font-bold">{c.symbol}</span>
-                  <span>{c.code}</span>
-                </button>
-              ))}
-            </div>
           )}
 
           {/* Country / Region switcher chips */}

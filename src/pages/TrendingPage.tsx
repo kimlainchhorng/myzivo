@@ -90,6 +90,7 @@ export default function TrendingPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<Tab>("posts");
+  const [isRetryingTrending, setIsRetryingTrending] = useState(false);
 
   /* ── Trending Posts (user + store merged) ── */
   const { data: userPosts = TRENDING_POST_FALLBACK, isLoading: loadingPosts, isError: hasUserPostsError } = useQuery({
@@ -244,14 +245,20 @@ export default function TrendingPage() {
   const shouldShowTrendingRecovery = hasActiveTabError && !hasActiveTabData;
 
   const retryTrendingQueries = useCallback(async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["trending-user-posts"] }),
-      queryClient.invalidateQueries({ queryKey: ["trending-store-posts"] }),
-      queryClient.invalidateQueries({ queryKey: ["trending-hashtags-page"] }),
-      queryClient.invalidateQueries({ queryKey: ["trending-people"] }),
-      queryClient.invalidateQueries({ queryKey: ["trending-communities"] }),
-    ]);
-  }, [queryClient]);
+    if (isRetryingTrending) return;
+    setIsRetryingTrending(true);
+    try {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["trending-user-posts"] }),
+        queryClient.invalidateQueries({ queryKey: ["trending-store-posts"] }),
+        queryClient.invalidateQueries({ queryKey: ["trending-hashtags-page"] }),
+        queryClient.invalidateQueries({ queryKey: ["trending-people"] }),
+        queryClient.invalidateQueries({ queryKey: ["trending-communities"] }),
+      ]);
+    } finally {
+      setIsRetryingTrending(false);
+    }
+  }, [isRetryingTrending, queryClient]);
 
   return (
     <>
@@ -296,6 +303,8 @@ export default function TrendingPage() {
               className="max-w-2xl mx-auto px-4 pb-2"
               message="Showing cached trending data. Refresh failed."
               onRetry={() => void retryTrendingQueries()}
+              retryDisabled={isRetryingTrending}
+              retryLabel={isRetryingTrending ? "Retrying..." : "Retry"}
               trackingContext="trending"
             />
           )}
@@ -320,6 +329,8 @@ export default function TrendingPage() {
                   title="Trending refresh failed"
                   description="We could not load fresh trending data right now. Retry to reconnect and restore live rankings."
                   onRetry={() => void retryTrendingQueries()}
+                  retryDisabled={isRetryingTrending}
+                  retryLabel={isRetryingTrending ? "Retrying..." : "Retry"}
                   onSecondary={() => navigate("/")}
                   secondaryLabel="Go Home"
                   trackingContext="trending"

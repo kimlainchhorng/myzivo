@@ -6,6 +6,8 @@ type LoadFailureCardProps = {
   title: string;
   description: string;
   onRetry: () => void;
+  retryDisabled?: boolean;
+  retryLabel?: string;
   onSecondary?: () => void;
   secondaryLabel?: string;
   className?: string;
@@ -16,6 +18,8 @@ export default function LoadFailureCard({
   title,
   description,
   onRetry,
+  retryDisabled = false,
+  retryLabel = "Retry",
   onSecondary,
   secondaryLabel = "Go Back",
   className,
@@ -24,6 +28,7 @@ export default function LoadFailureCard({
   const { track } = useEventTracking();
 
   const handleRetry = () => {
+    if (retryDisabled) return;
     void track("button_click", {
       component: "load_failure_card",
       action: "retry",
@@ -54,8 +59,8 @@ export default function LoadFailureCard({
         <h2 className="text-xl font-semibold text-foreground">{title}</h2>
         <p className="mt-2 text-sm text-muted-foreground">{description}</p>
         <div className="mt-5 flex items-center justify-center gap-3">
-          <Button type="button" onClick={handleRetry} className="rounded-full px-5">
-            Retry
+          <Button type="button" onClick={handleRetry} disabled={retryDisabled} className="rounded-full px-5">
+            {retryLabel}
           </Button>
           {onSecondary && (
             <Button type="button" variant="outline" onClick={handleSecondary} className="rounded-full px-5">

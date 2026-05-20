@@ -16,6 +16,7 @@ import Car from "lucide-react/dist/esm/icons/car";
 import Search from "lucide-react/dist/esm/icons/search";
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
+import Menu from "lucide-react/dist/esm/icons/menu";
 import PanelLeftClose from "lucide-react/dist/esm/icons/panel-left-close";
 import PanelLeftOpen from "lucide-react/dist/esm/icons/panel-left-open";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
@@ -101,7 +102,6 @@ const StoreLiveChat = lazy(() => import("@/components/grocery/StoreLiveChat"));
 const PersonalChat = lazy(() => import("@/components/chat/PersonalChat"));
 const TripChatSheet = lazy(() => import("@/components/rides/TripChatSheet"));
 const SupportTicketChatSheet = lazy(() => import("@/components/support/SupportTicketChatSheet"));
-const ChatStories = lazy(() => import("@/components/chat/ChatStories"));
 const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
 
 // Lazy-load sticker packs config (300+ PNG imports)
@@ -176,6 +176,13 @@ function readChatLastSeenMap(userId: string | undefined, category: "group" | "ri
   } catch {
     return {};
   }
+}
+
+function buildLastSeenSignature(map: Record<string, string>) {
+  const entries = Object.entries(map);
+  if (entries.length === 0) return "";
+  entries.sort(([a], [b]) => a.localeCompare(b));
+  return entries.map(([chatId, seenAt]) => `${chatId}:${seenAt}`).join("|");
 }
 
 type OpenChatState = {
@@ -353,8 +360,6 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   }, []);
   const [searchFilter, setSearchFilter] = useState<"chats" | "media" | "links" | "files">("chats");
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
-  // Telegram-style: collapse Stories strip on scroll-down, restore on scroll-up
-  const [storiesCollapsed, setStoriesCollapsed] = useState(false);
   // Pre-warm lazy chat chunks so first open is instant (no visible loading delay).
   // requestIdleCallback is unsupported in Safari — must guard via window.
   useEffect(() => {
@@ -372,35 +377,6 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     };
   }, []);
 
-  const lastScrollYRef = useRef(0);
-  useEffect(() => {
-    let rafId = 0;
-    let pending = false;
-    const tick = () => {
-      pending = false;
-      const y = window.scrollY || document.documentElement.scrollTop || 0;
-      const last = lastScrollYRef.current;
-      const delta = y - last;
-      if (y <= 4) {
-        setStoriesCollapsed(false);
-      } else if (delta > 6 && y > 20) {
-        setStoriesCollapsed(true);
-      } else if (delta < -4) {
-        setStoriesCollapsed(false);
-      }
-      lastScrollYRef.current = y;
-    };
-    const onScroll = () => {
-      if (pending) return;
-      pending = true;
-      rafId = requestAnimationFrame(tick);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (rafId) cancelAnimationFrame(rafId);
-    };
-  }, []);
   const [showArchived, setShowArchived] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -431,14 +407,15 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const [openGroupChat, setOpenGroupChat] = useState<{ id: string; name: string; avatar?: string | null; autoStartCall?: "audio" | "video" | null } | null>(null);
   const [openRideChat, setOpenRideChat] = useState<{ rideRequestId: string; counterpartName?: string } | null>(null);
   const [openSupportChat, setOpenSupportChat] = useState<{ ticketId: string } | null>(null);
+  const [isInviteSharing, setIsInviteSharing] = useState(false);
   const [showGroupCallPicker, setShowGroupCallPicker] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const fallbackPollInterval = syncMode === "fallback" && user ? fallbackRefreshMs : false;
-  const groupLastSeenSignature = useMemo(() => JSON.stringify(groupLastSeen), [groupLastSeen]);
-  const rideLastSeenSignature = useMemo(() => JSON.stringify(rideLastSeen), [rideLastSeen]);
-  const supportLastSeenSignature = useMemo(() => JSON.stringify(supportLastSeen), [supportLastSeen]);
+  const groupLastSeenSignature = useMemo(() => buildLastSeenSignature(groupLastSeen), [groupLastSeen]);
+  const rideLastSeenSignature = useMemo(() => buildLastSeenSignature(rideLastSeen), [rideLastSeen]);
+  const supportLastSeenSignature = useMemo(() => buildLastSeenSignature(supportLastSeen), [supportLastSeen]);
 
   useEffect(() => {
     setGroupLastSeen(readChatLastSeenMap(user?.id, "group"));
@@ -1828,7 +1805,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                       aria-label="Back"
                       title="Back"
                     >
-                      <ArrowLeft className="w-5 h-5 text-foreground" />
+                      <Menu className="w-5 h-5 text-foreground" />
                     </button>
                   )}
                   {/* Desktop-only collapse toggle. Visible only when the
@@ -1963,149 +1940,6 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
               </div>
             ) : null}
 
-            {!embedded && (
-              <motion.div
-                animate={{ height: storiesCollapsed ? 0 : "auto", opacity: storiesCollapsed ? 0 : 1 }}
-                transition={{ duration: 0.22, ease: "easeOut" }}
-                style={{ overflow: "hidden" }}
-                className={cn(collapsedRail && "lg:hidden")}
-              >
-                <Suspense fallback={null}><ChatStories /></Suspense>
-              </motion.div>
-            )}
-
-            <div className={cn("px-5 pb-3", embedded && "px-3 pb-2", collapsedRail && "lg:hidden")}>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder="Search conversations..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className={cn(
-                    "w-full pl-9 pr-10 bg-muted/60 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground transition-all",
-                    embedded ? "py-2 text-xs" : "py-2.5"
-                  )}
-                />
-                {search ? (
-                  <button type="button" onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Clear search" title="Clear search">
-                    <X className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
-                ) : (
-                  <span
-                    className="hidden md:inline-flex items-center px-1.5 py-0.5 rounded-md bg-muted/50 text-[10px] font-mono text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
-                    title="Press / to focus search"
-                  >
-                    /
-                  </span>
-                )}
-              </div>
-              {search.trim().length > 0 && (
-                <div className="flex gap-1.5 mt-2 overflow-x-auto scrollbar-hide">
-                  {(["chats", "media", "links", "files"] as const).map((f) => {
-                    const isActiveFilter = searchFilter === f;
-                    const enabled = true;
-                    return (
-                      <button type="button"
-                        key={f}
-                        onClick={() => enabled && setSearchFilter(f)}
-                        disabled={!enabled}
-                        className={cn(
-                          "px-3 py-1 text-[11px] font-semibold rounded-full whitespace-nowrap capitalize transition-all",
-                          isActiveFilter
-                            ? "bg-primary/15 text-primary"
-                            : enabled
-                              ? "bg-muted/60 text-muted-foreground hover:bg-muted"
-                              : "bg-muted/30 text-muted-foreground/50 cursor-not-allowed"
-                        )}
-                      >
-                        {f}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Active Now strip — online contacts */}
-            {!embedded && !search && active === "personal" && onlineIds.size > 0 && !zivoOFMode && (
-              <div className="px-4 pb-2">
-                <div className="flex items-center gap-1.5 mb-1.5">
-                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Active Now</span>
-                </div>
-                <div className="flex gap-3 overflow-x-auto overscroll-x-contain no-scrollbar pb-1 pr-2">
-                  {(mergedPersonalList as any[]).filter((c) => !c.isGroup && onlineIds.has(c.id)).slice(0, 12).map((c) => (
-                    <button type="button"
-                      key={c.id}
-                      onClick={() => setOpenPersonalChat({ id: c.id, name: c.name, avatar: c.avatar, isVerified: c.isVerified === true })}
-                      className="flex flex-col items-center gap-1 w-[58px] shrink-0 rounded-xl outline-none active:scale-95 transition-transform focus-visible:ring-2 focus-visible:ring-primary/30"
-                    >
-                      <div className="relative">
-                        <div className="w-12 h-12 rounded-full bg-muted overflow-hidden ring-2 ring-emerald-500/40">
-                          {c.avatar ? (
-                            <img src={c.avatar} alt={c.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-primary/10">
-                              <span className="text-sm font-bold text-primary">
-                                {(c.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-background" />
-                      </div>
-                      <span className="text-[9px] font-medium text-foreground truncate w-full text-center leading-tight">
-                        {c.name.split(" ")[0]}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className={cn("flex px-5 gap-2 pb-3 pr-6 overflow-x-auto overscroll-x-contain scrollbar-hide", embedded && "px-3 gap-1.5 pb-2 pr-4", collapsedRail && "lg:hidden")}>
-              <button type="button"
-                onClick={() => navigate('/chat/folders')}
-                className={cn(
-                  "flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-full bg-muted/40 text-muted-foreground hover:bg-muted whitespace-nowrap active:scale-95 transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
-                  embedded && "px-2.5 py-1.5 text-[11px]"
-                )}
-                aria-label="Edit folders"
-              >
-                <Settings className="w-3 h-3" />
-                Edit
-              </button>
-              {folderTabs.map((f) => {
-                const isActiveFolder = folder === f.id;
-                const unread = folderUnreadMap[f.id] || 0;
-                return (
-                  <button type="button"
-                    key={f.id}
-                    onClick={() => setFolder(f.id)}
-                    aria-label={`Show ${f.label} chats`}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all whitespace-nowrap active:scale-95 outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
-                      isActiveFolder
-                        ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
-                        : "bg-muted/60 text-muted-foreground hover:bg-muted",
-                      embedded && "px-3 py-1.5 text-[11px]"
-                    )}
-                  >
-                    <span>{f.label}</span>
-                    {unread > 0 && (
-                      <span className={cn(
-                        "min-w-[16px] h-[16px] px-1 text-[9px] font-bold rounded-full flex items-center justify-center",
-                        isActiveFolder ? "bg-primary-foreground text-primary" : "bg-primary text-primary-foreground"
-                      )}>
-                        {unread > 99 ? "99+" : unread}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
           </div>
 
           {/* Start a group call entry — shown only on the Groups folder */}
@@ -2176,6 +2010,139 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                 transition={{ duration: 0.12 }}
                 className={cn("px-4 pt-2", embedded && "px-2 pt-2 pb-2")}
               >
+                <div className={cn("pb-3", collapsedRail && "lg:hidden")}>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      placeholder="Search conversations..."
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className={cn(
+                        "w-full pl-9 pr-10 bg-muted/60 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground transition-all",
+                        embedded ? "py-2 text-xs" : "py-2.5"
+                      )}
+                    />
+                    {search ? (
+                      <button type="button" onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Clear search" title="Clear search">
+                        <X className="w-3.5 h-3.5 text-muted-foreground" />
+                      </button>
+                    ) : (
+                      <span
+                        className="hidden md:inline-flex items-center px-1.5 py-0.5 rounded-md bg-muted/50 text-[10px] font-mono text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                        title="Press / to focus search"
+                      >
+                        /
+                      </span>
+                    )}
+                  </div>
+                  {search.trim().length > 0 && (
+                    <div className="flex gap-1.5 mt-2 overflow-x-auto scrollbar-hide">
+                      {(["chats", "media", "links", "files"] as const).map((f) => {
+                        const isActiveFilter = searchFilter === f;
+                        const enabled = true;
+                        return (
+                          <button type="button"
+                            key={f}
+                            onClick={() => enabled && setSearchFilter(f)}
+                            disabled={!enabled}
+                            className={cn(
+                              "px-3 py-1 text-[11px] font-semibold rounded-full whitespace-nowrap capitalize transition-all",
+                              isActiveFilter
+                                ? "bg-primary/15 text-primary"
+                                : enabled
+                                  ? "bg-muted/60 text-muted-foreground hover:bg-muted"
+                                  : "bg-muted/30 text-muted-foreground/50 cursor-not-allowed"
+                            )}
+                          >
+                            {f}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Active Now strip — online contacts */}
+                {!embedded && !search && active === "personal" && onlineIds.size > 0 && !zivoOFMode && (
+                  <div className="pb-3">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Active Now</span>
+                    </div>
+                    <div className="flex gap-3 overflow-x-auto overscroll-x-contain no-scrollbar pb-1 pr-2">
+                      {(mergedPersonalList as any[]).filter((c) => !c.isGroup && onlineIds.has(c.id)).slice(0, 12).map((c) => (
+                        <button type="button"
+                          key={c.id}
+                          onClick={() => setOpenPersonalChat({ id: c.id, name: c.name, avatar: c.avatar, isVerified: c.isVerified === true })}
+                          className="flex flex-col items-center gap-1 w-[58px] shrink-0 rounded-xl outline-none active:scale-95 transition-transform focus-visible:ring-2 focus-visible:ring-primary/30"
+                        >
+                          <div className="relative">
+                            <div className="w-12 h-12 rounded-full bg-muted overflow-hidden ring-2 ring-emerald-500/40">
+                              {c.avatar ? (
+                                <img src={c.avatar} alt={c.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-primary/10">
+                                  <span className="text-sm font-bold text-primary">
+                                    {(c.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-background" />
+                          </div>
+                          <span className="text-[9px] font-medium text-foreground truncate w-full text-center leading-tight">
+                            {c.name.split(" ")[0]}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className={cn("flex gap-2 pb-3 pr-2 overflow-x-auto overscroll-x-contain scrollbar-hide", embedded && "gap-1.5 pb-2 pr-1", collapsedRail && "lg:hidden")}>
+                  <button type="button"
+                    onClick={() => navigate('/chat/folders')}
+                    className={cn(
+                      "flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-full bg-muted/40 text-muted-foreground hover:bg-muted whitespace-nowrap active:scale-95 transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+                      embedded && "px-2.5 py-1.5 text-[11px]"
+                    )}
+                    aria-label="Edit folders"
+                  >
+                    <Settings className="w-3 h-3" />
+                    Edit
+                  </button>
+                  {folderTabs.map((f) => {
+                    const isActiveFolder = folder === f.id;
+                    const unread = folderUnreadMap[f.id] || 0;
+                    return (
+                      <button type="button"
+                        key={f.id}
+                        onClick={() => setFolder(f.id)}
+                        aria-label={`Show ${f.label} chats`}
+                        className={cn(
+                          "flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all whitespace-nowrap active:scale-95 outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+                          isActiveFolder
+                            ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+                            : "bg-muted/60 text-muted-foreground hover:bg-muted",
+                          embedded && "px-3 py-1.5 text-[11px]"
+                        )}
+                      >
+                        <span>{f.label}</span>
+                        {unread > 0 && (
+                          <span className={cn(
+                            "min-w-[16px] h-[16px] px-1 text-[9px] font-bold rounded-full flex items-center justify-center",
+                            isActiveFolder ? "bg-primary-foreground text-primary" : "bg-primary text-primary-foreground"
+                          )}>
+                            {unread > 99 ? "99+" : unread}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
                 {searchingProfiles && active === "personal" && filtered.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20">
                     <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3" />
@@ -2207,20 +2174,24 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                       <div className={cn("grid gap-2.5 w-full max-w-[360px] mt-1", zivoOFMode ? "grid-cols-1" : "grid-cols-3")}>
                         <button type="button"
                           onClick={async () => {
+                            if (isInviteSharing) return;
+                            setIsInviteSharing(true);
                             const url = `${window.location.origin}/`;
                             const text = "Join me on ZIVO";
                             try {
                               if (navigator.share) await navigator.share({ title: "ZIVO", text, url });
                               else { await navigator.clipboard.writeText(url); toast.success("Link copied"); }
                             } catch {}
+                            finally { setIsInviteSharing(false); }
                           }}
+                          disabled={isInviteSharing}
                           aria-label="Invite friends to ZIVO"
-                          className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/40 shadow-sm active:scale-95 transition-transform"
+                          className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/40 shadow-sm active:scale-95 transition-transform disabled:opacity-50"
                         >
                           <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
                             <Share2 className="w-4 h-4 text-primary" />
                           </div>
-                          <span className="text-[11px] font-semibold text-foreground leading-tight">Invite friends</span>
+                          <span className="text-[11px] font-semibold text-foreground leading-tight">{isInviteSharing ? "Sharing..." : "Invite friends"}</span>
                         </button>
                         {!zivoOFMode && (
                           <>

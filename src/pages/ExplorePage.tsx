@@ -30,6 +30,7 @@ export default function ExplorePage() {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<Tab>("trending");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [isRetryingExplore, setIsRetryingExplore] = useState(false);
 
   useEffect(() => {
     const tag = searchParams.get("tag");
@@ -184,14 +185,20 @@ export default function ExplorePage() {
   const shouldShowExploreRecovery = hasActiveViewError && !hasActiveViewData;
 
   const retryExploreQueries = useCallback(async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["explore-trending"] }),
-      queryClient.invalidateQueries({ queryKey: ["explore-users"] }),
-      queryClient.invalidateQueries({ queryKey: ["explore-suggested-users"] }),
-      queryClient.invalidateQueries({ queryKey: ["explore-tagged"] }),
-      queryClient.invalidateQueries({ queryKey: ["explore-hashtags"] }),
-    ]);
-  }, [queryClient]);
+    if (isRetryingExplore) return;
+    setIsRetryingExplore(true);
+    try {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["explore-trending"] }),
+        queryClient.invalidateQueries({ queryKey: ["explore-users"] }),
+        queryClient.invalidateQueries({ queryKey: ["explore-suggested-users"] }),
+        queryClient.invalidateQueries({ queryKey: ["explore-tagged"] }),
+        queryClient.invalidateQueries({ queryKey: ["explore-hashtags"] }),
+      ]);
+    } finally {
+      setIsRetryingExplore(false);
+    }
+  }, [isRetryingExplore, queryClient]);
 
   return (
     <div className="zivo-shell-mobile bg-background pb-20">
@@ -252,6 +259,8 @@ export default function ExplorePage() {
             className="px-4 pt-4"
             message="Showing cached explore results. Refresh failed."
             onRetry={() => void retryExploreQueries()}
+            retryDisabled={isRetryingExplore}
+            retryLabel={isRetryingExplore ? "Retrying..." : "Retry"}
             trackingContext="explore"
           />
         )}
@@ -262,6 +271,8 @@ export default function ExplorePage() {
             title="Explore refresh failed"
             description="We could not load fresh explore data right now. Retry to reconnect and restore trending results."
             onRetry={() => void retryExploreQueries()}
+            retryDisabled={isRetryingExplore}
+            retryLabel={isRetryingExplore ? "Retrying..." : "Retry"}
             onSecondary={() => navigate("/")}
             secondaryLabel="Go Home"
             trackingContext="explore"

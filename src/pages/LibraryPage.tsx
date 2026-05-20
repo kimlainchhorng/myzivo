@@ -16,7 +16,7 @@ import {
   Library, Archive, Star, FolderHeart, Vote, AtSign, Trophy, BookImage, Handshake,
   Smile, Ticket, Gift, Palette, Award, Bell, BarChart2, Shield, Tag, Flag, Gamepad2,
   MessageSquare, Music, TrendingUp, Wand2, MapPin, NotebookPen, ClipboardList,
-  ArrowLeftRight, Hash, Coins, Image as ImageIcon, Receipt, Dumbbell, Unlock, Mic, Link2, ListTodo, ShoppingCart, ShieldAlert, MessageSquareHeart, Images, MessageCircleQuestion, Voicemail, AlertTriangle, Bug, ShieldCheck, Flame, ShieldOff, BellRing, Car, Send as SendIcon, Gavel, Plane, Radio, UserPlus, UtensilsCrossed, History, Briefcase, ListChecks, Eye, VolumeX, Banknote, MessageCircle, Scale, Headphones, Home as HomeIcon, Sticker,
+  ArrowLeftRight, Hash, Coins, Image as ImageIcon, Receipt, Dumbbell, Unlock, Mic, Link2, ListTodo, ShoppingCart, ShieldAlert, MessageSquareHeart, Images, MessageCircleQuestion, Voicemail, AlertTriangle, Bug, ShieldCheck, Flame, ShieldOff, BellRing, Car, Send as SendIcon, Gavel, Plane, Radio, UserPlus, UtensilsCrossed, History, Briefcase, ListChecks, Eye, VolumeX, Banknote, MessageCircle, Scale, Headphones, Home as HomeIcon, Sticker, FileCheck, Building, Building2, Brain,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
@@ -164,6 +164,7 @@ const GROUPS: LibraryGroup[] = [
       { icon: BellRing, title: "Price Alerts", description: "Travel price tracking — get notified on drops", path: "/price-alerts" },
       { icon: Plane, title: "Flight Price Alerts", description: "Watch specific routes + cabin classes", path: "/flight-price-alerts" },
       { icon: HomeIcon, title: "Saved Locations", description: "Home, work, and pinned addresses", path: "/saved-locations" },
+      { icon: MapPin, title: "Itineraries", description: "Travel plans with flights, hotels, cars", path: "/itineraries" },
       { icon: Headphones, title: "My Podcasts", description: "Podcasts you've subscribed to", path: "/my-podcasts" },
       { icon: Car, title: "Ride Quotes", description: "Recent ride price quotes you've gotten", path: "/ride-quotes" },
       { icon: ClipboardList, title: "Surveys", description: "Open feedback surveys", path: "/surveys" },
@@ -192,6 +193,10 @@ const GROUPS: LibraryGroup[] = [
       { icon: VolumeX, title: "Muted Chats", description: "Conversations with notifications silenced", path: "/muted-chats" },
       { icon: BellRing, title: "Push Devices", description: "Active push notification subscriptions", path: "/push-devices" },
       { icon: MessageSquareHeart, title: "Feedback", description: "Send product feedback, see team responses", path: "/feedback" },
+      { icon: FileCheck, title: "Consent Log", description: "Audit trail of policies you've agreed to", path: "/consent-log" },
+      { icon: Building2, title: "Organizations", description: "Tenants + workspaces you belong to", path: "/tenant-memberships" },
+      { icon: Brain, title: "Recommendations", description: "What we recommend for you + scores", path: "/recommendation-scores" },
+      { icon: Building, title: "Business Account", description: "Corporate renter account info", path: "/business-account" },
     ],
   },
 ];

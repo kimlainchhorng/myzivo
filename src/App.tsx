@@ -667,6 +667,11 @@ const SavedLocationsPage = lazy(() => import("./pages/SavedLocationsPage"));
 const StoryCommentsPage = lazy(() => import("./pages/StoryCommentsPage"));
 const RestaurantReviewDetailsPage = lazy(() => import("./pages/RestaurantReviewDetailsPage"));
 const StoryViewersPage = lazy(() => import("./pages/StoryViewersPage"));
+const ItinerariesPage = lazy(() => import("./pages/ItinerariesPage"));
+const ConsentLogPage = lazy(() => import("./pages/ConsentLogPage"));
+const TenantMembershipsPage = lazy(() => import("./pages/TenantMembershipsPage"));
+const RecommendationScoresPage = lazy(() => import("./pages/RecommendationScoresPage"));
+const BusinessRenterAccountPage = lazy(() => import("./pages/BusinessAccountPage"));
 
 const Vision = lazy(() => import("./pages/Vision"));
 const BrandMission = lazy(() => import("./pages/BrandMission"));
@@ -1812,6 +1817,11 @@ const App = () => (
                 <Route path="/story-comments" element={<ProtectedRoute><StoryCommentsPage /></ProtectedRoute>} />
                 <Route path="/restaurant-reviews" element={<ProtectedRoute><RestaurantReviewDetailsPage /></ProtectedRoute>} />
                 <Route path="/story-viewers" element={<ProtectedRoute><StoryViewersPage /></ProtectedRoute>} />
+                <Route path="/itineraries" element={<ProtectedRoute><ItinerariesPage /></ProtectedRoute>} />
+                <Route path="/consent-log" element={<ProtectedRoute><ConsentLogPage /></ProtectedRoute>} />
+                <Route path="/tenant-memberships" element={<ProtectedRoute><TenantMembershipsPage /></ProtectedRoute>} />
+                <Route path="/recommendation-scores" element={<ProtectedRoute><RecommendationScoresPage /></ProtectedRoute>} />
+                <Route path="/business-account" element={<ProtectedRoute><BusinessRenterAccountPage /></ProtectedRoute>} />
                 <Route path="/podcasts" element={<PodcastsPage />} />
                 <Route path="/sounds" element={<SoundsPage />} />
                 <Route path="/media-library" element={<ProtectedRoute><MediaLibraryPage /></ProtectedRoute>} />

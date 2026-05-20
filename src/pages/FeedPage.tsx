@@ -443,6 +443,8 @@ function ReelCard({
   usePostViewTracking(rawPostId, post.source ?? "store", isActive, userId);
   const [videoProgress, setVideoProgress] = useState(0); // 0..1
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [isPipToggling, setIsPipToggling] = useState(false);
+  const [isPinningProfile, setIsPinningProfile] = useState(false);
   const [captionExpanded, setCaptionExpanded] = useState(false);
   const [translatedCaption, setTranslatedCaption] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -1853,17 +1855,11 @@ function ReelCard({
       </div>
 
       {/* Right-side action buttons (TikTok-style) — responsive scale.
-          - smallest (<sm, e.g. iPhone SE): tight gap-3, Views row hidden
+          - smallest (<sm, e.g. iPhone SE): tight gap, Views row hidden
             (it's display-only) so the column fits a 568-px-tall viewport
             without clipping the avatar off the top.
-          - tablet (≥sm):  gap-5, all items
-          - desktop (≥lg): gap-6, larger icons */}
-      <div className="absolute right-5 sm:right-3 lg:right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+128px)] z-30 flex flex-col items-center justify-end gap-3 sm:gap-5 lg:gap-6">
-        {/* Mute moved out of the right rail — TikTok exposes mute via tap-on-
-            video + a transient toast, not a persistent button. The visible
-            "muted" state on the feed is now signaled by the floating pill
-            below (rendered at the top-right of the video). */}
-
+          - tablet/desktop: all items, still grouped tightly */}
+      <div className="absolute right-5 sm:right-3 lg:right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+128px)] z-30 flex flex-col items-center justify-end gap-1.5 sm:gap-2 lg:gap-2.5">
         {/* Like / Reaction (long-press for emoji picker) */}
         <div className="relative">
           {onSetReaction && (
@@ -1905,7 +1901,7 @@ function ReelCard({
               if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
             }}
             onContextMenu={(e) => { e.preventDefault(); if (onSetReaction) setShowReactionPicker(true); }}
-            className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+            className="flex flex-col items-center gap-0.5 min-w-[44px] min-h-[44px]"
             aria-label={currentReaction ? `Reacted ${currentReaction}` : "Like"}
             title="Like (L)"
           >
@@ -1941,7 +1937,7 @@ function ReelCard({
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onOpenComments(post.id); }}
-          className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+          className="flex flex-col items-center gap-0.5 min-w-[44px] min-h-[44px]"
           aria-label="Comment"
           title="Comments"
         >
@@ -1964,7 +1960,7 @@ function ReelCard({
         {/* Views — only render when there's a real count to show. Empty
             "0" labels make the video feel lifeless and clutter the rail. */}
         {(post.view_count || 0) > 0 && (
-          <div className="hidden sm:flex flex-col items-center gap-1">
+          <div className="hidden sm:flex flex-col items-center gap-0.5">
             <Eye className="w-9 h-9 lg:w-10 lg:h-10 text-white drop-shadow-lg" />
             <span className="text-white text-xs font-semibold drop-shadow">
               {post.view_count!}
@@ -1979,7 +1975,7 @@ function ReelCard({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onOpenRepost(); }}
-            className="hidden sm:flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+            className="hidden sm:flex flex-col items-center gap-0.5 min-w-[44px] min-h-[44px]"
             aria-label={isReposted ? "Reposted" : "Repost"}
           >
             <div className="w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-black/30 backdrop-blur-sm border border-white/10 flex items-center justify-center shadow-[0_4px_14px_-4px_rgba(0,0,0,0.6)] transition-transform active:scale-90">
@@ -2000,25 +1996,25 @@ function ReelCard({
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onOpenShare(post.id); }}
-          className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+          className="flex flex-col items-center gap-0.5 min-w-[44px] min-h-[44px]"
           aria-label="Share"
           title="Share"
         >
           <div className="w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-black/30 backdrop-blur-sm border border-white/10 flex items-center justify-center shadow-[0_4px_14px_-4px_rgba(0,0,0,0.6)] transition-transform active:scale-90">
             <Send className="w-6 h-6 lg:w-7 lg:h-7 text-white" />
           </div>
-          <span className="text-white text-[11px] sm:text-xs font-semibold drop-shadow min-h-[14px]">
-            {(post.shares_count || 0) > 0
-              ? (post.shares_count! > 999 ? `${(post.shares_count! / 1000).toFixed(1)}k` : post.shares_count)
-              : ""}
-          </span>
+          {(post.shares_count || 0) > 0 && (
+            <span className="text-white text-[11px] sm:text-xs font-semibold drop-shadow">
+              {post.shares_count! > 999 ? `${(post.shares_count! / 1000).toFixed(1)}k` : post.shares_count}
+            </span>
+          )}
         </button>
 
         {/* Save / Bookmark */}
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); handleSaveToggle(); }}
-          className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+          className="flex flex-col items-center gap-0.5 min-w-[44px] min-h-[44px]"
           aria-label={saved ? "Remove from saved" : "Save reel"}
           title={saved ? "Saved" : "Save"}
         >
@@ -2030,9 +2026,24 @@ function ReelCard({
               )}
             />
           </div>
-          <span className="text-white text-[11px] sm:text-xs font-semibold drop-shadow min-h-[14px]">
-            {saved ? "Saved" : ""}
-          </span>
+          {saved && (
+            <span className="text-white text-[11px] sm:text-xs font-semibold drop-shadow">Saved</span>
+          )}
+        </button>
+
+        {/* Mute */}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); handleMuteToggle(); }}
+          className="flex flex-col items-center gap-0.5 min-w-[44px] min-h-[44px]"
+          aria-label={globalMuted ? "Unmute" : "Mute"}
+          title={globalMuted ? "Tap to unmute" : "Tap to mute"}
+        >
+          <div className="w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-black/30 backdrop-blur-sm border border-white/10 flex items-center justify-center shadow-[0_4px_14px_-4px_rgba(0,0,0,0.6)] transition-transform active:scale-90">
+            {globalMuted
+              ? <VolumeX className="w-6 h-6 lg:w-7 lg:h-7 text-white/80" />
+              : <Volume2 className="w-6 h-6 lg:w-7 lg:h-7 text-white" />}
+          </div>
         </button>
 
         {/* CC / Subtitles toggle — hidden on small phones to keep the rail
@@ -2041,7 +2052,7 @@ function ReelCard({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); setShowCaptions((v) => !v); }}
-            className="hidden sm:flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+            className="hidden sm:flex flex-col items-center gap-0.5 min-w-[44px] min-h-[44px]"
             aria-label={showCaptions ? "Hide captions" : "Show captions"}
             title="Captions"
           >
@@ -2071,7 +2082,7 @@ function ReelCard({
               toast.success("Starting duet…");
               if (onOpenActions) onOpenActions();
             }}
-            className="hidden sm:flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+            className="hidden sm:flex flex-col items-center gap-0.5 min-w-[44px] min-h-[44px]"
             aria-label="Duet this video"
             title="Duet"
           >
@@ -2089,7 +2100,7 @@ function ReelCard({
               toast.success("Opening tip jar for " + (post.author_name || "this creator") + "…");
               if (onOpenActions) onOpenActions();
             }}
-            className="hidden sm:flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+            className="hidden sm:flex flex-col items-center gap-0.5 min-w-[44px] min-h-[44px]"
             aria-label="Send a gift to this creator"
             title="Gift creator"
           >
@@ -2109,7 +2120,7 @@ function ReelCard({
             if (onOpenActions) onOpenActions();
             else setShowMoreMenu(true);
           }}
-          className="hidden sm:flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+          className="hidden sm:flex flex-col items-center gap-0.5 min-w-[44px] min-h-[44px]"
           aria-label="More options"
           title="More options"
         >
@@ -2286,9 +2297,14 @@ function ReelCard({
                 </button>
                 <button type="button"
                   onClick={async () => {
+                    if (isPipToggling) return;
+                    setIsPipToggling(true);
                     setShowMoreMenu(false);
                     const v = videoRef.current;
-                    if (!v) return;
+                    if (!v) {
+                      setIsPipToggling(false);
+                      return;
+                    }
                     try {
                       const doc = document as any;
                       if (doc.pictureInPictureElement) {
@@ -2300,12 +2316,15 @@ function ReelCard({
                       }
                     } catch {
                       toast.error("Couldn't open picture-in-picture");
+                    } finally {
+                      setIsPipToggling(false);
                     }
                   }}
-                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                  disabled={isPipToggling}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl disabled:opacity-50"
                 >
                   <PictureInPicture className="h-5 w-5 text-foreground" />
-                  <span className="text-sm font-medium text-foreground">Picture-in-picture</span>
+                  <span className="text-sm font-medium text-foreground">{isPipToggling ? "Opening PiP..." : "Picture-in-picture"}</span>
                 </button>
                 <button type="button"
                   onClick={() => {
@@ -2386,16 +2405,27 @@ function ReelCard({
                 {userId && post.author_id && userId === post.author_id && (
                   <button type="button"
                     onClick={async () => {
+                      if (isPinningProfile) return;
+                      setIsPinningProfile(true);
                       setShowMoreMenu(false);
                       const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
                       const table = post.source === "user" ? "user_posts" : "store_posts";
-                      await (supabase as any).from(table).update({ is_pinned: true }).eq("id", rawId);
-                      toast.success("Pinned to your profile");
+                      try {
+                        const { error } = await (supabase as any).from(table).update({ is_pinned: true }).eq("id", rawId);
+                        if (error) {
+                          toast.error("Couldn't pin to profile");
+                          return;
+                        }
+                        toast.success("Pinned to your profile");
+                      } finally {
+                        setIsPinningProfile(false);
+                      }
                     }}
-                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                    disabled={isPinningProfile}
+                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl disabled:opacity-50"
                   >
                     <Pin className="h-5 w-5 text-foreground" />
-                    <span className="text-sm font-medium text-foreground">Pin to Profile</span>
+                    <span className="text-sm font-medium text-foreground">{isPinningProfile ? "Pinning..." : "Pin to Profile"}</span>
                   </button>
                 )}
                 <button type="button"
@@ -2528,6 +2558,9 @@ function CommentSheet({
   // Inline edit state for own comments
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
+  const [deletingCommentIds, setDeletingCommentIds] = useState<Set<string>>(new Set());
+  const [savingCommentIds, setSavingCommentIds] = useState<Set<string>>(new Set());
+  const [pinningCommentIds, setPinningCommentIds] = useState<Set<string>>(new Set());
   // Reply state: when set, the next submitted comment is a reply to this id
   const [replyTo, setReplyTo] = useState<{ id: string; authorName: string } | null>(null);
   // Per-thread expand state: which top-level comments have their replies open
@@ -2640,18 +2673,27 @@ function CommentSheet({
   }, [userId, rawPostId, isUserPost]);
 
   const handleTogglePin = async (commentId: string) => {
-    if (!userId) return;
-    const { error } = await (supabase as any).rpc("toggle_comment_pin", {
-      _comment_id:   commentId,
-      _target_table: targetTable,
-    });
-    if (error) {
-      toast.error(/only the post author/i.test(error.message ?? "")
-        ? "Only the post author can pin comments"
-        : "Couldn't update pin");
-      return;
+    if (!userId || pinningCommentIds.has(commentId)) return;
+    setPinningCommentIds((prev) => new Set(prev).add(commentId));
+    try {
+      const { error } = await (supabase as any).rpc("toggle_comment_pin", {
+        _comment_id:   commentId,
+        _target_table: targetTable,
+      });
+      if (error) {
+        toast.error(/only the post author/i.test(error.message ?? "")
+          ? "Only the post author can pin comments"
+          : "Couldn't update pin");
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: ["post-comments", targetTable, rawPostId] });
+    } finally {
+      setPinningCommentIds((prev) => {
+        const next = new Set(prev);
+        next.delete(commentId);
+        return next;
+      });
     }
-    queryClient.invalidateQueries({ queryKey: ["post-comments", targetTable, rawPostId] });
   };
 
   const handleSubmit = async () => {
@@ -2697,39 +2739,57 @@ function CommentSheet({
 
   // Edit / delete handlers for own comments
   const handleEditComment = async (commentId: string, nextContent: string) => {
-    if (!userId || !nextContent.trim()) return;
+    if (!userId || !nextContent.trim() || savingCommentIds.has(commentId)) return;
     if (!confirmContentSafe(nextContent, "comment")) return;
-    const updatePayload: Record<string, unknown> = isUserPost
-      ? { comment: nextContent.trim() }
-      : { content: nextContent.trim() };
-    const { error } = await (supabase as any)
-      .from(targetTable)
-      .update(updatePayload)
-      .eq("id", commentId)
-      .eq("user_id", userId); // RLS-style guard
-    if (error) {
-      toast.error("Couldn't save edit");
-      return;
+    setSavingCommentIds((prev) => new Set(prev).add(commentId));
+    try {
+      const updatePayload: Record<string, unknown> = isUserPost
+        ? { comment: nextContent.trim() }
+        : { content: nextContent.trim() };
+      const { error } = await (supabase as any)
+        .from(targetTable)
+        .update(updatePayload)
+        .eq("id", commentId)
+        .eq("user_id", userId); // RLS-style guard
+      if (error) {
+        toast.error("Couldn't save edit");
+        return;
+      }
+      setEditingId(null);
+      setEditingText("");
+      queryClient.invalidateQueries({ queryKey: ["post-comments", targetTable, rawPostId] });
+    } finally {
+      setSavingCommentIds((prev) => {
+        const next = new Set(prev);
+        next.delete(commentId);
+        return next;
+      });
     }
-    setEditingId(null);
-    setEditingText("");
-    queryClient.invalidateQueries({ queryKey: ["post-comments", targetTable, rawPostId] });
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    if (!userId) return;
-    const { error } = await (supabase as any)
-      .from(targetTable)
-      .delete()
-      .eq("id", commentId)
-      .eq("user_id", userId);
-    if (error) {
-      toast.error("Couldn't delete comment");
-      return;
+    if (!userId || deletingCommentIds.has(commentId)) return;
+    setDeletingCommentIds((prev) => new Set(prev).add(commentId));
+    try {
+      const { error } = await (supabase as any)
+        .from(targetTable)
+        .delete()
+        .eq("id", commentId)
+        .eq("user_id", userId);
+      if (error) {
+        toast.error("Couldn't delete comment");
+        return;
+      }
+      toast.success("Comment deleted");
+      queryClient.invalidateQueries({ queryKey: ["post-comments", targetTable, rawPostId] });
+      queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+    } finally {
+      setDeletingCommentIds((prev) => {
+        const next = new Set(prev);
+        next.delete(commentId);
+        return next;
+      });
     }
-    toast.success("Comment deleted");
-    queryClient.invalidateQueries({ queryKey: ["post-comments", targetTable, rawPostId] });
-    queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
   };
 
   useEffect(() => {
@@ -2880,10 +2940,10 @@ function CommentSheet({
                           <button
                             type="button"
                             onClick={() => handleEditComment(c.id, editingText)}
-                            disabled={!editingText.trim() || editingText.trim() === c.content}
+                            disabled={!editingText.trim() || editingText.trim() === c.content || savingCommentIds.has(c.id)}
                             className="rounded-lg bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-40 active:scale-95"
                           >
-                            Save
+                            {savingCommentIds.has(c.id) ? "Saving..." : "Save"}
                           </button>
                         </div>
                       </div>
@@ -2930,9 +2990,11 @@ function CommentSheet({
                         variant="light"
                         onEditStart={() => { setEditingId(c.id); setEditingText(c.content || ""); }}
                         onDelete={() => handleDeleteComment(c.id)}
+                        deleting={deletingCommentIds.has(c.id)}
                         canPin={isPostAuthor && !isReply}
                         isPinned={!!c.is_pinned}
                         onTogglePin={() => handleTogglePin(c.id)}
+                        pinning={pinningCommentIds.has(c.id)}
                       />
                     </Suspense>
                   </div>
@@ -3622,8 +3684,11 @@ function DiscoverPeopleOverlay({ onClose, onNavigate }: { onClose: () => void; o
     enabled: !!userId,
   });
 
+  const [followingLoadingIds, setFollowingLoadingIds] = useState<Set<string>>(new Set());
+
   const handleFollow = async (profileId: string) => {
-    if (!userId) return;
+    if (!userId || followingLoadingIds.has(profileId)) return;
+    setFollowingLoadingIds((prev) => new Set([...prev, profileId]));
     try {
       const { error } = await (supabase as any).from("user_followers").insert({
         follower_id: userId,
@@ -3634,6 +3699,12 @@ function DiscoverPeopleOverlay({ onClose, onNavigate }: { onClose: () => void; o
     } catch (err) {
       console.warn("[DiscoverPeopleOverlay] follow failed", err);
       toast.error("Couldn't follow. Try again.");
+    } finally {
+      setFollowingLoadingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(profileId);
+        return next;
+      });
     }
   };
 
@@ -3678,25 +3749,29 @@ function DiscoverPeopleOverlay({ onClose, onNavigate }: { onClose: () => void; o
                       </div>
                     )}
                   </div>
-                  <p className="text-sm font-semibold text-foreground truncate">{profile.full_name || "User"}</p>
+                  <h3 className="text-sm font-semibold text-foreground truncate">
+                    {profile.full_name || "ZIVO user"}
+                  </h3>
                   {profile.bio && (
-                    <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5 leading-tight">
-                      <Suspense fallback={<span>{profile.bio}</span>}>
-                        <SafeCaption text={profile.bio} />
-                      </Suspense>
-                    </p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground line-clamp-2">{profile.bio}</p>
                   )}
                 </div>
                 <button type="button"
                   onClick={() => handleFollow(profile.id)}
-                  disabled={followingIds.has(profile.id)}
+                  disabled={followingIds.has(profile.id) || followingLoadingIds.has(profile.id)}
                   className={`w-full mt-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     followingIds.has(profile.id)
                       ? "bg-muted text-muted-foreground"
                       : "bg-primary text-primary-foreground"
                   }`}
                 >
-                  {followingIds.has(profile.id) ? "Following" : "Follow"}
+                  {followingLoadingIds.has(profile.id) ? (
+                    <Loader2 className="h-3 w-3 animate-spin mx-auto" />
+                  ) : followingIds.has(profile.id) ? (
+                    "Following"
+                  ) : (
+                    "Follow"
+                  )}
                 </button>
               </motion.div>
             ))}
@@ -3878,6 +3953,7 @@ export default function FeedPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<{ name: string; avatar: string | null } | null>(null);
   const [userLikedPostIds, setUserLikedPostIds] = useState<Set<string>>(new Set());
+  const [likePendingPostIds, setLikePendingPostIds] = useState<Set<string>>(new Set());
   const [savedPostIds, setSavedPostIds] = useState<Set<string>>(new Set());
   const [liveAuthorIds, setLiveAuthorIds] = useState<Set<string>>(new Set());
   const [feedMode, setFeedMode] = useState<"foryou" | "following" | "trending">(() => {
@@ -4437,6 +4513,8 @@ export default function FeedPage() {
       toast.error("Please sign in to like posts");
       return;
     }
+    if (likePendingPostIds.has(postId)) return;
+    setLikePendingPostIds((prev) => new Set(prev).add(postId));
     setUserLikedPostIds((prev) => {
       const next = new Set(prev);
       if (currentlyLiked) next.delete(postId);
@@ -4444,28 +4522,44 @@ export default function FeedPage() {
       return next;
     });
 
-    const post = posts.find(p => p.id === postId);
-    const rawPostId = postId.replace(/^u-/, "");
-    const likesTable = post?.source === "user" ? "post_likes" : "store_post_likes";
-    if (currentlyLiked) {
-      await (supabase as any).from(likesTable).delete().eq("post_id", rawPostId).eq("user_id", userId);
-    } else {
-      await (supabase as any).from(likesTable).insert({ post_id: rawPostId, user_id: userId });
-      // Push notification to post author — once per post per session.
-      const authorId = post?.author_id;
-      if (authorId && authorId !== userId && shouldSendLikeNotification(postId)) {
-        try {
-          const { data: sp } = await supabase.from("profiles").select("full_name").eq("user_id", userId).single();
-          await supabase.functions.invoke("send-push-notification", {
-            body: { user_id: authorId, notification_type: "post_liked", title: "New Like ❤️", body: `${sp?.full_name || "Someone"} liked your post`, data: { type: "post_liked", post_id: postId, liker_id: userId, action_url: `/feed?post=${postId}` } },
-          });
-        } catch (notifyErr) {
-          console.warn("[FeedPage] like push notify failed", notifyErr);
+    try {
+      const post = posts.find(p => p.id === postId);
+      const rawPostId = postId.replace(/^u-/, "");
+      const likesTable = post?.source === "user" ? "post_likes" : "store_post_likes";
+      if (currentlyLiked) {
+        await (supabase as any).from(likesTable).delete().eq("post_id", rawPostId).eq("user_id", userId);
+      } else {
+        await (supabase as any).from(likesTable).insert({ post_id: rawPostId, user_id: userId });
+        // Push notification to post author — once per post per session.
+        const authorId = post?.author_id;
+        if (authorId && authorId !== userId && shouldSendLikeNotification(postId)) {
+          try {
+            const { data: sp } = await supabase.from("profiles").select("full_name").eq("user_id", userId).single();
+            await supabase.functions.invoke("send-push-notification", {
+              body: { user_id: authorId, notification_type: "post_liked", title: "New Like ❤️", body: `${sp?.full_name || "Someone"} liked your post`, data: { type: "post_liked", post_id: postId, liker_id: userId, action_url: `/feed?post=${postId}` } },
+            });
+          } catch (notifyErr) {
+            console.warn("[FeedPage] like push notify failed", notifyErr);
+          }
         }
       }
+    } catch {
+      setUserLikedPostIds((prev) => {
+        const next = new Set(prev);
+        if (currentlyLiked) next.add(postId);
+        else next.delete(postId);
+        return next;
+      });
+      toast.error("Couldn't update like. Try again.");
+    } finally {
+      setLikePendingPostIds((prev) => {
+        const next = new Set(prev);
+        next.delete(postId);
+        return next;
+      });
+      queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
     }
-    queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
-  }, [userId, queryClient, posts]);
+  }, [userId, likePendingPostIds, queryClient, posts]);
 
   // Media Session bridge — the active ReelCard exposes nexttrack/previoustrack
   // handlers via window events so the OS-level skip buttons (Bluetooth,
@@ -4750,7 +4844,7 @@ export default function FeedPage() {
             Reels are videos from people and stores. Record one or check back after new videos publish.
           </p>
         </div>
-        <div className="flex flex-wrap justify-center gap-2">
+        <div className="flex flex-wrap justify-center gap-2 max-w-md">
           {userId && (
             <button
               type="button"
@@ -4770,6 +4864,9 @@ export default function FeedPage() {
           >
             Refresh
           </button>
+          <button type="button" onClick={() => navigate("/trending")} className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white active:scale-95">Trending</button>
+          <button type="button" onClick={() => navigate("/audio-rooms")} className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white active:scale-95">Live rooms</button>
+          <button type="button" onClick={() => navigate("/feed")} className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white active:scale-95">Browse feed</button>
         </div>
         <ZivoMobileNav />
       </div>
@@ -5067,19 +5164,6 @@ export default function FeedPage() {
           of the frame instead of floating in the black gutter outside it. */}
       <div className="absolute inset-x-0 top-safe-overlay z-50 mx-auto md:max-w-[420px] pointer-events-none lg:hidden">
       <div data-testid="feed-floating-actions" className="flex justify-end gap-2 sm:gap-2.5 px-3 sm:px-4">
-        {/* Mute toggle — moved out of the bottom-right action rail so the
-            rail can stay TikTok-lean (5 icons). Tap to flip global mute. */}
-        <button
-          type="button"
-          onClick={() => setGlobalMuted((m) => !m)}
-          aria-label={globalMuted ? "Unmute" : "Mute"}
-          title={globalMuted ? "Tap to unmute" : "Tap to mute"}
-          className="pointer-events-auto w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform border border-white/10"
-        >
-          {globalMuted
-            ? <VolumeX className="w-5 h-5 text-white/80" />
-            : <Volume2 className="w-5 h-5 text-white" />}
-        </button>
         {/* Live entry — also reachable via the bottom nav, so hide on the
             smallest phones (<sm) where the row would collide with center tabs. */}
         <button

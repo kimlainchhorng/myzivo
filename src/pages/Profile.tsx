@@ -280,6 +280,22 @@ const Profile = () => {
     if (window.history.length > 1) navigate(-1);
     else navigate("/feed");
   }, [impact, navigate]);
+  const copyTextToClipboard = useCallback(async (text: string) => {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.setAttribute("readonly", "");
+    textArea.style.position = "fixed";
+    textArea.style.opacity = "0";
+    document.body.appendChild(textArea);
+    textArea.select();
+    const copied = document.execCommand("copy");
+    document.body.removeChild(textArea);
+    if (!copied) throw new Error("Copy command failed");
+  }, []);
   const handleToggleNotif = useCallback(() => { selectionChanged(); setShowNotifPanel(p => !p); }, [selectionChanged]);
   const [notifFilter, setNotifFilter] = useState<"all" | "unread">("all");
   const notifPanelRef = useRef<HTMLDivElement>(null);
@@ -322,22 +338,28 @@ const Profile = () => {
     if (tpl.includes("promo") || tpl.includes("coupon")) return "/wallet/promos";
     return "/notifications";
   }, []);
-  const handleNotifClick = useCallback(async (n: { id: string; action_url: string | null; metadata: Record<string, any>; template: string; is_read: boolean }) => {
+  const handleNotifClick = useCallback((n: { id: string; action_url: string | null; metadata: Record<string, any>; template: string; is_read: boolean }) => {
     selectionChanged();
-    if (!n.is_read) { try { await markAsRead([n.id]); } catch {} }
+    if (!n.is_read) {
+      void markAsRead([n.id]).catch(() => undefined);
+    }
     setShowNotifPanel(false);
     navigate(resolveNotifLink(n));
   }, [markAsRead, navigate, resolveNotifLink, selectionChanged]);
+  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
   const handleMarkAllRead = useCallback(async () => {
-    if (notifUnreadCount === 0) return;
+    if (notifUnreadCount === 0 || isMarkingAllRead) return;
     selectionChanged();
+    setIsMarkingAllRead(true);
     try {
       await markAllAsRead();
       toast.success("All notifications marked as read");
     } catch {
       toast.error("Couldn't mark all as read");
+    } finally {
+      setIsMarkingAllRead(false);
     }
-  }, [markAllAsRead, notifUnreadCount, selectionChanged]);
+  }, [isMarkingAllRead, markAllAsRead, notifUnreadCount, selectionChanged]);
   const handleResetCover = useCallback(() => { impact("light"); setCoverPosition(50); }, [impact]);
   
   const [showLangPicker, setShowLangPicker] = useState(false);
@@ -407,6 +429,7 @@ const Profile = () => {
   const setFollowingCount = (_n: number) => { void refetchSocialCounts(); };
   const [socialModal, setSocialModal] = useState<{ open: boolean; tab: "friends" | "followers" | "following" }>({ open: false, tab: "friends" });
   const [shareOpen, setShareOpen] = useState(false);
+  const [profileLinkCopied, setProfileLinkCopied] = useState(false);
   const [modeOpen, setModeOpen] = useState(false);
   const [activeMode, setActiveMode] = useState<string>(() => {
     if (typeof window === "undefined") return "personal";
@@ -434,6 +457,27 @@ const Profile = () => {
   }, [zivoOFMode]);
 
   const workflowMode = zivoOFMode ? "creator" : activeMode;
+  const profileShareUrl = useMemo(
+    () => `https://hizivo.com/u/${claimedUsername || user?.id || ""}`,
+    [claimedUsername, user?.id],
+  );
+
+  const handleCopyProfileLink = useCallback(async () => {
+    selectionChanged();
+    if (!claimedUsername && !user?.id) {
+      toast.error("Profile link is not ready yet");
+      return;
+    }
+    try {
+      await copyTextToClipboard(profileShareUrl);
+      setProfileLinkCopied(true);
+      toast.success("Profile link copied");
+      window.setTimeout(() => setProfileLinkCopied(false), 1600);
+    } catch {
+      setShareOpen(true);
+      toast.info("Copy failed, share options opened");
+    }
+  }, [claimedUsername, copyTextToClipboard, profileShareUrl, selectionChanged, user?.id]);
 
   const getShopDashboardPath = useCallback(() => {
     if (!ownerStore?.id) return "/shop-dashboard";
@@ -548,9 +592,14 @@ const Profile = () => {
   };
   const handleCoverDragEnd = () => { coverDragRef.current = null; };
   const saveCoverPosition = async () => {
-    await updateProfile.mutateAsync({ cover_position: Math.round(coverPosition) });
-    setCoverRepositioning(false);
-    toast.success("Cover position saved!");
+    if (updateProfile.isPending) return;
+    try {
+      await updateProfile.mutateAsync({ cover_position: Math.round(coverPosition) });
+      setCoverRepositioning(false);
+      toast.success("Cover position saved!");
+    } catch {
+      toast.error("Couldn't save cover position");
+    }
   };
 
 
@@ -689,21 +738,19 @@ const Profile = () => {
           </div>
           <motion.button
             type="button"
-            onClick={() => {
-              const url = `https://hizivo.com/u/${claimedUsername || user?.id || ""}`;
-              navigator.clipboard.writeText(url)
-                .then(() => toast.success("Profile link copied!"))
-                .catch(() => toast.error("Couldn't copy link"));
-            }}
-            aria-label="Copy profile link"
+            onClick={handleCopyProfileLink}
+            aria-label={profileLinkCopied ? "Profile link copied" : "Copy profile link"}
+            aria-pressed={profileLinkCopied}
             whileTap={{ scale: 0.86 }}
             transition={{ type: "spring", stiffness: 400, damping: 22 }}
             className={cn(
-              "h-9 w-9 flex items-center justify-center rounded-full transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none",
-              "hover:bg-muted/60 text-foreground"
+              "h-9 w-9 flex items-center justify-center rounded-full border transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none",
+              profileLinkCopied
+                ? "border-emerald-500/30 bg-emerald-500/12 text-emerald-600"
+                : "border-transparent hover:bg-muted/60 text-foreground"
             )}
           >
-            <Share2 className="h-5 w-5" />
+            {profileLinkCopied ? <Check className="h-5 w-5" /> : <LinkIcon className="h-5 w-5" />}
           </motion.button>
           <div className="relative">
           <motion.button
@@ -773,9 +820,10 @@ const Profile = () => {
                   {notifUnreadCount > 0 && (
                     <button type="button"
                       onClick={handleMarkAllRead}
+                      disabled={isMarkingAllRead}
                       className="rounded-full px-2 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
                     >
-                      Mark all read
+                      {isMarkingAllRead ? "Marking..." : "Mark all read"}
                     </button>
                   )}
                 </div>
@@ -1094,8 +1142,8 @@ const Profile = () => {
                           <div className="relative flex items-center gap-3 bg-background/90 backdrop-blur-xl rounded-full px-4 py-2 shadow-xl border border-border/50">
                             <MoveVertical className="h-4 w-4 text-muted-foreground" />
                             <span className="text-xs font-semibold text-foreground">Drag to reposition</span>
-                            <button type="button" onClick={saveCoverPosition} aria-label="Save cover position" className="p-1.5 rounded-full bg-primary text-primary-foreground transition active:scale-90 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none">
-                              <Check className="h-3.5 w-3.5" />
+                            <button type="button" onClick={saveCoverPosition} disabled={updateProfile.isPending} aria-label="Save cover position" className="p-1.5 rounded-full bg-primary text-primary-foreground transition active:scale-90 disabled:opacity-60 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none">
+                              {updateProfile.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
                             </button>
                             <button type="button" onClick={handleResetCover} aria-label="Reset cover position to center" className="p-1.5 rounded-full bg-muted/70 text-foreground hover:bg-muted transition active:scale-90 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none">
                               <RotateCcw className="h-3.5 w-3.5" />
@@ -1815,6 +1863,7 @@ const Profile = () => {
       <UsernameShareSheet
         open={shareOpen}
         username={claimedUsername || null}
+        profileId={user?.id || null}
         displayName={headerName || undefined}
         onClose={() => setShareOpen(false)}
       />

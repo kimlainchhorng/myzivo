@@ -17,16 +17,19 @@ import { getPublicOrigin } from "@/lib/getPublicOrigin";
 interface Props {
   open: boolean;
   username: string | null;
+  profileId?: string | null;
   displayName?: string;
   onClose: () => void;
 }
 
-export default function UsernameShareSheet({ open, username, displayName, onClose }: Props) {
+export default function UsernameShareSheet({ open, username, profileId, displayName, onClose }: Props) {
   const [copied, setCopied] = useState(false);
   // We expose `/u/<username>` as the canonical share URL — it's safe in
   // every URL parser and equivalent to `/@<username>` (both routes resolve
   // to the same page).
-  const url = username ? `${getPublicOrigin()}/u/${username}` : "";
+  const profileSlug = username || profileId || "";
+  const url = profileSlug ? `${getPublicOrigin()}/u/${profileSlug}` : "";
+  const profileLabel = username ? `@${username}` : displayName || "your profile";
 
   const copy = async () => {
     if (!url) return;
@@ -45,8 +48,8 @@ export default function UsernameShareSheet({ open, username, displayName, onClos
     if (typeof navigator !== "undefined" && "share" in navigator) {
       try {
         await navigator.share({
-          title: displayName ? `${displayName} on ZIVO` : `@${username}`,
-          text: `Find me on ZIVO: @${username}`,
+          title: displayName ? `${displayName} on ZIVO` : `${profileLabel} on ZIVO`,
+          text: `Find me on ZIVO: ${profileLabel}`,
           url,
         });
       } catch {
@@ -89,7 +92,7 @@ export default function UsernameShareSheet({ open, username, displayName, onClos
               </button>
             </div>
 
-            {!username ? (
+            {!profileSlug ? (
               <div className="text-sm text-muted-foreground py-4 text-center">
                 Set a username first to get a shareable link.
               </div>

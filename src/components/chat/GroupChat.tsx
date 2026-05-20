@@ -1592,7 +1592,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
           <div className="relative shrink-0">
             <button type="button"
               data-attach-trigger
-              onClick={() => setShowAttachMenu(!showAttachMenu)}
+              onClick={() => setShowAttachMenu((prev) => !prev)}
               disabled={uploadingImage}
               className={`h-11 w-11 rounded-full flex items-center justify-center transition-all shrink-0 ${
                 showAttachMenu ? "bg-primary text-primary-foreground rotate-45" : "text-muted-foreground/60 hover:bg-muted/50"

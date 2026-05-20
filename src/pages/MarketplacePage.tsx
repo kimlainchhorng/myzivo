@@ -18,6 +18,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import DegradedDataBanner from "@/components/reliability/DegradedDataBanner";
+import LoadFailureCard from "@/components/reliability/LoadFailureCard";
 
 const CONDITIONS = [
   { label: "All", value: "all" },
@@ -744,7 +746,7 @@ export default function MarketplacePage() {
       if (negotiableOnly && !l.is_negotiable) return false;
       return true;
     });
-  }, [sourceList, searchQuery, priceMin, priceMax]);
+  }, [sourceList, searchQuery, priceMin, priceMax, negotiableOnly, tab, blockedSet]);
 
   const featured = useMemo(
     () => (listings as any[]).filter((l) => l.is_featured).slice(0, 6),
@@ -1333,31 +1335,39 @@ export default function MarketplacePage() {
 
       {/* Browse error recovery card */}
       {tab === "browse" && isListingsError && (listings as any[]).length === 0 && !isLoading && (
-        <div className="mx-4 mt-4 p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-center">
-          <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-2">Couldn't load listings</p>
-          <button
-            type="button"
-            onClick={() => refetch()}
-            className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-bold"
-          >
-            Retry
-          </button>
-        </div>
+        <LoadFailureCard
+          className="mx-4 mt-4"
+          title="Could not load listings"
+          description="Marketplace data failed to refresh. Retry to reconnect and load the latest listings."
+          onRetry={() => {
+            void refetch();
+          }}
+          trackingContext="marketplace"
+        />
       )}
 
       {/* Stale-data banner */}
       {tab === "browse" && isListingsError && (listings as any[]).length > 0 && (
-        <div className="mx-4 mt-3 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2">
-          <p className="flex-1 text-[11px] text-amber-700 dark:text-amber-400 font-medium">Showing cached results — couldn't refresh</p>
-          <button
-            type="button"
-            onClick={() => refetch()}
-            disabled={isFetching}
-            className="shrink-0 text-[11px] font-bold text-amber-700 dark:text-amber-400 disabled:opacity-50"
-          >
-            {isFetching ? "Refreshing…" : "Retry"}
-          </button>
-        </div>
+        <DegradedDataBanner
+          className="mx-4 mt-3"
+          message="Showing cached results. Refresh failed."
+          onRetry={() => {
+            void refetch();
+          }}
+          trackingContext="marketplace"
+          rightSlot={
+            <button
+              type="button"
+              onClick={() => {
+                void refetch();
+              }}
+              disabled={isFetching}
+              className="shrink-0 rounded-full bg-foreground px-3 py-1 text-[11px] font-bold text-background disabled:opacity-50"
+            >
+              {isFetching ? "Refreshing..." : "Retry"}
+            </button>
+          }
+        />
       )}
 
       {/* Listings */}
@@ -2184,6 +2194,9 @@ function ListingDetail({
   });
 
   const [qText, setQText] = useState("");
+  const [isSharingListing, setIsSharingListing] = useState(false);
+  const [helpfulLoadingIds, setHelpfulLoadingIds] = useState<Set<string>>(new Set());
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
   const { data: similar = [] } = useQuery({
     queryKey: ["marketplace-similar", listing.id, listing.category_id],
@@ -2237,11 +2250,14 @@ function ListingDetail({
   });
 
   const handleShare = async () => {
+    if (isSharingListing) return;
+    setIsSharingListing(true);
     const url = `${window.location.origin}/marketplace?listing=${listing.id}`;
     try {
       if (navigator.share) await navigator.share({ title: listing.title, url });
       else { await navigator.clipboard.writeText(url); toast.success("Link copied"); }
     } catch {/* user cancelled */}
+    finally { setIsSharingListing(false); }
   };
 
   const handleMessage = () => {
@@ -2458,7 +2474,7 @@ function ListingDetail({
                 <Heart className={`h-5 w-5 ${isFav ? "fill-red-500 text-red-500" : ""}`} />
               </button>
             )}
-            <button type="button" aria-label="Share listing" onClick={handleShare} className="p-2.5 rounded-full bg-muted/40">
+            <button type="button" aria-label="Share listing" onClick={handleShare} disabled={isSharingListing} className="p-2.5 rounded-full bg-muted/40 disabled:opacity-50">
               <Share2 className="h-5 w-5" />
             </button>
           </div>
@@ -2599,12 +2615,23 @@ function ListingDetail({
                   <button
                     type="button"
                     onClick={async () => {
-                      const { error } = await (supabase as any).rpc("increment_review_helpful", { review_id: r.id });
-                      if (error) toast.error(error.message); else toast.success("Marked helpful");
+                      if (helpfulLoadingIds.has(r.id)) return;
+                      setHelpfulLoadingIds((prev) => new Set(prev).add(r.id));
+                      try {
+                        const { error } = await (supabase as any).rpc("increment_review_helpful", { review_id: r.id });
+                        if (error) toast.error(error.message); else toast.success("Marked helpful");
+                      } finally {
+                        setHelpfulLoadingIds((prev) => {
+                          const next = new Set(prev);
+                          next.delete(r.id);
+                          return next;
+                        });
+                      }
                     }}
-                    className="mt-1.5 text-[11px] text-muted-foreground hover:text-primary"
+                    disabled={helpfulLoadingIds.has(r.id)}
+                    className="mt-1.5 text-[11px] text-muted-foreground hover:text-primary disabled:opacity-50"
                   >
-                    👍 Helpful{r.helpful_count ? ` (${r.helpful_count})` : ""}
+                    {helpfulLoadingIds.has(r.id) ? "Saving..." : `👍 Helpful${r.helpful_count ? ` (${r.helpful_count})` : ""}`}
                   </button>
                 </div>
               ))}
@@ -2961,8 +2988,10 @@ function ListingDetail({
                   />
                   <button
                     type="button"
-                    disabled={!reportReason}
+                    disabled={!reportReason || isSubmittingReport}
                     onClick={async () => {
+                      if (isSubmittingReport) return;
+                      setIsSubmittingReport(true);
                       try {
                         await (supabase as any).from("bug_reports").insert({
                           user_id: currentUserId || null,
@@ -2974,10 +3003,11 @@ function ListingDetail({
                       } catch {/* table optional */}
                       toast.success("Report submitted. Thank you.");
                       setShowReport(false); setReportReason(""); setReportNote("");
+                      setIsSubmittingReport(false);
                     }}
                     className="w-full py-3.5 rounded-2xl bg-red-500 text-white font-bold text-sm disabled:opacity-50"
                   >
-                    Submit report
+                    {isSubmittingReport ? "Submitting..." : "Submit report"}
                   </button>
                   {currentUserId && (
                     <button

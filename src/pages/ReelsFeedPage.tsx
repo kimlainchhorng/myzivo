@@ -1134,24 +1134,22 @@ export default function ReelsFeedPage() {
         const storePostIds = allItems.filter((i) => i.source === "store").map((i) => i.id);
         const userPostIds = allItems.filter((i) => i.source === "user").map((i) => i.id.replace(/^u-/, ""));
 
-        const [storeLinksRes, userLinksRes] = await Promise.all([
-          storePostIds.length
-            ? (supabase as any)
-                .from("social_reel_links")
-                .select("post_id, post_source, link_type, store_id, store_product_id, truck_sale_id, checkout_path, map_lat, map_lng, map_label")
-                .eq("post_source", "store")
-                .in("post_id", storePostIds)
-            : Promise.resolve({ data: [] as any[] }),
-          userPostIds.length
-            ? (supabase as any)
-                .from("social_reel_links")
-                .select("post_id, post_source, link_type, store_id, store_product_id, truck_sale_id, checkout_path, map_lat, map_lng, map_label")
-                .eq("post_source", "user")
-                .in("post_id", userPostIds)
-            : Promise.resolve({ data: [] as any[] }),
-        ]);
+        // Single round-trip for both sources. Previous code hit the same table
+        // (social_reel_links) twice — once per source — even though they're
+        // already in Promise.all, that's 2 connections and 2 SQL plans.
+        // OR'd predicate keeps the (post_source, post_id) index usable.
+        const orParts: string[] = [];
+        if (storePostIds.length) orParts.push(`and(post_source.eq.store,post_id.in.(${storePostIds.join(",")}))`);
+        if (userPostIds.length)  orParts.push(`and(post_source.eq.user,post_id.in.(${userPostIds.join(",")}))`);
 
-        const links = [...(storeLinksRes.data || []), ...(userLinksRes.data || [])] as any[];
+        const linksRes = orParts.length
+          ? await (supabase as any)
+              .from("social_reel_links")
+              .select("post_id, post_source, link_type, store_id, store_product_id, truck_sale_id, checkout_path, map_lat, map_lng, map_label")
+              .or(orParts.join(","))
+          : { data: [] as any[] };
+
+        const links = (linksRes.data || []) as any[];
         const linkMap = new Map(links.map((row) => [`${row.post_source}:${row.post_id}`, row]));
 
         allItems.forEach((item) => {
@@ -2024,20 +2022,22 @@ export default function ReelsFeedPage() {
               trackingContext={reliabilityTrackingContext}
             />
           ) : items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-60 text-center px-6">
-              <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center mb-3 mx-auto">
-                <Camera className="h-8 w-8 text-muted-foreground" />
+            <div className="flex flex-col items-center justify-center min-h-72 text-center px-6 py-8">
+              <div className="h-16 w-16 rounded-2xl bg-ig-gradient/10 flex items-center justify-center mb-3 mx-auto">
+                <Camera className="h-8 w-8 text-ig-gradient" />
               </div>
-              <p className="text-base font-bold text-foreground mb-1">No posts yet</p>
-              <p className="text-sm text-muted-foreground mb-4">Be the first to share something amazing!</p>
-              {userId && (
-                <button type="button"
-                  onClick={() => { setCreateMode("photo"); setShowCreate(true); }}
-                  className="px-6 py-2.5 bg-ig-gradient text-white rounded-full text-sm font-bold shadow-lg shadow-rose-500/25 hover:opacity-90 active:scale-95 transition-all"
-                >
-                  Create Post
-                </button>
-              )}
+              <p className="text-base font-bold text-foreground mb-1">Quiet here for now</p>
+              <p className="text-sm text-muted-foreground mb-4 max-w-xs">Post something or jump into one of these spots — the community is active right now.</p>
+              <div className="flex flex-wrap gap-2 justify-center mb-3">
+                {userId && (
+                  <button type="button" onClick={() => { setCreateMode("photo"); setShowCreate(true); }} className="px-4 py-2 bg-ig-gradient text-white rounded-full text-xs font-bold shadow-sm hover:opacity-90 active:scale-95 transition-all">
+                    Create post
+                  </button>
+                )}
+                <button type="button" onClick={() => navigate("/audio-rooms")} className="px-4 py-2 bg-secondary text-foreground rounded-full text-xs font-bold hover:bg-muted active:scale-95 transition-all">Live rooms</button>
+                <button type="button" onClick={() => navigate("/ama")} className="px-4 py-2 bg-secondary text-foreground rounded-full text-xs font-bold hover:bg-muted active:scale-95 transition-all">AMA sessions</button>
+                <button type="button" onClick={() => navigate("/trending")} className="px-4 py-2 bg-secondary text-foreground rounded-full text-xs font-bold hover:bg-muted active:scale-95 transition-all">Trending</button>
+              </div>
             </div>
           ) : (() => {
             const hiddenFiltered = hiddenPosts.hidden.size > 0
@@ -2068,7 +2068,7 @@ export default function ReelsFeedPage() {
                   </>
                 ) : feedTab === "Following" || feedTab === "Friends" ? (
                   <div className="w-full max-w-md">
-                    <div className="flex flex-col items-center gap-2 text-center mb-2">
+                    <div className="flex flex-col items-center gap-2 text-center mb-3">
                       <p className="text-sm text-foreground font-medium">
                         Nothing in {feedTab} yet
                       </p>
@@ -2077,12 +2077,11 @@ export default function ReelsFeedPage() {
                           ? "Follow creators to see their posts here."
                           : "Add friends or follow more people to fill this tab."}
                       </p>
-                      <button type="button"
-                        onClick={() => setFeedTab("For You")}
-                        className="rounded-full bg-ig-gradient text-white text-xs font-bold px-4 py-2 shadow-sm hover:opacity-90 active:scale-95 transition-all"
-                      >
-                        Back to For You
-                      </button>
+                      <div className="flex flex-wrap gap-1.5 justify-center mt-2">
+                        <button type="button" onClick={() => setFeedTab("For You")} className="rounded-full bg-ig-gradient text-white text-xs font-bold px-3.5 py-1.5 shadow-sm hover:opacity-90 active:scale-95 transition-all">Back to For You</button>
+                        <button type="button" onClick={() => navigate("/friend-requests")} className="rounded-full bg-secondary text-foreground text-xs font-bold px-3.5 py-1.5 hover:bg-muted active:scale-95 transition-all">Pending requests</button>
+                        <button type="button" onClick={() => navigate("/audio-rooms")} className="rounded-full bg-secondary text-foreground text-xs font-bold px-3.5 py-1.5 hover:bg-muted active:scale-95 transition-all">Live rooms</button>
+                      </div>
                     </div>
                     {sidebarDataReady && (
                       <Suspense fallback={null}>

@@ -21,6 +21,8 @@ interface Props {
   canPin?: boolean;
   isPinned?: boolean;
   onTogglePin?: () => void;
+  deleting?: boolean;
+  pinning?: boolean;
   /** Light surface (e.g. bottom sheet on the feed) vs dark (overlay reels) */
   variant?: "light" | "dark";
 }
@@ -28,6 +30,8 @@ interface Props {
 export default function CommentRowActions({
   canManage, onEditStart, onDelete,
   canPin, isPinned, onTogglePin,
+  deleting = false,
+  pinning = false,
   variant = "light",
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -53,12 +57,12 @@ export default function CommentRowActions({
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
+        disabled={deleting || pinning}
         className={cn(
-          "rounded-full p-1.5 transition-colors active:scale-90",
+          "rounded-full p-1.5 transition-colors active:scale-90 disabled:opacity-50",
           isDark ? "text-white/60 hover:bg-white/10" : "text-muted-foreground hover:bg-muted",
         )}
         aria-label="Comment options"
-        aria-expanded={open}
       >
         <MoreVertical className="h-4 w-4" />
       </button>
@@ -77,11 +81,12 @@ export default function CommentRowActions({
                 {canPin && onTogglePin && (
                   <button
                     type="button"
+                    disabled={pinning}
                     onClick={(e) => { e.stopPropagation(); setOpen(false); onTogglePin(); }}
-                    className="flex w-full items-center gap-2 px-3 py-2.5 text-sm hover:bg-muted active:bg-muted/80"
+                    className="flex w-full items-center gap-2 px-3 py-2.5 text-sm hover:bg-muted active:bg-muted/80 disabled:opacity-50"
                   >
                     {isPinned ? <PinOff className="h-4 w-4 text-foreground" /> : <Pin className="h-4 w-4 text-primary" />}
-                    {isPinned ? "Unpin" : "Pin to top"}
+                    {pinning ? "Updating..." : (isPinned ? "Unpin" : "Pin to top")}
                   </button>
                 )}
                 {/* Edit/Delete — comment author only */}
@@ -97,8 +102,9 @@ export default function CommentRowActions({
                     </button>
                     <button
                       type="button"
+                      disabled={deleting}
                       onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
-                      className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 active:bg-red-100 dark:hover:bg-red-950/40"
+                      className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 active:bg-red-100 disabled:opacity-50 dark:hover:bg-red-950/40"
                     >
                       <Trash2 className="h-4 w-4" />
                       Delete
@@ -119,10 +125,11 @@ export default function CommentRowActions({
                   </button>
                   <button
                     type="button"
+                    disabled={deleting}
                     onClick={(e) => { e.stopPropagation(); setOpen(false); setConfirmDelete(false); onDelete(); }}
-                    className="flex-1 rounded-lg bg-red-600 px-2 py-1.5 text-xs font-semibold text-white hover:bg-red-700 active:scale-95"
+                    className="flex-1 rounded-lg bg-red-600 px-2 py-1.5 text-xs font-semibold text-white hover:bg-red-700 active:scale-95 disabled:opacity-50"
                   >
-                    Delete
+                    {deleting ? "Deleting..." : "Delete"}
                   </button>
                 </div>
               </div>

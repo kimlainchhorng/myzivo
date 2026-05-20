@@ -4,6 +4,8 @@ import { useEventTracking } from "@/hooks/useEventTracking";
 type DegradedDataBannerProps = {
   message: string;
   onRetry: () => void;
+  retryDisabled?: boolean;
+  retryLabel?: string;
   className?: string;
   rightSlot?: ReactNode;
   trackingContext?: string;
@@ -12,6 +14,8 @@ type DegradedDataBannerProps = {
 export default function DegradedDataBanner({
   message,
   onRetry,
+  retryDisabled = false,
+  retryLabel = "Retry",
   className,
   rightSlot,
   trackingContext = "unknown",
@@ -19,6 +23,7 @@ export default function DegradedDataBanner({
   const { track } = useEventTracking();
 
   const handleRetry = () => {
+    if (retryDisabled) return;
     void track("button_click", {
       component: "degraded_data_banner",
       action: "retry",
@@ -39,9 +44,10 @@ export default function DegradedDataBanner({
           <button
             type="button"
             onClick={handleRetry}
-            className="shrink-0 rounded-full bg-foreground px-3 py-1 text-[11px] font-bold text-background active:scale-95"
+            disabled={retryDisabled}
+            className="shrink-0 rounded-full bg-foreground px-3 py-1 text-[11px] font-bold text-background active:scale-95 disabled:opacity-50"
           >
-            Retry
+            {retryLabel}
           </button>
         )}
       </div>
