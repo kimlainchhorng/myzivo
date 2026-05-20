@@ -4,8 +4,11 @@
  * quick actions, service navigation, and personalized content.
  * @module AppHome
  */
-import { useState, useEffect, useMemo, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import SEOHead from "@/components/SEOHead";
+import DegradedDataBanner from "@/components/reliability/DegradedDataBanner";
+import LoadFailureCard from "@/components/reliability/LoadFailureCard";
 import { useNavigate } from "react-router-dom";
 import { useRoutePrefetch } from "@/components/shared/RoutePrefetcher";
 import { useI18n } from "@/hooks/useI18n";
@@ -566,6 +569,7 @@ const cambodiaDestKeysKH = [
 
 const AppHome = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const { t, currentLanguage } = useI18n();
   const { isCambodia: isKH } = useCountry();
@@ -611,7 +615,7 @@ const AppHome = () => {
     if (tab === "hotels") return t("home.search_hotels");
     return t("home.where_to");
   }
-  const { data: profile } = useUserProfile();
+  const { data: profile, isError: hasProfileError } = useUserProfile();
   const { data: ownerStore, isLoading: ownerStoreLoading } = useOwnerStoreProfile();
   const lodgingStoreId = ownerStore?.isLodging ? ownerStore.id : "";
   const lodgingRooms = useLodgeRooms(lodgingStoreId);
@@ -633,9 +637,9 @@ const AppHome = () => {
     reservationsCount: lodgingReservations.data?.length ?? 0,
   }) : null;
   const lodgingProgress = lodgingCompletion ? { complete: lodgingCompletion.complete, total: lodgingCompletion.total, percent: lodgingCompletion.percent } : null;
-  const { data: deals = [] } = useRecommendedDeals("all", 6);
+  const { data: deals = [], isError: hasDealsError } = useRecommendedDeals("all", 6);
   const { items: recentItems } = useRecentlyViewed();
-  const { data: savedLocations } = useSavedLocations(user?.id);
+  const { data: savedLocations, isError: hasSavedLocationsError } = useSavedLocations(user?.id);
   const { points, getNextTierProgress } = useLoyaltyPoints();
   const loyaltySummary = points as LoyaltySummary | null;
   const { active: activeRewards } = useUserRewards();
@@ -660,6 +664,28 @@ const AppHome = () => {
   const { balanceDollars } = useCustomerWallet();
   const { getDefault } = useLocalPaymentMethods();
   const defaultCard = getDefault();
+
+  const hasAnyHomeData =
+    Boolean(profile) ||
+    deals.length > 0 ||
+    (savedLocations?.length ?? 0) > 0 ||
+    recentItems.length > 0 ||
+    Object.keys(destPrices).length > 0;
+
+  const hasHomeRefreshError =
+    hasAnyHomeData && (hasProfileError || hasDealsError || hasSavedLocationsError);
+
+  const shouldShowHomeRecovery =
+    Boolean(user) && !hasAnyHomeData && !destPricesLoading && (hasProfileError || hasDealsError || hasSavedLocationsError);
+
+  const retryHomeQueries = useCallback(() => {
+    void Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["userProfile", user?.id] }),
+      queryClient.invalidateQueries({ queryKey: ["travel-deals", "all", 6] }),
+      queryClient.invalidateQueries({ queryKey: ["saved-locations", user?.id] }),
+      queryClient.invalidateQueries({ queryKey: ["destination-prices"] }),
+    ]);
+  }, [queryClient, user?.id]);
 
   const estimate = (() => {
     const hour = new Date().getHours();
@@ -692,7 +718,7 @@ const AppHome = () => {
   const initials = (profile?.full_name || user?.email || "Z").charAt(0).toUpperCase();
 
   return (
-    <>
+    <div>
     <SEOHead title="ZIVO – Your Travel Super-App" description="Book rides, flights, hotels, and grocery delivery — all in one app." />
     <div className="relative min-h-[100dvh] bg-background font-sans text-foreground selection:bg-primary/30 overflow-x-hidden" role="main">
       {/* Safe-area top backdrop — Capacitor's `overlaysWebView: true` lets web
@@ -712,6 +738,26 @@ const AppHome = () => {
 
       {/* Scrollable content */}
       <div className="scroll-momentum relative z-10 [padding-bottom:calc(56px+env(safe-area-inset-bottom,0px)+24px)]">
+        {shouldShowHomeRecovery ? (
+          <LoadFailureCard
+            className="px-4 pt-safe pb-6"
+            title="Home refresh failed"
+            description="We couldn&apos;t load your home updates right now. Retry to restore recommendations and account shortcuts."
+            onRetry={retryHomeQueries}
+            onSecondary={() => navigate("/feed")}
+            secondaryLabel="Go Feed"
+            trackingContext="home"
+          />
+        ) : (
+          <div>
+        {hasHomeRefreshError && (
+          <DegradedDataBanner
+            className="px-4 pt-safe pb-2"
+            message="Showing cached home data. Refresh failed."
+            onRetry={retryHomeQueries}
+            trackingContext="home"
+          />
+        )}
         {/* Ambient orbs removed on mobile — they triggered CLS and constant repaints. */}
         {/* ─── HEADER ─── */}
         <div className="bg-background relative">
@@ -1248,17 +1294,19 @@ const AppHome = () => {
           )}
           {/* Spacer for fixed bottom nav */}
           <div className="h-24 md:h-8" aria-hidden="true" />
+          </div>
+          </div>
+        )}
         </div>
       </div>
 
       <Suspense fallback={null}>
         <UniversalSearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       </Suspense>
-    </div>
 
     {/* Bottom Nav — outside perspective container so position:fixed works */}
     <Suspense fallback={<div className="fixed inset-x-0 bottom-0 h-16 bg-background border-t border-border lg:hidden pb-safe" />}><ZivoMobileNav /></Suspense>
-    </>
+      </div>
   );
 };
 

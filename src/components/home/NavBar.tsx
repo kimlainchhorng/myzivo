@@ -52,6 +52,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import CurrencySelector from "@/components/shared/CurrencySelector";
 import { useI18n } from "@/hooks/useI18n";
 import { useSupportedLanguages } from "@/hooks/useGlobalExpansion";
+import { useRoutePrefetch } from "@/components/shared/RoutePrefetcher";
 
 import { withRedirectParam } from "@/lib/authRedirect";
 import { useOwnerStores } from "@/hooks/useOwnerStoreProfile";
@@ -109,6 +110,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const { currentLanguage, changeLanguage, t } = useI18n();
+  const { prefetch } = useRoutePrefetch();
   const { unreadCount: notificationUnread } = useNotifications(20);
   const { data: supportedLanguages } = useSupportedLanguages(true);
   const activeLanguages = (supportedLanguages || []).filter((l) => l.is_active);
@@ -162,6 +164,16 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
   }, []);
 
   const isHomePage = location.pathname === "/";
+  const prefetchIfEligible = (path: string) => {
+    if (!path) return;
+    if (path.startsWith("/login")) {
+      const redirectPart = path.split("redirect=")[1] || "";
+      const target = redirectPart ? decodeURIComponent(redirectPart) : "";
+      if (target) prefetch(target);
+      return;
+    }
+    prefetch(path);
+  };
   const openFeedSearch = () => {
     if (location.pathname.startsWith("/feed")) {
       window.dispatchEvent(new CustomEvent("zivo-open-feed-search"));
@@ -227,6 +239,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                 {/* Direct nav pills: Feed, Reels */}
                 {directNavItems.map((item) => {
                   const isActive = location.pathname.startsWith(item.href);
+                  const targetPath = item.label === "Chat" && !user ? withRedirectParam("/login", "/chat") : item.href;
                   return (
                     <motion.div
                       key={item.href}
@@ -235,7 +248,10 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       transition={{ type: "spring", stiffness: 400, damping: 22 }}
                     >
                       <Link
-                        to={item.label === "Chat" && !user ? withRedirectParam("/login", "/chat") : item.href}
+                        to={targetPath}
+                        onMouseEnter={() => prefetchIfEligible(targetPath)}
+                        onFocus={() => prefetchIfEligible(targetPath)}
+                        onTouchStart={() => prefetchIfEligible(targetPath)}
                         className={cn(
                           "flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap border",
                           isActive
@@ -590,6 +606,9 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                   <Link
                     key={item.href}
                     to={item.href}
+                    onMouseEnter={() => prefetchIfEligible(item.href)}
+                    onFocus={() => prefetchIfEligible(item.href)}
+                    onTouchStart={() => prefetchIfEligible(item.href)}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium hover:bg-muted transition-all touch-manipulation active:scale-[0.98] active:bg-muted min-h-[48px]"
                   >
@@ -605,6 +624,9 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                   <Link
                     key={link.href}
                     to={link.href}
+                    onMouseEnter={() => prefetchIfEligible(link.href)}
+                    onFocus={() => prefetchIfEligible(link.href)}
+                    onTouchStart={() => prefetchIfEligible(link.href)}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium hover:bg-muted transition-all touch-manipulation active:scale-[0.98] active:bg-muted min-h-[48px]"
                   >

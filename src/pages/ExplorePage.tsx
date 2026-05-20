@@ -17,6 +17,8 @@ import SEOHead from "@/components/SEOHead";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
+import DegradedDataBanner from "@/components/reliability/DegradedDataBanner";
+import LoadFailureCard from "@/components/reliability/LoadFailureCard";
 
 type Tab = "trending" | "users" | "hashtags";
 
@@ -38,7 +40,7 @@ export default function ExplorePage() {
   }, [searchParams]);
 
   // Trending posts
-  const { data: trendingPosts = [], isLoading: loadingPosts } = useQuery({
+  const { data: trendingPosts = [], isLoading: loadingPosts, isError: hasTrendingError } = useQuery({
     queryKey: ["explore-trending"],
     queryFn: async () => {
       const { data } = await supabase
@@ -56,7 +58,7 @@ export default function ExplorePage() {
   });
 
   // User search
-  const { data: searchResults = [], isLoading: loadingUsers } = useQuery({
+  const { data: searchResults = [], isLoading: loadingUsers, isError: hasSearchError } = useQuery({
     queryKey: ["explore-users", search],
     queryFn: async () => {
       if (!search.trim()) return [];
@@ -73,7 +75,7 @@ export default function ExplorePage() {
   });
 
   // Suggested users for People tab
-  const { data: suggestedUsers = [], isLoading: loadingSuggested } = useQuery({
+  const { data: suggestedUsers = [], isLoading: loadingSuggested, isError: hasSuggestedError } = useQuery({
     queryKey: ["explore-suggested-users", user?.id],
     queryFn: async () => {
       const { data } = await (supabase as any)
@@ -90,7 +92,7 @@ export default function ExplorePage() {
   });
 
   // Posts filtered by selected hashtag
-  const { data: taggedPosts = [], isLoading: loadingTagged } = useQuery({
+  const { data: taggedPosts = [], isLoading: loadingTagged, isError: hasTaggedError } = useQuery({
     queryKey: ["explore-tagged", selectedTag],
     queryFn: async () => {
       if (!selectedTag) return [];
@@ -111,7 +113,7 @@ export default function ExplorePage() {
   });
 
   // Hashtags — extracted from post captions via Supabase
-  const { data: trendingHashtags = [] } = useQuery({
+  const { data: trendingHashtags = [], isError: hasHashtagsError } = useQuery({
     queryKey: ["explore-hashtags"],
     queryFn: async () => {
       const { data } = await (supabase as any)
@@ -148,6 +150,48 @@ export default function ExplorePage() {
     { id: "users", label: "People", icon: Users },
     { id: "hashtags", label: "Tags", icon: Hash },
   ];
+
+  const hasAnyExploreData =
+    trendingPosts.length > 0 ||
+    searchResults.length > 0 ||
+    suggestedUsers.length > 0 ||
+    taggedPosts.length > 0 ||
+    trendingHashtags.length > 0;
+  const hasExploreRefreshError =
+    hasTrendingError ||
+    hasSearchError ||
+    hasSuggestedError ||
+    hasTaggedError ||
+    hasHashtagsError;
+  const hasActiveViewError = search.length > 1
+    ? hasSearchError
+    : activeTab === "trending"
+      ? hasTrendingError
+      : activeTab === "users"
+        ? hasSuggestedError
+        : selectedTag
+          ? hasTaggedError
+          : hasHashtagsError;
+  const hasActiveViewData = search.length > 1
+    ? searchResults.length > 0
+    : activeTab === "trending"
+      ? trendingPosts.length > 0
+      : activeTab === "users"
+        ? suggestedUsers.length > 0
+        : selectedTag
+          ? taggedPosts.length > 0
+          : trendingHashtags.length > 0;
+  const shouldShowExploreRecovery = hasActiveViewError && !hasActiveViewData;
+
+  const retryExploreQueries = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["explore-trending"] }),
+      queryClient.invalidateQueries({ queryKey: ["explore-users"] }),
+      queryClient.invalidateQueries({ queryKey: ["explore-suggested-users"] }),
+      queryClient.invalidateQueries({ queryKey: ["explore-tagged"] }),
+      queryClient.invalidateQueries({ queryKey: ["explore-hashtags"] }),
+    ]);
+  }, [queryClient]);
 
   return (
     <div className="zivo-shell-mobile bg-background pb-20">
@@ -201,14 +245,31 @@ export default function ExplorePage() {
       </div>
 
       <PullToRefresh onRefresh={async () => {
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ["explore-trending"] }),
-          queryClient.invalidateQueries({ queryKey: ["explore-hashtags"] }),
-          queryClient.invalidateQueries({ queryKey: ["explore-suggested-users"] }),
-        ]);
+        await retryExploreQueries();
       }}>
+        {hasExploreRefreshError && hasAnyExploreData && (
+          <DegradedDataBanner
+            className="px-4 pt-4"
+            message="Showing cached explore results. Refresh failed."
+            onRetry={() => void retryExploreQueries()}
+            trackingContext="explore"
+          />
+        )}
+
+        {shouldShowExploreRecovery && (
+          <LoadFailureCard
+            className="px-4 py-6"
+            title="Explore refresh failed"
+            description="We could not load fresh explore data right now. Retry to reconnect and restore trending results."
+            onRetry={() => void retryExploreQueries()}
+            onSecondary={() => navigate("/")}
+            secondaryLabel="Go Home"
+            trackingContext="explore"
+          />
+        )}
+
         {/* Search results */}
-        {search.length > 1 && (
+        {search.length > 1 && !shouldShowExploreRecovery && (
           <div className="p-4 space-y-2">
             {loadingUsers && <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />}
             {searchResults.map((u: any) => (
@@ -234,7 +295,7 @@ export default function ExplorePage() {
         )}
 
         {/* Trending grid */}
-        {!search && activeTab === "trending" && (
+        {!search && activeTab === "trending" && !shouldShowExploreRecovery && (
           <div className="grid grid-cols-3 gap-0.5 p-0.5">
             {loadingPosts && (
               <div className="col-span-3 flex justify-center py-12">
@@ -273,7 +334,7 @@ export default function ExplorePage() {
         )}
 
         {/* People tab */}
-        {!search && activeTab === "users" && (
+        {!search && activeTab === "users" && !shouldShowExploreRecovery && (
           <div className="p-4 space-y-2">
             <h3 className="text-sm font-semibold text-foreground mb-3">Suggested for you</h3>
             {loadingSuggested && <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />}
@@ -303,7 +364,7 @@ export default function ExplorePage() {
         )}
 
         {/* Hashtags tab */}
-        {!search && activeTab === "hashtags" && (
+        {!search && activeTab === "hashtags" && !shouldShowExploreRecovery && (
           <div className="p-4 space-y-2">
             {selectedTag && (
               <div className="mb-3">

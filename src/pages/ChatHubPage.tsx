@@ -74,6 +74,7 @@ import { format, isToday, isYesterday } from "date-fns";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import PullToRefresh from "@/components/shared/PullToRefresh";
+import DegradedDataBanner from "@/components/reliability/DegradedDataBanner";
 import SEOHead from "@/components/SEOHead";
 import { useCallback } from "react";
 import { assessChatMessageRisk, sanitizeOutgoingMessage } from "@/lib/security/chatContentSafety";
@@ -91,6 +92,7 @@ import {
 import { useChatHubSearchResults } from "./chat/useChatHubSearchResults";
 import { useChatHubRealtimeInvalidation } from "./chat/useChatHubRealtimeInvalidation";
 import { useMarkOpenPersonalChatRead } from "./chat/useMarkOpenPersonalChatRead";
+import { useLastOpenChatPersistence } from "./chat/useLastOpenChatPersistence";
 
 // Lazy-load heavy sub-pages/components
 const GroupChat = lazy(() => import("@/components/chat/GroupChat"));
@@ -159,13 +161,6 @@ function BodyPortal({ children }: { children: ReactNode }) {
   if (typeof document === "undefined") return <>{children}</>;
   return createPortal(children, document.body);
 }
-
-type PersistedOpenChat =
-  | { kind: "personal"; id: string; name: string; avatar?: string | null; isVerified?: boolean }
-  | { kind: "group"; id: string; name: string; avatar?: string | null }
-  | { kind: "shop"; storeId: string; name: string; logo?: string | null }
-  | { kind: "ride"; rideRequestId: string; counterpartName?: string }
-  | { kind: "support"; ticketId: string };
 
 function getChatLastSeenStorageKey(userId: string, category: "group" | "ride" | "support") {
   return `${CHAT_LAST_SEEN_KEY_PREFIX}:${userId}:${category}`;
@@ -642,31 +637,59 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
   // Handle deep-link from profile page chat button OR share-to-chat OR start call
   const [pendingCall, setPendingCall] = useState<"voice" | "video" | null>(null);
-  const hasRestoredLastChatRef = useRef(false);
+  const routeState = location.state as {
+    openChat?: OpenChatState;
+    startCall?: StartCallState;
+    shareUrl?: string;
+    shareText?: string;
+    shareMessage?: string;
+    splitRequest?: SplitRequestState;
+  } | null;
+  const normalizedRouteOpenChat = normalizeOpenChatState(routeState?.openChat);
+  const shouldSkipLastOpenRestore = Boolean(
+    searchParams.get("with") ||
+    searchParams.get("unlocked") ||
+    normalizedRouteOpenChat ||
+    routeState?.shareUrl ||
+    routeState?.shareMessage ||
+    routeState?.splitRequest
+  );
+
+  useLastOpenChatPersistence({
+    userId: user?.id,
+    lastOpenChatKey: LAST_OPEN_CHAT_KEY,
+    shouldSkipRestore: shouldSkipLastOpenRestore,
+    locationState: location.state,
+    searchParamsKey: searchParams.toString(),
+    openPersonalChat,
+    openGroupChat,
+    openShopChat,
+    openRideChat,
+    openSupportChat,
+    setActive,
+    setOpenPersonalChat,
+    setOpenGroupChat,
+    setOpenShopChat,
+    setOpenRideChat,
+    setOpenSupportChat,
+  });
+
   useEffect(() => {
-    const state = location.state as {
-      openChat?: OpenChatState;
-      startCall?: StartCallState;
-      shareUrl?: string;
-      shareText?: string;
-      shareMessage?: string;
-      splitRequest?: SplitRequestState;
-    } | null;
-    const normalizedOpenChat = normalizeOpenChatState(state?.openChat);
+    const normalizedOpenChat = normalizedRouteOpenChat;
 
     const splitAmount =
-      typeof state?.splitRequest?.amount === "number" && Number.isFinite(state.splitRequest.amount)
-        ? state.splitRequest.amount
+      typeof routeState?.splitRequest?.amount === "number" && Number.isFinite(routeState.splitRequest.amount)
+        ? routeState.splitRequest.amount
         : null;
     const splitRiders =
-      typeof state?.splitRequest?.riders === "number" && Number.isFinite(state.splitRequest.riders)
-        ? state.splitRequest.riders
+      typeof routeState?.splitRequest?.riders === "number" && Number.isFinite(routeState.splitRequest.riders)
+        ? routeState.splitRequest.riders
         : null;
     const splitPrefill = splitAmount !== null
       ? `Split ride fare: $${splitAmount.toFixed(2)}${splitRiders ? ` each (${splitRiders} riders)` : ""}`
       : "";
-    const sharedPrefill = (state?.shareMessage || "").trim() || splitPrefill;
-    const normalizedStartCall = normalizeStartCall(state?.startCall);
+    const sharedPrefill = (routeState?.shareMessage || "").trim() || splitPrefill;
+    const normalizedStartCall = normalizeStartCall(routeState?.startCall);
 
     if (normalizedOpenChat) {
       setOpenPersonalChat(normalizedOpenChat);
@@ -685,8 +708,8 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       window.history.replaceState({}, document.title);
     }
 
-    if (state?.shareUrl) {
-      setSharePayload({ shareUrl: state.shareUrl, shareText: state.shareText || "" });
+    if (routeState?.shareUrl) {
+      setSharePayload({ shareUrl: routeState.shareUrl, shareText: routeState.shareText || "" });
       setActive("personal");
       window.history.replaceState({}, document.title);
     }
@@ -695,108 +718,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       setActive("personal");
       setOpenPersonalChat({ id: user.id, name: "Saved Messages", avatar: null, isVerified: false });
     }
-  }, [location.state, location.pathname, user?.id]);
-
-  useEffect(() => {
-    if (hasRestoredLastChatRef.current || !user?.id) return;
-    hasRestoredLastChatRef.current = true;
-
-    const routeState = location.state as {
-      openChat?: OpenChatState;
-      startCall?: StartCallState;
-      shareUrl?: string;
-      shareText?: string;
-      shareMessage?: string;
-      splitRequest?: SplitRequestState;
-    } | null;
-
-    if (
-      searchParams.get("with") ||
-      searchParams.get("unlocked") ||
-      normalizeOpenChatState(routeState?.openChat) ||
-      routeState?.shareUrl ||
-      routeState?.shareMessage ||
-      routeState?.splitRequest
-    ) return;
-
-    try {
-      const raw = localStorage.getItem(`${LAST_OPEN_CHAT_KEY}:${user.id}`);
-      if (!raw) return;
-      const persisted = JSON.parse(raw) as PersistedOpenChat;
-      if (persisted.kind === "personal") {
-        setActive("personal");
-        setOpenPersonalChat({ id: persisted.id, name: persisted.name, avatar: persisted.avatar || null, isVerified: persisted.isVerified === true });
-      } else if (persisted.kind === "group") {
-        setActive("personal");
-        setOpenGroupChat({ id: persisted.id, name: persisted.name, avatar: persisted.avatar || null });
-      } else if (persisted.kind === "shop") {
-        setActive("shop");
-        setOpenShopChat({ storeId: persisted.storeId, name: persisted.name, logo: persisted.logo || null });
-      } else if (persisted.kind === "ride") {
-        setActive("ride");
-        setOpenRideChat({ rideRequestId: persisted.rideRequestId, counterpartName: persisted.counterpartName });
-      } else if (persisted.kind === "support") {
-        setActive("support");
-        setOpenSupportChat({ ticketId: persisted.ticketId });
-      }
-    } catch {}
-  }, [location.state, searchParams, user?.id]);
-
-  useEffect(() => {
-    if (!user?.id || !hasRestoredLastChatRef.current) return;
-    const storageKey = `${LAST_OPEN_CHAT_KEY}:${user.id}`;
-    try {
-      if (openPersonalChat) {
-        const payload: PersistedOpenChat = {
-          kind: "personal",
-          id: openPersonalChat.id,
-          name: openPersonalChat.name,
-          avatar: openPersonalChat.avatar || null,
-          isVerified: openPersonalChat.isVerified === true,
-        };
-        localStorage.setItem(storageKey, JSON.stringify(payload));
-        return;
-      }
-      if (openGroupChat) {
-        const payload: PersistedOpenChat = {
-          kind: "group",
-          id: openGroupChat.id,
-          name: openGroupChat.name,
-          avatar: openGroupChat.avatar || null,
-        };
-        localStorage.setItem(storageKey, JSON.stringify(payload));
-        return;
-      }
-      if (openShopChat) {
-        const payload: PersistedOpenChat = {
-          kind: "shop",
-          storeId: openShopChat.storeId,
-          name: openShopChat.name,
-          logo: openShopChat.logo || null,
-        };
-        localStorage.setItem(storageKey, JSON.stringify(payload));
-        return;
-      }
-      if (openRideChat) {
-        const payload: PersistedOpenChat = {
-          kind: "ride",
-          rideRequestId: openRideChat.rideRequestId,
-          counterpartName: openRideChat.counterpartName,
-        };
-        localStorage.setItem(storageKey, JSON.stringify(payload));
-        return;
-      }
-      if (openSupportChat) {
-        const payload: PersistedOpenChat = {
-          kind: "support",
-          ticketId: openSupportChat.ticketId,
-        };
-        localStorage.setItem(storageKey, JSON.stringify(payload));
-        return;
-      }
-      localStorage.removeItem(storageKey);
-    } catch {}
-  }, [openGroupChat, openPersonalChat, openRideChat, openShopChat, openSupportChat, user?.id]);
+  }, [location.pathname, normalizedRouteOpenChat, routeState, user?.id]);
 
   useMarkOpenPersonalChatRead({
     userId: user?.id,
@@ -847,7 +769,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   };
 
   // Fetch store chats for "shop" tab
-  const { data: shopChats = [] } = useQuery({
+  const { data: shopChats = [], isError: hasShopChatsError } = useQuery({
     queryKey: ["chat-hub-shop", user?.id],
     enabled: !!user,
     refetchInterval: fallbackPollInterval,
@@ -863,35 +785,26 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       const chatIds = data.map((chat: any) => chat.id).filter(Boolean);
       if (chatIds.length === 0) return [];
 
-      const [messageRowsResult, unreadRowsResult] = await Promise.all([
-        supabase
-          .from("store_chat_messages")
-          .select("chat_id, content, created_at, is_read, sender_type")
-          .in("chat_id", chatIds)
-          .order("created_at", { ascending: false })
-          .limit(2500),
-        supabase
-          .from("store_chat_messages")
-          .select("chat_id, created_at")
-          .in("chat_id", chatIds)
-          .eq("sender_type", "store")
-          .eq("is_read", false)
-          .limit(2500),
-      ]);
+      // Single query for both "latest message per chat" and "unread count per
+      // chat". The previous two queries hit the same table back-to-back; one
+      // pass + client-side aggregation removes the duplicate round-trip.
+      const { data: messageRows } = await supabase
+        .from("store_chat_messages")
+        .select("chat_id, content, created_at, is_read, sender_type")
+        .in("chat_id", chatIds)
+        .order("created_at", { ascending: false })
+        .limit(2500);
 
       const latestByChat = new Map<string, { content: string; created_at: string }>();
-      for (const row of (messageRowsResult.data || []) as any[]) {
-        if (!row?.chat_id || latestByChat.has(row.chat_id)) continue;
-        latestByChat.set(row.chat_id, {
-          content: row.content || "",
-          created_at: row.created_at,
-        });
-      }
-
       const unreadByChat = new Map<string, number>();
-      for (const row of (unreadRowsResult.data || []) as any[]) {
+      for (const row of (messageRows || []) as any[]) {
         if (!row?.chat_id) continue;
-        unreadByChat.set(row.chat_id, (unreadByChat.get(row.chat_id) || 0) + 1);
+        if (!latestByChat.has(row.chat_id)) {
+          latestByChat.set(row.chat_id, { content: row.content || "", created_at: row.created_at });
+        }
+        if (row.sender_type === "store" && row.is_read === false) {
+          unreadByChat.set(row.chat_id, (unreadByChat.get(row.chat_id) || 0) + 1);
+        }
       }
 
       const enriched = data.map((chat: any) => {
@@ -912,7 +825,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   });
 
   // Fetch ride chats via chat_messages with trip_id
-  const { data: rideChats = [] } = useQuery({
+  const { data: rideChats = [], isError: hasRideChatsError } = useQuery({
     queryKey: ["chat-hub-ride", user?.id, rideLastSeenSignature],
     enabled: !!user,
     refetchInterval: fallbackPollInterval,
@@ -948,7 +861,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   });
 
   // Support chats from ai_conversations
-  const { data: supportChats = [] } = useQuery({
+  const { data: supportChats = [], isError: hasSupportChatsError } = useQuery({
     queryKey: ["chat-hub-support", user?.id, supportLastSeenSignature],
     enabled: !!user,
     refetchInterval: fallbackPollInterval,
@@ -1030,7 +943,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   });
 
   // Fetch personal chats from direct_messages
-  const { data: personalChats = [] } = useQuery({
+  const { data: personalChats = [], isError: hasPersonalChatsError } = useQuery({
     queryKey: ["chat-hub-personal", user?.id],
     enabled: !!user,
     refetchInterval: fallbackPollInterval,
@@ -1102,7 +1015,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   });
 
   // Fetch group chats
-  const { data: groupChats = [] } = useQuery({
+  const { data: groupChats = [], isError: hasGroupChatsError } = useQuery({
     queryKey: ["chat-hub-groups", user?.id, groupLastSeenSignature],
     enabled: !!user,
     refetchInterval: fallbackPollInterval,
@@ -1230,6 +1143,34 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     }
     return map;
   }, [customFolderMembers]);
+
+  const hasAnyChatData =
+    personalChats.length +
+      groupChats.length +
+      shopChats.length +
+      rideChats.length +
+      supportChats.length >
+    0;
+  const hasChatListRefreshError =
+    hasAnyChatData &&
+    (hasShopChatsError ||
+      hasRideChatsError ||
+      hasSupportChatsError ||
+      hasPersonalChatsError ||
+      hasGroupChatsError);
+
+  const retryChatHubLists = useCallback(() => {
+    if (!user?.id) return;
+    void Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["chat-hub-personal", user.id] }),
+      queryClient.invalidateQueries({ queryKey: ["chat-hub-groups", user.id] }),
+      queryClient.invalidateQueries({ queryKey: ["chat-hub-shop", user.id] }),
+      queryClient.invalidateQueries({ queryKey: ["chat-hub-ride", user.id] }),
+      queryClient.invalidateQueries({ queryKey: ["chat-hub-support", user.id] }),
+      queryClient.invalidateQueries({ queryKey: ["chat-folders", user.id] }),
+      queryClient.invalidateQueries({ queryKey: ["chat-folder-members", user.id] }),
+    ]);
+  }, [queryClient, user?.id]);
 
   const { isOFMode: zivoOFMode } = useZivoOFMode();
 
@@ -1694,6 +1635,47 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     const personalIds = selectedMeta.filter((chat) => !chat.isGroup).map((chat) => chat.id);
     const groupIds = selectedMeta.filter((chat) => !!chat.isGroup).map((chat) => chat.id);
 
+    // --- OPTIMISTIC UI ---
+    // Snapshot caches + prefs, strip selected rows immediately so the chats
+    // disappear from the list before the network round-trip completes. On
+    // failure we restore the snapshot.
+    const personalKey = ["chat-hub-personal", user.id] as const;
+    const groupsKey   = ["chat-hub-groups",   user.id] as const;
+    const folderKey   = ["chat-folder-members", user.id] as const;
+    const selectedIdSet = new Set(selectedChatIds);
+    const snapshot = {
+      personal: queryClient.getQueryData(personalKey) as Array<{ id: string }> | undefined,
+      groups:   queryClient.getQueryData(groupsKey)   as Array<{ id: string }> | undefined,
+      folders:  queryClient.getQueryData(folderKey)   as Array<{ conversation_id: string }> | undefined,
+      prefs,
+    };
+    queryClient.setQueryData(personalKey, (old: Array<{ id: string }> | undefined) =>
+      (old ?? []).filter((c) => !selectedIdSet.has(c.id)),
+    );
+    queryClient.setQueryData(groupsKey, (old: Array<{ id: string }> | undefined) =>
+      (old ?? []).filter((c) => !selectedIdSet.has(c.id)),
+    );
+    queryClient.setQueryData(folderKey, (old: Array<{ conversation_id: string }> | undefined) =>
+      (old ?? []).filter((m) => !selectedIdSet.has(m.conversation_id)),
+    );
+    const nextPinned = { ...(prefs.pinned || {}) };
+    const nextMuted = { ...(prefs.muted || {}) };
+    const nextArchived = { ...(prefs.archived || {}) };
+    for (const id of selectedChatIds) {
+      delete nextPinned[id];
+      delete nextMuted[id];
+      delete nextArchived[id];
+    }
+    setPrefs({ ...prefs, pinned: nextPinned, muted: nextMuted, archived: nextArchived });
+
+    const personalCount = personalIds.length;
+    const leftGroups = groupIds.length;
+    const parts = [];
+    if (personalCount > 0) parts.push(`Deleted ${personalCount} personal chat${personalCount === 1 ? "" : "s"}`);
+    if (leftGroups > 0) parts.push(`left ${leftGroups} group chat${leftGroups === 1 ? "" : "s"}`);
+    toast.success(parts.length ? `${parts.join(" and ")}.` : "Selected chats removed.");
+    clearSelectionMode();
+
     try {
       await Promise.all(
         [
@@ -1719,29 +1701,16 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
         ]
       );
 
-      // Remove deleted/left conversations from local pin/mute/archive maps.
-      const nextPinned = { ...(prefs.pinned || {}) };
-      const nextMuted = { ...(prefs.muted || {}) };
-      const nextArchived = { ...(prefs.archived || {}) };
-      for (const id of selectedChatIds) {
-        delete nextPinned[id];
-        delete nextMuted[id];
-        delete nextArchived[id];
-      }
-      setPrefs({ ...prefs, pinned: nextPinned, muted: nextMuted, archived: nextArchived });
-
-      const personalCount = personalIds.length;
-      const leftGroups = groupIds.length;
-      const parts = [];
-      if (personalCount > 0) parts.push(`Deleted ${personalCount} personal chat${personalCount === 1 ? "" : "s"}`);
-      if (leftGroups > 0) parts.push(`left ${leftGroups} group chat${leftGroups === 1 ? "" : "s"}`);
-      toast.success(parts.length ? `${parts.join(" and ")}.` : "Selected chats removed.");
-
-      await queryClient.invalidateQueries({ queryKey: ["chat-hub-personal", user.id] });
-      await queryClient.invalidateQueries({ queryKey: ["chat-hub-groups", user.id] });
-      await queryClient.invalidateQueries({ queryKey: ["chat-folder-members", user.id] });
-      clearSelectionMode();
+      // Background refresh to reconcile with server truth.
+      void queryClient.invalidateQueries({ queryKey: personalKey });
+      void queryClient.invalidateQueries({ queryKey: groupsKey });
+      void queryClient.invalidateQueries({ queryKey: folderKey });
     } catch {
+      // Rollback caches + prefs so the UI snaps back to pre-delete state.
+      if (snapshot.personal) queryClient.setQueryData(personalKey, snapshot.personal);
+      if (snapshot.groups)   queryClient.setQueryData(groupsKey,   snapshot.groups);
+      if (snapshot.folders)  queryClient.setQueryData(folderKey,   snapshot.folders);
+      setPrefs(snapshot.prefs);
       toast.error("Failed to delete selected chats");
     }
   }, [bulkSelectableList, clearSelectionMode, prefs, queryClient, selectedChatIds, setPrefs, user?.id]);
@@ -2184,6 +2153,15 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                 </button>
               </div>
             </div>
+          )}
+
+          {hasChatListRefreshError && (
+            <DegradedDataBanner
+              className={cn("px-5 pt-3", embedded && "px-3 pt-2")}
+              message="Showing cached chats. Refresh failed."
+              onRetry={retryChatHubLists}
+              trackingContext="chat"
+            />
           )}
 
           

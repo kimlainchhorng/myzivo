@@ -115,6 +115,8 @@ import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
 import { SwipeGrabHandle } from "@/components/social/SwipeGrabHandle";
 import { perfLog, perfMeasure, perfNow } from "@/lib/perfTrace";
 import { reportFeedQueryError } from "@/lib/feedQueryTelemetry";
+import DegradedDataBanner from "@/components/reliability/DegradedDataBanner";
+import LoadFailureCard from "@/components/reliability/LoadFailureCard";
 
 const INITIAL_REELS_PAGE_SIZE = 18;
 const REELS_PAGE_INCREMENT = 12;
@@ -546,19 +548,6 @@ export default function ReelsFeedPage() {
   useEffect(() => {
     try { localStorage.setItem("zivo:feed-tab-v1", feedTab); } catch { /* ignore */ }
   }, [feedTab]);
-  // Defensive: if the user is stuck on a Friends/Following tab but their social
-  // graph is empty (new account, never followed anyone), the feed looks broken
-  // — it isn't, the tab just filters out everything. Kick them back to For You
-  // once we've confirmed both sets are loaded and empty.
-  const socialGraphLoadedRef = useRef(false);
-  useEffect(() => {
-    if (!sidebarDataReady) return;
-    if (socialGraphLoadedRef.current) return;
-    socialGraphLoadedRef.current = true;
-    if ((feedTab === "Friends" || feedTab === "Following") && friendIds.size === 0 && followingIds.size === 0) {
-      setFeedTab("For You");
-    }
-  }, [feedTab, friendIds, followingIds, sidebarDataReady]);
   // Scroll to top when the user actually switches tabs or hashtag scope — skip the
   // initial mount so a remembered tab from localStorage doesn't yank the page.
   const tabMountedRef = useRef(false);
@@ -577,6 +566,17 @@ export default function ReelsFeedPage() {
   const PAGE_MAX = REELS_PAGE_MAX;
   const [pageSize, setPageSize] = useState(INITIAL_REELS_PAGE_SIZE);
   const [sidebarDataReady, setSidebarDataReady] = useState(false);
+  // Defensive: if the user is stuck on a Friends/Following tab but their social
+  // graph is empty (new account, never followed anyone), the feed looks broken.
+  const socialGraphLoadedRef = useRef(false);
+  useEffect(() => {
+    if (!sidebarDataReady) return;
+    if (socialGraphLoadedRef.current) return;
+    socialGraphLoadedRef.current = true;
+    if ((feedTab === "Friends" || feedTab === "Following") && friendIds.size === 0 && followingIds.size === 0) {
+      setFeedTab("For You");
+    }
+  }, [feedTab, friendIds, followingIds, sidebarDataReady]);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const feedPageTopRef = useRef<HTMLDivElement>(null);
   const feedTopRef = useRef<HTMLDivElement>(null);
@@ -584,6 +584,7 @@ export default function ReelsFeedPage() {
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
   const isFeedRoute = location.pathname.startsWith("/feed");
+  const reliabilityTrackingContext = isFeedRoute ? "feed" : "reels";
   const feedSuperAppResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return FEED_SUPER_APP_TARGETS;
@@ -976,25 +977,31 @@ export default function ReelsFeedPage() {
 
           const originalUserIds = [...new Set(originalUserPosts.map((p) => p.user_id))] as string[];
           const allProfileIds = [...new Set([...userIds, ...sharedFromUserIds, ...originalUserIds].filter(Boolean))] as string[];
+          // Collapsed from 4 round-trips to 2: each profile table is hit once
+          // with an OR matching either `id` or `user_id` against the same list.
+          // Historical IDs can be either, so we match both in a single query.
+          const profileIdsCsv = allProfileIds.join(",");
           const [
-            { data: publicProfilesById },
-            { data: publicProfilesByUserId },
-            { data: profileSettingsById },
-            { data: profileSettingsByUserId },
+            { data: publicProfilesMerged },
+            { data: profileSettingsMerged },
           ] = await Promise.all([
             allProfileIds.length
-              ? (supabase as any).from("public_profiles").select("id, user_id, full_name, avatar_url").in("id", allProfileIds)
+              ? (supabase as any)
+                  .from("public_profiles")
+                  .select("id, user_id, full_name, avatar_url")
+                  .or(`id.in.(${profileIdsCsv}),user_id.in.(${profileIdsCsv})`)
               : Promise.resolve({ data: [] as any[] }),
             allProfileIds.length
-              ? (supabase as any).from("public_profiles").select("id, user_id, full_name, avatar_url").in("user_id", allProfileIds)
-              : Promise.resolve({ data: [] as any[] }),
-            allProfileIds.length
-              ? (supabase as any).from("profiles").select("id, user_id, comment_control, hide_like_counts, allow_sharing, allow_mentions, is_verified").in("id", allProfileIds)
-              : Promise.resolve({ data: [] as any[] }),
-            allProfileIds.length
-              ? (supabase as any).from("profiles").select("id, user_id, comment_control, hide_like_counts, allow_sharing, allow_mentions, is_verified").in("user_id", allProfileIds)
+              ? (supabase as any)
+                  .from("profiles")
+                  .select("id, user_id, comment_control, hide_like_counts, allow_sharing, allow_mentions, is_verified")
+                  .or(`id.in.(${profileIdsCsv}),user_id.in.(${profileIdsCsv})`)
               : Promise.resolve({ data: [] as any[] }),
           ]);
+          // Single-source arrays — downstream Map builders still set under both
+          // keys (profile.id and profile.user_id), so one array is enough.
+          const publicProfilesRows = publicProfilesMerged ?? [];
+          const profileSettingsRows = profileSettingsMerged ?? [];
 
           let sharedStores: Array<{ id: string; name: string; logo_url: string | null; slug: string; is_verified?: boolean | null }> = [];
           const sharedStoreIds = [...new Set(originalStorePosts.map((p) => p.store_id))] as string[];
@@ -1007,13 +1014,13 @@ export default function ReelsFeedPage() {
           }
 
           const publicProfileMap = new Map<string, any>();
-          [...(publicProfilesById || []), ...(publicProfilesByUserId || [])].forEach((profile: any) => {
+          publicProfilesRows.forEach((profile: any) => {
             if (profile?.id) publicProfileMap.set(profile.id, profile);
             if (profile?.user_id) publicProfileMap.set(profile.user_id, profile);
           });
 
           const profileSettingsMap = new Map<string, any>();
-          [...(profileSettingsById || []), ...(profileSettingsByUserId || [])].forEach((profile: any) => {
+          profileSettingsRows.forEach((profile: any) => {
             if (profile?.id) profileSettingsMap.set(profile.id, profile);
             if (profile?.user_id) profileSettingsMap.set(profile.user_id, profile);
           });
@@ -1980,6 +1987,15 @@ export default function ReelsFeedPage() {
             </div>
           )}
 
+          {hasGridError && items.length > 0 && (
+            <DegradedDataBanner
+              className="mx-3 mt-2 mb-1"
+              message="Showing cached posts. Refresh failed."
+              onRetry={() => void handlePullRefresh()}
+              trackingContext={reliabilityTrackingContext}
+            />
+          )}
+
           {/* Posts */}
           {isLoading ? (
             <div className="space-y-2 pb-4" aria-label="Loading posts" aria-busy="true">
@@ -1999,6 +2015,14 @@ export default function ReelsFeedPage() {
                 </div>
               ))}
             </div>
+          ) : hasGridError && items.length === 0 ? (
+            <LoadFailureCard
+              className="px-6 py-4"
+              title="Couldn&apos;t load posts"
+              description="Please try again. We will keep your current tab and filters."
+              onRetry={() => void handlePullRefresh()}
+              trackingContext={reliabilityTrackingContext}
+            />
           ) : items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-60 text-center px-6">
               <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center mb-3 mx-auto">

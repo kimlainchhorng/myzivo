@@ -89,6 +89,8 @@ import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 import { perfLog, perfMeasure, perfNow } from "@/lib/perfTrace";
 import { reportFeedQueryError } from "@/lib/feedQueryTelemetry";
+import DegradedDataBanner from "@/components/reliability/DegradedDataBanner";
+import LoadFailureCard from "@/components/reliability/LoadFailureCard";
 // videoRepair is heavy (FFmpeg WASM) — dynamic import only when needed
 
 const FEED_STORE_PAGE_SIZE = 18;
@@ -144,7 +146,6 @@ const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal")
 const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
 const SafeCaption = lazy(() => import("@/components/social/SafeCaption"));
 const SuggestedUsersCarousel = lazy(() => import("@/components/social/SuggestedUsersCarousel"));
-const FeedSkeleton = lazy(() => import("@/components/social/FeedSkeleton"));
 const NewPostsPill = lazy(() => import("@/components/social/NewPostsPill"));
 const PostActionsMenu = lazy(() => import("@/components/social/PostActionsMenu"));
 const ReactionPicker = lazy(() => import("@/components/social/ReactionPicker"));
@@ -2559,15 +2560,19 @@ function CommentSheet({
     enabled: !!userId,
   });
 
+  // Page through comments in batches of 20. Avoids hauling 300 comments + 300
+  // profile lookups on every sheet-open; "Load more" reveals older replies.
+  const COMMENTS_PAGE_SIZE = 20;
+  const [commentLimit, setCommentLimit] = useState(COMMENTS_PAGE_SIZE);
   const { data: comments = [], isLoading } = useQuery({
-    queryKey: ["post-comments", targetTable, rawPostId, userId],
+    queryKey: ["post-comments", targetTable, rawPostId, userId, commentLimit],
     queryFn: async () => {
       const { data: rawComments, error } = await (supabase as any)
         .from(targetTable)
         .select("id, post_id, user_id, content, comment, created_at, parent_id, is_pinned, likes_count")
         .eq("post_id", rawPostId)
         .order("created_at", { ascending: true })
-        .limit(300);
+        .limit(commentLimit);
       if (error) throw error;
       if (!rawComments || rawComments.length === 0) return [];
 
@@ -2967,6 +2972,15 @@ function CommentSheet({
               </>
             );
           })()}
+          {!isLoading && comments.length >= commentLimit && (
+            <button
+              type="button"
+              onClick={() => setCommentLimit((n) => n + COMMENTS_PAGE_SIZE)}
+              className="w-full mt-2 mb-1 h-9 rounded-full bg-secondary hover:bg-muted text-foreground text-xs font-bold transition-colors active:scale-[0.98]"
+            >
+              Load more comments
+            </button>
+          )}
         </div>
 
         {/* Input */}
@@ -4680,12 +4694,47 @@ export default function FeedPage() {
   }, [visiblePosts, location.search, routePostId]);
 
   if (isLoading) {
+    // Inline skeleton — drawn from one tiny CSS animation rather than lazy-
+    // loading a separate Skeleton bundle. Renders on first paint with no
+    // network/JS waterfall. The IG-gradient pulse hints at the reels theme.
     return (
-      <Suspense fallback={
-        <div className="fixed inset-0 bg-black z-50" aria-busy="true" aria-label="Loading reels" />
-      }>
-        <FeedSkeleton />
-      </Suspense>
+      <div className="fixed inset-0 bg-black z-50 flex flex-col" aria-busy="true" aria-label="Loading reels">
+        <div className="flex-1 relative overflow-hidden">
+          <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-pink-400/[0.05] via-violet-500/[0.04] to-transparent" />
+          <div className="absolute bottom-32 left-4 right-16 space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="h-9 w-9 rounded-full bg-white/10 animate-pulse" />
+              <div className="h-3 w-32 rounded-full bg-white/10 animate-pulse" />
+            </div>
+            <div className="h-3 w-3/4 rounded-full bg-white/10 animate-pulse" />
+            <div className="h-3 w-1/2 rounded-full bg-white/10 animate-pulse" />
+          </div>
+          <div className="absolute right-3 bottom-32 flex flex-col gap-5 items-center">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-10 w-10 rounded-full bg-white/10 animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (hasCustomerFeedError && posts.length === 0) {
+    return (
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 z-50 px-8 text-center">
+        <LoadFailureCard
+          className="w-full max-w-xl"
+          title="Feed is having trouble loading"
+          description="We could not load reels right now. Your connection or a service may be temporarily unstable."
+          onRetry={() => {
+            void queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+          }}
+          onSecondary={() => navigate("/")}
+          secondaryLabel="Go Home"
+          trackingContext="reels_feed"
+        />
+        <ZivoMobileNav />
+      </div>
     );
   }
 
@@ -4855,6 +4904,29 @@ export default function FeedPage() {
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
               <span className="text-white text-xs font-semibold">You're offline — reels will resume when you reconnect</span>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {hasCustomerFeedError && posts.length > 0 && (
+          <motion.div
+            initial={{ y: -32, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -32, opacity: 0 }}
+            transition={{ type: "spring", damping: 22, stiffness: 300 }}
+            className="absolute inset-x-0 top-[max(env(safe-area-inset-top),8px)] z-[70] mx-auto pointer-events-none"
+            role="status"
+            aria-live="polite"
+          >
+            <DegradedDataBanner
+              className="mx-3 md:mx-auto md:max-w-[460px] pointer-events-auto"
+              message="Using cached reels. Live refresh failed."
+              onRetry={() => {
+                void queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+              }}
+              trackingContext="reels_feed"
+            />
           </motion.div>
         )}
       </AnimatePresence>

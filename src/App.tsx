@@ -34,7 +34,7 @@ const OTAUpdateBanner = lazy(() => import("@/components/shared/OTAUpdateBanner")
 const NavigationProgressBar = lazy(() => import("@/components/app/NavigationProgressBar"));
 const ScrollRestoration = lazy(() => import("@/components/app/ScrollRestoration"));
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
@@ -104,6 +104,8 @@ import { perfLog } from "@/lib/perfTrace";
 import { pathFromNativeOpenUrl } from "@/lib/nativeDeepLinks";
 import { SOCIAL_ROUTE_PATHS } from "@/lib/socialRoutes";
 import { P2P_TRANSFER_EVENT, hasPendingP2PTransfer, subscribeP2PTransferMount } from "@/lib/p2pTransfer";
+import { recordRequestIssue } from "@/lib/requestHealth";
+import RequestHealthBadge from "@/components/dev/RequestHealthBadge";
 
 // Auth pages — lazy loaded (not always the entry point)
 const Login = lazy(() => import("./pages/Login"));
@@ -614,6 +616,57 @@ const GiftHistoryPage = lazy(() => import("./pages/GiftHistoryPage"));
 const SharedTodosPage = lazy(() => import("./pages/SharedTodosPage"));
 const MarketplaceCartPage = lazy(() => import("./pages/MarketplaceCartPage"));
 const PointsHistoryPage = lazy(() => import("./pages/PointsHistoryPage"));
+const ModerationAppealsPage = lazy(() => import("./pages/ModerationAppealsPage"));
+const FeedbackPage = lazy(() => import("./pages/FeedbackPage"));
+const ChatMediaGalleryPage = lazy(() => import("./pages/ChatMediaGalleryPage"));
+const LoginActivityPage = lazy(() => import("./pages/LoginActivityPage"));
+const AMAPage = lazy(() => import("./pages/AMAPage"));
+const VoicemailsPage = lazy(() => import("./pages/VoicemailsPage"));
+const TrustScorePage = lazy(() => import("./pages/TrustScorePage"));
+const WarningsPage = lazy(() => import("./pages/WarningsPage"));
+const ChatWallpapersPage = lazy(() => import("./pages/ChatWallpapersPage"));
+const PromoUsagePage = lazy(() => import("./pages/PromoUsagePage"));
+const BugReportsPage = lazy(() => import("./pages/BugReportsPage"));
+const StreaksPage = lazy(() => import("./pages/StreaksPage"));
+const MyChallengeSubmissionsPage = lazy(() => import("./pages/MyChallengeSubmissionsPage"));
+const PollHistoryPage = lazy(() => import("./pages/PollHistoryPage"));
+const SpamDetectionsPage = lazy(() => import("./pages/SpamDetectionsPage"));
+const PlaceClicksPage = lazy(() => import("./pages/PlaceClicksPage"));
+const PriceAlertsPage = lazy(() => import("./pages/PriceAlertsPage"));
+const RideQuotesPage = lazy(() => import("./pages/RideQuotesPage"));
+const AutoMessagesLogPage = lazy(() => import("./pages/AutoMessagesLogPage"));
+const OrderDisputesPage = lazy(() => import("./pages/OrderDisputesPage"));
+const FlightPriceAlertsPage = lazy(() => import("./pages/FlightPriceAlertsPage"));
+const AudioRoomsPage = lazy(() => import("./pages/AudioRoomsPage"));
+const CoinTransfersPage = lazy(() => import("./pages/CoinTransfersPage"));
+const LiveLocationsPage = lazy(() => import("./pages/LiveLocationsPage"));
+const FriendRequestsPage = lazy(() => import("./pages/FriendRequestsPage"));
+const GroupOrdersPage = lazy(() => import("./pages/GroupOrdersPage"));
+const TransactionsPage = lazy(() => import("./pages/TransactionsPage"));
+const FavoritesPage = lazy(() => import("./pages/FavoritesPage"));
+const LeaderboardsPage = lazy(() => import("./pages/LeaderboardsPage"));
+const RecentlyViewedPage = lazy(() => import("./pages/RecentlyViewedPage"));
+const TwoStepAuthPage = lazy(() => import("./pages/TwoStepAuthPage"));
+const MyJobApplicationsPage = lazy(() => import("./pages/MyJobApplicationsPage"));
+const OnboardingProgressPage = lazy(() => import("./pages/OnboardingProgressPage"));
+const ProfileViewsPage = lazy(() => import("./pages/ProfileViewsPage"));
+const StorePromoCodesPage = lazy(() => import("./pages/StorePromoCodesPage"));
+const EmojiPacksPage = lazy(() => import("./pages/EmojiPacksPage"));
+const LiveChatSessionsPage = lazy(() => import("./pages/LiveChatSessionsPage"));
+const MutedBlockedUsersPage = lazy(() => import("./pages/MutedBlockedUsersPage"));
+const MutedChatsPage = lazy(() => import("./pages/MutedChatsPage"));
+const PushDevicesPage = lazy(() => import("./pages/PushDevicesPage"));
+const CreatorPayoutsPage = lazy(() => import("./pages/CreatorPayoutsPage"));
+const P2PMoneyPage = lazy(() => import("./pages/P2PMoneyPage"));
+const MusicStickersPage = lazy(() => import("./pages/MusicStickersPage"));
+const AvatarMoodsPage = lazy(() => import("./pages/AvatarMoodsPage"));
+const DownloadedPacksPage = lazy(() => import("./pages/DownloadedPacksPage"));
+const LegalDisputesPage = lazy(() => import("./pages/LegalDisputesPage"));
+const MyPodcastsPage = lazy(() => import("./pages/MyPodcastsPage"));
+const SavedLocationsPage = lazy(() => import("./pages/SavedLocationsPage"));
+const StoryCommentsPage = lazy(() => import("./pages/StoryCommentsPage"));
+const RestaurantReviewDetailsPage = lazy(() => import("./pages/RestaurantReviewDetailsPage"));
+const StoryViewersPage = lazy(() => import("./pages/StoryViewersPage"));
 
 const Vision = lazy(() => import("./pages/Vision"));
 const BrandMission = lazy(() => import("./pages/BrandMission"));
@@ -707,7 +760,93 @@ const CheapFlightsGuide = lazy(() => import("./pages/guides/CheapFlightsGuide"))
 const CityGuide = lazy(() => import("./pages/guides/CityGuide"));
 const BestTimeToBook = lazy(() => import("./pages/guides/BestTimeToBook"));
 
+function extractHttpStatus(error: unknown): number | null {
+  if (typeof error === "object" && error !== null) {
+    const maybeStatus = (error as { status?: unknown }).status;
+    if (typeof maybeStatus === "number" && Number.isFinite(maybeStatus)) {
+      return maybeStatus;
+    }
+
+    const maybeCode = (error as { code?: unknown }).code;
+    if (typeof maybeCode === "string" && /^\d{3}$/.test(maybeCode)) {
+      return Number(maybeCode);
+    }
+
+    const maybeMessage = (error as { message?: unknown }).message;
+    if (typeof maybeMessage === "string") {
+      const statusMatch = maybeMessage.match(/\b([45]\d\d)\b/);
+      if (statusMatch) return Number(statusMatch[1]);
+    }
+  }
+
+  return null;
+}
+
+function shouldRetryQuery(failureCount: number, error: unknown) {
+  const info = categorizeError(error);
+  const status = extractHttpStatus(error);
+
+  if (info.type === "auth") return false;
+  if (status !== null && [400, 401, 403, 404, 409, 410, 412, 422].includes(status)) {
+    return false;
+  }
+
+  if (info.type === "rate_limit" || status === 429) {
+    return failureCount < 3;
+  }
+
+  if (info.type === "network" || (status !== null && status >= 500)) {
+    return failureCount < 3;
+  }
+
+  return failureCount < 2;
+}
+
+function queryRetryDelay(attempt: number, error: unknown) {
+  const info = categorizeError(error);
+  const baseDelay = info.type === "rate_limit" ? 1500 : 800;
+  const exponential = Math.min(baseDelay * 2 ** attempt, 12_000);
+  const jitter = 0.8 + Math.random() * 0.4;
+  return Math.round(exponential * jitter);
+}
+
+function shouldRetryMutation(failureCount: number, error: unknown) {
+  const info = categorizeError(error);
+  const status = extractHttpStatus(error);
+  if (info.type === "auth") return false;
+  if (status !== null && [400, 401, 403, 404, 409, 410, 412, 422].includes(status)) {
+    return false;
+  }
+  return (info.type === "network" || info.type === "rate_limit" || status === 429) && failureCount < 2;
+}
+
 const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error, query) => {
+      const info = categorizeError(error);
+      recordRequestIssue({
+        scope: "query",
+        category: info.type,
+        status: extractHttpStatus(error),
+        retryable: info.isRetryable,
+        key: query.queryHash,
+        path: typeof window !== "undefined" ? window.location.pathname : undefined,
+      });
+    },
+  }),
+  mutationCache: new MutationCache({
+    onError: (error, _variables, _context, mutation) => {
+      const info = categorizeError(error);
+      recordRequestIssue({
+        scope: "mutation",
+        category: info.type,
+        status: extractHttpStatus(error),
+        retryable: info.isRetryable,
+        key: mutation.options.mutationKey ? JSON.stringify(mutation.options.mutationKey) : undefined,
+        path: typeof window !== "undefined" ? window.location.pathname : undefined,
+      });
+    },
+  }),
   defaultOptions: {
     queries: {
       staleTime: 2 * 60_000, // 2 min — halve unnecessary background refetches
@@ -715,17 +854,31 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false, // don't refetch every tab switch
       refetchOnReconnect: "always", // always sync after network reconnects
       retry: (failureCount, error) => {
-        const info = categorizeError(error);
-        if (info.type === "auth") return false;
-        return failureCount < 2;
+        const nextRetry = shouldRetryQuery(failureCount, error);
+        if (nextRetry) {
+          const info = categorizeError(error);
+          recordRequestIssue({
+            scope: "retry",
+            category: info.type,
+            status: extractHttpStatus(error),
+            retryable: info.isRetryable,
+            path: typeof window !== "undefined" ? window.location.pathname : undefined,
+          });
+        }
+        if (import.meta.env.DEV && nextRetry) {
+          perfLog("query.retry", {
+            failureCount,
+            category: categorizeError(error).type,
+            status: extractHttpStatus(error),
+          });
+        }
+        return nextRetry;
       },
-      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
+      retryDelay: queryRetryDelay,
     },
     mutations: {
-      retry: (failureCount, error) => {
-        const info = categorizeError(error);
-        return info.type === "network" && failureCount < 1;
-      },
+      retry: shouldRetryMutation,
+      retryDelay: queryRetryDelay,
     },
   },
 });
@@ -1105,6 +1258,7 @@ const App = () => (
               <SkipToContent />
               <Toaster />
               <Sonner />
+              {import.meta.env.DEV && <RequestHealthBadge />}
               <DeferredPassiveChatOverlays />
               <BrowserRouter
                 future={{
@@ -1607,6 +1761,57 @@ const App = () => (
                 <Route path="/shared-todos" element={<ProtectedRoute><SharedTodosPage /></ProtectedRoute>} />
                 <Route path="/marketplace-cart" element={<ProtectedRoute><MarketplaceCartPage /></ProtectedRoute>} />
                 <Route path="/points-history" element={<ProtectedRoute><PointsHistoryPage /></ProtectedRoute>} />
+                <Route path="/moderation-appeals" element={<ProtectedRoute><ModerationAppealsPage /></ProtectedRoute>} />
+                <Route path="/feedback" element={<ProtectedRoute><FeedbackPage /></ProtectedRoute>} />
+                <Route path="/chat-media" element={<ProtectedRoute><ChatMediaGalleryPage /></ProtectedRoute>} />
+                <Route path="/login-activity" element={<ProtectedRoute><LoginActivityPage /></ProtectedRoute>} />
+                <Route path="/ama" element={<AMAPage />} />
+                <Route path="/voicemails" element={<ProtectedRoute><VoicemailsPage /></ProtectedRoute>} />
+                <Route path="/trust-score" element={<ProtectedRoute><TrustScorePage /></ProtectedRoute>} />
+                <Route path="/warnings" element={<ProtectedRoute><WarningsPage /></ProtectedRoute>} />
+                <Route path="/chat-wallpapers" element={<ProtectedRoute><ChatWallpapersPage /></ProtectedRoute>} />
+                <Route path="/promo-usage" element={<ProtectedRoute><PromoUsagePage /></ProtectedRoute>} />
+                <Route path="/bug-reports" element={<ProtectedRoute><BugReportsPage /></ProtectedRoute>} />
+                <Route path="/streaks" element={<ProtectedRoute><StreaksPage /></ProtectedRoute>} />
+                <Route path="/my-challenges" element={<ProtectedRoute><MyChallengeSubmissionsPage /></ProtectedRoute>} />
+                <Route path="/poll-history" element={<ProtectedRoute><PollHistoryPage /></ProtectedRoute>} />
+                <Route path="/spam-detections" element={<ProtectedRoute><SpamDetectionsPage /></ProtectedRoute>} />
+                <Route path="/place-clicks" element={<ProtectedRoute><PlaceClicksPage /></ProtectedRoute>} />
+                <Route path="/price-alerts" element={<ProtectedRoute><PriceAlertsPage /></ProtectedRoute>} />
+                <Route path="/ride-quotes" element={<ProtectedRoute><RideQuotesPage /></ProtectedRoute>} />
+                <Route path="/auto-messages" element={<ProtectedRoute><AutoMessagesLogPage /></ProtectedRoute>} />
+                <Route path="/order-disputes" element={<ProtectedRoute><OrderDisputesPage /></ProtectedRoute>} />
+                <Route path="/flight-price-alerts" element={<ProtectedRoute><FlightPriceAlertsPage /></ProtectedRoute>} />
+                <Route path="/audio-rooms" element={<AudioRoomsPage />} />
+                <Route path="/coin-transfers" element={<ProtectedRoute><CoinTransfersPage /></ProtectedRoute>} />
+                <Route path="/live-locations" element={<ProtectedRoute><LiveLocationsPage /></ProtectedRoute>} />
+                <Route path="/friend-requests" element={<ProtectedRoute><FriendRequestsPage /></ProtectedRoute>} />
+                <Route path="/group-orders" element={<ProtectedRoute><GroupOrdersPage /></ProtectedRoute>} />
+                <Route path="/transactions" element={<ProtectedRoute><TransactionsPage /></ProtectedRoute>} />
+                <Route path="/favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />
+                <Route path="/leaderboards" element={<LeaderboardsPage />} />
+                <Route path="/recently-viewed" element={<ProtectedRoute><RecentlyViewedPage /></ProtectedRoute>} />
+                <Route path="/two-step-auth" element={<ProtectedRoute><TwoStepAuthPage /></ProtectedRoute>} />
+                <Route path="/my-applications" element={<ProtectedRoute><MyJobApplicationsPage /></ProtectedRoute>} />
+                <Route path="/onboarding-progress" element={<ProtectedRoute><OnboardingProgressPage /></ProtectedRoute>} />
+                <Route path="/profile-views" element={<ProtectedRoute><ProfileViewsPage /></ProtectedRoute>} />
+                <Route path="/store-promos" element={<StorePromoCodesPage />} />
+                <Route path="/emoji-packs" element={<EmojiPacksPage />} />
+                <Route path="/live-chat-sessions" element={<ProtectedRoute><LiveChatSessionsPage /></ProtectedRoute>} />
+                <Route path="/muted-blocked" element={<ProtectedRoute><MutedBlockedUsersPage /></ProtectedRoute>} />
+                <Route path="/muted-chats" element={<ProtectedRoute><MutedChatsPage /></ProtectedRoute>} />
+                <Route path="/push-devices" element={<ProtectedRoute><PushDevicesPage /></ProtectedRoute>} />
+                <Route path="/creator-payouts" element={<ProtectedRoute><CreatorPayoutsPage /></ProtectedRoute>} />
+                <Route path="/p2p-money" element={<ProtectedRoute><P2PMoneyPage /></ProtectedRoute>} />
+                <Route path="/music-stickers" element={<MusicStickersPage />} />
+                <Route path="/avatar-moods" element={<AvatarMoodsPage />} />
+                <Route path="/downloaded-packs" element={<ProtectedRoute><DownloadedPacksPage /></ProtectedRoute>} />
+                <Route path="/legal-disputes" element={<ProtectedRoute><LegalDisputesPage /></ProtectedRoute>} />
+                <Route path="/my-podcasts" element={<ProtectedRoute><MyPodcastsPage /></ProtectedRoute>} />
+                <Route path="/saved-locations" element={<ProtectedRoute><SavedLocationsPage /></ProtectedRoute>} />
+                <Route path="/story-comments" element={<ProtectedRoute><StoryCommentsPage /></ProtectedRoute>} />
+                <Route path="/restaurant-reviews" element={<ProtectedRoute><RestaurantReviewDetailsPage /></ProtectedRoute>} />
+                <Route path="/story-viewers" element={<ProtectedRoute><StoryViewersPage /></ProtectedRoute>} />
                 <Route path="/podcasts" element={<PodcastsPage />} />
                 <Route path="/sounds" element={<SoundsPage />} />
                 <Route path="/media-library" element={<ProtectedRoute><MediaLibraryPage /></ProtectedRoute>} />

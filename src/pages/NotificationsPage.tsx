@@ -20,6 +20,8 @@ import { useSocialNotifications } from '@/hooks/useSocialNotifications';
 import type { SocialNotification } from '@/hooks/useSocialNotifications';
 import VerifiedBadge from '@/components/VerifiedBadge';
 import { isBlueVerified } from '@/lib/verification';
+import DegradedDataBanner from '@/components/reliability/DegradedDataBanner';
+import LoadFailureCard from '@/components/reliability/LoadFailureCard';
 
 type NotificationCategory = 'all' | 'chat' | 'social' | 'orders' | 'promos' | 'support' | 'delays';
 
@@ -151,6 +153,7 @@ const NotificationsPage = () => {
     notifications, 
     unreadCount, 
     isLoading, 
+    error,
     markAsRead, 
     markAllAsRead,
     fetchNotifications,
@@ -275,6 +278,11 @@ const NotificationsPage = () => {
     });
   }, [notifications, activeTab]);
 
+  const hasAnyVisibleNotificationData =
+    notifications.length > 0 || friendRequests.length > 0 || socialNotifs.length > 0;
+  const hasNotificationsRefreshError = Boolean(error) && hasAnyVisibleNotificationData;
+  const shouldShowNotificationsRecovery = Boolean(error) && !isLoading && !hasAnyVisibleNotificationData;
+
   const categoryCounts = useMemo(() => {
     const counts = { all: 0, chat: 0, social: friendRequests.length + socialUnread, orders: 0, promos: 0, support: 0, delays: 0 };
     notifications.forEach(n => {
@@ -375,13 +383,9 @@ const NotificationsPage = () => {
                 </button>
                 <div className="min-w-0 flex-1">
                   <div className="flex min-w-0 items-center gap-2">
-                    <div
-                      role="heading"
-                      aria-level={1}
-                      className="block min-w-[8rem] text-xl font-bold tracking-tight text-ig-gradient sm:text-2xl"
-                    >
+                    <h1 className="block min-w-[8rem] text-xl font-bold tracking-tight text-ig-gradient sm:text-2xl">
                       {notificationTitle}
-                    </div>
+                    </h1>
                     {categoryCounts.all > 0 && (
                       <Badge className="h-5 min-w-[22px] rounded-full bg-destructive px-1.5 text-[10px] font-bold text-destructive-foreground">
                         {categoryCounts.all > 99 ? '99+' : categoryCounts.all}
@@ -500,10 +504,31 @@ const NotificationsPage = () => {
             </motion.div>
           )}
 
+          {hasNotificationsRefreshError && (
+            <DegradedDataBanner
+              className="py-1"
+              message="Showing cached notifications. Refresh failed."
+              onRetry={() => void handlePullRefresh()}
+              trackingContext="notifications"
+            />
+          )}
+
+          {shouldShowNotificationsRecovery && (
+            <LoadFailureCard
+              className="px-0 py-2"
+              title="Notifications refresh failed"
+              description="We couldn&apos;t load your latest notifications right now. Retry to reconnect and restore updates."
+              onRetry={() => void handlePullRefresh()}
+              onSecondary={() => navigate('/feed')}
+              secondaryLabel="Go Feed"
+              trackingContext="notifications"
+            />
+          )}
+
           {/* ── Notification List ── */}
           {(activeTab !== 'social' || filteredNotifications.length > 0) && (
             <>
-              {isLoading ? (
+              {isLoading && !shouldShowNotificationsRecovery ? (
                 <div className="space-y-3">
                   {[1, 2, 3, 4].map((i) => (
                     <motion.div

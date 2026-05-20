@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Heart, MessageCircle, UserPlus, Star, ShoppingBag, Award, Zap } from "lucide-react";
@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
 import SEOHead from "@/components/SEOHead";
+import DegradedDataBanner from "@/components/reliability/DegradedDataBanner";
+import LoadFailureCard from "@/components/reliability/LoadFailureCard";
 
 interface Activity {
   id: string;
@@ -56,30 +58,61 @@ export default function ActivityFeedPage() {
   const [filter, setFilter] = useState<string>("all");
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [hasRefreshError, setHasRefreshError] = useState(false);
+  const activitiesRef = useRef<Activity[]>([]);
 
   useEffect(() => {
-    const load = async () => {
-      if (!user) { setLoading(false); return; }
-      const { data } = await supabase
+    activitiesRef.current = activities;
+  }, [activities]);
+
+  const loadActivities = useCallback(async () => {
+    if (!user) {
+      setActivities([]);
+      setLoadError(false);
+      setHasRefreshError(false);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setLoadError(false);
+
+    try {
+      const { data, error } = await supabase
         .from("notifications")
         .select("id, title, body, category, created_at, is_read")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(50);
 
-      if (data && data.length > 0) {
-        setActivities(data.map(n => ({
-          id: n.id,
-          type: categoryToType(n.category ?? ""),
-          user: n.title,
-          action: n.body,
-          time: formatDistanceToNow(new Date(n.created_at), { addSuffix: true }),
-        })));
+      if (error) throw error;
+
+      const nextActivities = (data || []).map((n) => ({
+        id: n.id,
+        type: categoryToType(n.category ?? ""),
+        user: n.title,
+        action: n.body,
+        time: formatDistanceToNow(new Date(n.created_at), { addSuffix: true }),
+      })) as Activity[];
+
+      setActivities(nextActivities);
+      setHasRefreshError(false);
+    } catch (error) {
+      console.error("[ActivityFeedPage] failed to load activity:", error);
+      if (activitiesRef.current.length > 0) {
+        setHasRefreshError(true);
+      } else {
+        setLoadError(true);
       }
+    } finally {
       setLoading(false);
-    };
-    load();
+    }
   }, [user]);
+
+  useEffect(() => {
+    void loadActivities();
+  }, [loadActivities]);
 
   const filters = ["all", "likes", "comments", "follows", "sales"];
   const filterTypeMap: Record<string, string[]> = {
@@ -122,7 +155,17 @@ export default function ActivityFeedPage() {
       </div>
 
       <div className="divide-y divide-border">
-        {loading ? (
+        {loadError && activities.length === 0 ? (
+          <LoadFailureCard
+            className="px-4 py-10"
+            title="Activity refresh failed"
+            description="We couldn&apos;t load your latest activity right now. Retry to restore notifications and account events."
+            onRetry={() => void loadActivities()}
+            onSecondary={() => navigate("/feed")}
+            secondaryLabel="Go Feed"
+            trackingContext="activity"
+          />
+        ) : loading && activities.length === 0 ? (
           <div className="space-y-0">
             {[1,2,3,4].map(i => (
               <div key={i} className="flex items-center gap-3 px-4 py-3 animate-pulse">
@@ -136,6 +179,15 @@ export default function ActivityFeedPage() {
           </div>
         ) : (
           <>
+            {hasRefreshError && activities.length > 0 && (
+              <DegradedDataBanner
+                className="px-4 py-3"
+                message="Showing cached activity. Refresh failed."
+                onRetry={() => void loadActivities()}
+                trackingContext="activity"
+              />
+            )}
+
             {today.length > 0 && (
               <>
                 <p className="text-xs font-semibold text-muted-foreground px-4 py-2 bg-muted/50">Today</p>

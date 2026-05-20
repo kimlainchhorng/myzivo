@@ -2,10 +2,10 @@
  * MorePage — ZIVO Signature Design (2026)
  * Full hub with real user profile, quick actions, 70+ links, and organic design.
  */
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useUsername } from "@/hooks/useUsername";
 import { useCoinBalance } from "@/hooks/useCoinBalance";
 import { formatCount } from "@/lib/social/formatCount";
@@ -44,6 +44,8 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { cn } from "@/lib/utils";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import SEOHead from "@/components/SEOHead";
+import DegradedDataBanner from "@/components/reliability/DegradedDataBanner";
+import LoadFailureCard from "@/components/reliability/LoadFailureCard";
 import FeedSidebar from "@/components/social/FeedSidebar";
 import NavBar from "@/components/home/NavBar";
 import {
@@ -545,6 +547,7 @@ export default function MorePage() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const { user, signOut, isAdmin } = useAuth();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [showPartnerSheet, setShowPartnerSheet] = useState(false);
@@ -1028,14 +1031,14 @@ export default function MorePage() {
   }, []);
 
   // Shared profile data — same source as /profile, so the name/badge stay in sync
-  const { data: profile } = useUserProfile();
+  const { data: profile, isError: hasProfileError, isLoading: isProfileLoading } = useUserProfile();
   const { username: claimedUsername } = useUsername();
   const { balance: coinBalance } = useCoinBalance();
   const { isPlus, plan } = useZivoPlus();
   const { isOFMode: zivoOFMode } = useZivoOFMode();
 
   // Real post count — matches /profile
-  const { data: postsCount = 0 } = useQuery({
+  const { data: postsCount = 0, isError: hasPostsCountError, isLoading: isPostsCountLoading } = useQuery({
     queryKey: ["more-posts", user?.id],
     queryFn: async () => {
       const { count } = await (supabase as any)
@@ -1049,7 +1052,7 @@ export default function MorePage() {
   });
 
   // Real friend count (accepted friendships) — matches /profile
-  const { data: friendCount = 0 } = useQuery({
+  const { data: friendCount = 0, isError: hasFriendCountError, isLoading: isFriendCountLoading } = useQuery({
     queryKey: ["more-friends", user?.id],
     queryFn: async () => {
       const { count } = await (supabase as any)
@@ -1064,7 +1067,7 @@ export default function MorePage() {
   });
 
   // Unread notification count (lightweight count query)
-  const { data: unreadNotifCount = 0 } = useQuery({
+  const { data: unreadNotifCount = 0, isError: hasUnreadNotifError, isLoading: isUnreadNotifLoading } = useQuery({
     queryKey: ["more-unread-notifs", user?.id],
     queryFn: async () => {
       const { count } = await (supabase as any)
@@ -1079,7 +1082,7 @@ export default function MorePage() {
   });
 
   // Upcoming flight bookings count
-  const { data: upcomingFlightCount = 0 } = useQuery({
+  const { data: upcomingFlightCount = 0, isError: hasUpcomingFlightsError, isLoading: isUpcomingFlightsLoading } = useQuery({
     queryKey: ["more-upcoming-flights", user?.id],
     queryFn: async () => {
       const { count } = await (supabase as any)
@@ -1094,7 +1097,7 @@ export default function MorePage() {
   });
 
   // Active grocery / eats orders count (in-progress)
-  const { data: activeOrdersCount = 0 } = useQuery({
+  const { data: activeOrdersCount = 0, isError: hasActiveOrdersError, isLoading: isActiveOrdersLoading } = useQuery({
     queryKey: ["more-active-orders", user?.id],
     queryFn: async () => {
       const { count } = await (supabase as any)
@@ -1109,7 +1112,11 @@ export default function MorePage() {
   });
 
   // Last 3 unread notifications (preview)
-  const { data: notifPreview = [] } = useQuery<Array<{ id: string; title: string; body: string; action_url: string | null; created_at: string }>>({
+  const {
+    data: notifPreview = [],
+    isError: hasNotifPreviewError,
+    isLoading: isNotifPreviewLoading,
+  } = useQuery<Array<{ id: string; title: string; body: string; action_url: string | null; created_at: string }>>({
     queryKey: ["more-notif-preview", user?.id],
     queryFn: async () => {
       const { data } = await (supabase as any)
@@ -1126,7 +1133,7 @@ export default function MorePage() {
   });
 
   // Pending friend requests
-  const { data: pendingRequestsCount = 0 } = useQuery({
+  const { data: pendingRequestsCount = 0, isError: hasPendingRequestsError, isLoading: isPendingRequestsLoading } = useQuery({
     queryKey: ["more-pending-friends", user?.id],
     queryFn: async () => {
       const { count } = await (supabase as any)
@@ -1158,7 +1165,7 @@ export default function MorePage() {
   }, [unreadNotifCount, pendingRequestsCount]);
 
   // Real follower count (people following this user)
-  const { data: followerCount = 0 } = useQuery({
+  const { data: followerCount = 0, isError: hasFollowersError, isLoading: isFollowersLoading } = useQuery({
     queryKey: ["more-followers", user?.id],
     queryFn: async () => {
       const { count } = await (supabase as any)
@@ -1172,7 +1179,7 @@ export default function MorePage() {
   });
 
   // Real following count (people this user follows)
-  const { data: followingCount = 0 } = useQuery({
+  const { data: followingCount = 0, isError: hasFollowingError, isLoading: isFollowingLoading } = useQuery({
     queryKey: ["more-following", user?.id],
     queryFn: async () => {
       const { count } = await (supabase as any)
@@ -1222,6 +1229,61 @@ export default function MorePage() {
     const filled = checks.filter(Boolean).length;
     return Math.round((filled / checks.length) * 100);
   }, [profile, claimedUsername, isVerified]);
+
+  const hasAnyMoreData =
+    Boolean(profile) ||
+    notifPreview.length > 0 ||
+    postsCount > 0 ||
+    friendCount > 0 ||
+    followerCount > 0 ||
+    followingCount > 0 ||
+    unreadNotifCount > 0 ||
+    pendingRequestsCount > 0 ||
+    upcomingFlightCount > 0 ||
+    activeOrdersCount > 0;
+
+  const hasAnyMoreError =
+    hasProfileError ||
+    hasPostsCountError ||
+    hasFriendCountError ||
+    hasUnreadNotifError ||
+    hasUpcomingFlightsError ||
+    hasActiveOrdersError ||
+    hasNotifPreviewError ||
+    hasPendingRequestsError ||
+    hasFollowersError ||
+    hasFollowingError;
+
+  const hasAnyMoreLoading =
+    isProfileLoading ||
+    isPostsCountLoading ||
+    isFriendCountLoading ||
+    isUnreadNotifLoading ||
+    isUpcomingFlightsLoading ||
+    isActiveOrdersLoading ||
+    isNotifPreviewLoading ||
+    isPendingRequestsLoading ||
+    isFollowersLoading ||
+    isFollowingLoading;
+
+  const hasMoreRefreshError = hasAnyMoreData && hasAnyMoreError;
+  const shouldShowMoreRecovery = Boolean(user) && !hasAnyMoreData && !hasAnyMoreLoading && hasAnyMoreError;
+
+  const retryMoreQueries = useCallback(() => {
+    if (!user?.id) return;
+    void Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["userProfile", user.id] }),
+      queryClient.invalidateQueries({ queryKey: ["more-posts", user.id] }),
+      queryClient.invalidateQueries({ queryKey: ["more-friends", user.id] }),
+      queryClient.invalidateQueries({ queryKey: ["more-unread-notifs", user.id] }),
+      queryClient.invalidateQueries({ queryKey: ["more-upcoming-flights", user.id] }),
+      queryClient.invalidateQueries({ queryKey: ["more-active-orders", user.id] }),
+      queryClient.invalidateQueries({ queryKey: ["more-notif-preview", user.id] }),
+      queryClient.invalidateQueries({ queryKey: ["more-pending-friends", user.id] }),
+      queryClient.invalidateQueries({ queryKey: ["more-followers", user.id] }),
+      queryClient.invalidateQueries({ queryKey: ["more-following", user.id] }),
+    ]);
+  }, [queryClient, user?.id]);
 
   // ===== Suggested next action (computed from user state) =====
   // Declared here (not earlier) because it depends on isEmailVerified,
@@ -1762,6 +1824,27 @@ export default function MorePage() {
             reducedMotion && "[&_*]:!transition-none [&_*]:!animate-none",
           )}
         >
+          {hasMoreRefreshError && (
+            <DegradedDataBanner
+              className="mb-3"
+              message="Showing cached account data. Refresh failed."
+              onRetry={retryMoreQueries}
+              trackingContext="more"
+            />
+          )}
+
+          {shouldShowMoreRecovery && (
+            <LoadFailureCard
+              className="mb-4"
+              title="Account refresh failed"
+              description="We couldn&apos;t load your account hub right now. Retry to restore your profile and shortcuts."
+              onRetry={retryMoreQueries}
+              onSecondary={() => navigate('/feed')}
+              secondaryLabel="Go Feed"
+              trackingContext="more"
+            />
+          )}
+
           {/* Profile Card */}
           {user && renderProfileCard()}
 

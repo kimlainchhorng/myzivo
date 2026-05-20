@@ -9,6 +9,8 @@ import { stripImageMetadata } from "@/utils/stripImageMetadata";
 import { pickImageFromLibrary } from "@/lib/imagePicker";
 
 import SEOHead from "@/components/SEOHead";
+import DegradedDataBanner from "@/components/reliability/DegradedDataBanner";
+import LoadFailureCard from "@/components/reliability/LoadFailureCard";
 import {
   User, ArrowLeft, Loader2, Sparkles, Camera, ImagePlus, Check, X, MoveVertical,
   Shield, Star, ChevronRight, UserPlus, BadgeCheck,
@@ -162,7 +164,7 @@ const Profile = () => {
   const { t, currentLanguage, changeLanguage } = useI18n();
   
   const { user, isAdmin } = useAuth();
-  const { data: profile, isLoading: profileLoading } = useUserProfile();
+  const { data: profile, isLoading: profileLoading, isError: hasProfileError } = useUserProfile();
   const { username: claimedUsername } = useUsername();
   // Brand-name override (e.g. "ZIVO" for staff/founder accounts) — falls back to legal name.
   const brandName = (profile as { display_brand_name?: string | null } | undefined)?.display_brand_name || null;
@@ -172,7 +174,7 @@ const Profile = () => {
   const { data: merchantData } = useMerchantRole();
   const { data: ownerStore, isLoading: ownerStoreLoading } = useOwnerStoreProfile();
   const { unreadCount: notifUnreadCount, notifications, isLoading: notifLoading, markAsRead, markAllAsRead } = useNotifications(20);
-  const { data: latestVerificationRequest } = useQuery({
+  const { data: latestVerificationRequest, isError: hasVerificationRequestError } = useQuery({
     queryKey: ["verification-request", user?.id, "latest"],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -370,10 +372,39 @@ const Profile = () => {
 
   const profileTilt = use3DTilt(profileCardRef);
 
-  const [friendCount, setFriendCount] = useState(0);
-  const [followerCount, setFollowerCount] = useState(0);
-  const [followingCount, setFollowingCount] = useState(0);
-  const [postsCount, setPostsCount] = useState(0);
+  // Social-graph counts unified into a single React Query instead of 4 ad-hoc
+  // useState + manual visibility-change listeners. React Query handles focus
+  // refetch + caching (staleTime 30s) so we don't burn 4 round-trips on every
+  // re-render of the profile header.
+  const { data: socialCounts, refetch: refetchSocialCounts, isError: hasSocialCountsError } = useQuery({
+    queryKey: ["profile-social-counts", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return { friends: 0, followers: 0, following: 0, posts: 0 };
+      const [{ count: fc }, { count: flc }, { count: fgc }, { count: pc }] = await Promise.all([
+        supabase.from("friendships" as never).select("id", { count: "exact", head: true })
+          .eq("status", "accepted")
+          .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`),
+        supabase.from("followers" as never).select("id", { count: "exact", head: true })
+          .eq("following_id", user.id),
+        supabase.from("followers" as never).select("id", { count: "exact", head: true })
+          .eq("follower_id", user.id),
+        (supabase as never as { from: (t: string) => { select: (s: string, o: { count: string; head: boolean }) => { eq: (k: string, v: string) => Promise<{ count: number | null }> } } })
+          .from("user_posts").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+      ]);
+      return { friends: fc || 0, followers: flc || 0, following: fgc || 0, posts: pc || 0 };
+    },
+    enabled: !!user?.id,
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
+  });
+  const friendCount = socialCounts?.friends ?? 0;
+  const followerCount = socialCounts?.followers ?? 0;
+  const followingCount = socialCounts?.following ?? 0;
+  const postsCount = socialCounts?.posts ?? 0;
+  // Modal callbacks just invalidate — React Query refetches the canonical counts.
+  const setFriendCount = (_n: number) => { void refetchSocialCounts(); };
+  const setFollowerCount = (_n: number) => { void refetchSocialCounts(); };
+  const setFollowingCount = (_n: number) => { void refetchSocialCounts(); };
   const [socialModal, setSocialModal] = useState<{ open: boolean; tab: "friends" | "followers" | "following" }>({ open: false, tab: "friends" });
   const [shareOpen, setShareOpen] = useState(false);
   const [modeOpen, setModeOpen] = useState(false);
@@ -423,31 +454,8 @@ const Profile = () => {
     navigate(getShopDashboardPath());
   }, [getShopDashboardPath, navigate, ownerStoreLoading, selectionChanged, user]);
 
-  // Load real friendship status, friend count & follower count.
-  // Refetches on tab visibility change so counts don't go stale after the
-  // user follows/unfollows / accepts a friend request from another screen.
-  const loadSocialCounts = useCallback(async () => {
-    if (!user?.id) return;
-    const [{ count: fc }, { count: flc }, { count: fgc }, { count: pc }] = await Promise.all([
-      supabase.from("friendships" as any).select("id", { count: "exact", head: true }).eq("status", "accepted").or(`user_id.eq.${user.id},friend_id.eq.${user.id}`),
-      supabase.from("followers" as any).select("id", { count: "exact", head: true }).eq("following_id", user.id),
-      supabase.from("followers" as any).select("id", { count: "exact", head: true }).eq("follower_id", user.id),
-      (supabase as any).from("user_posts").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-    ]);
-    setFriendCount(fc || 0);
-    setFollowerCount(flc || 0);
-    setFollowingCount(fgc || 0);
-    setPostsCount(pc || 0);
-  }, [user?.id]);
-
-  useEffect(() => { void loadSocialCounts(); }, [loadSocialCounts]);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    const onVisible = () => { if (document.visibilityState === "visible") void loadSocialCounts(); };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [user?.id, loadSocialCounts]);
+  // Social counts now flow through useQuery above — refetched on focus and
+  // staleTime'd so 4 round-trips don't fire on every re-render.
 
   useEffect(() => {
     setBioDraft(profile?.bio ?? "");
@@ -550,7 +558,7 @@ const Profile = () => {
 
   const currentLang = LANGS.find(l => l.code === currentLanguage) || LANGS[0];
 
-  const { data: recentApps } = useQuery({
+  const { data: recentApps, isError: hasRecentAppsError } = useQuery({
     queryKey: ["profile-recent-apps", user?.id],
     enabled: !!user?.id,
     staleTime: 60_000,
@@ -580,6 +588,21 @@ const Profile = () => {
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 5);
   }, [bookings, recentApps]);
+
+  const hasAnyProfileData = Boolean(profile);
+  const hasProfileRefreshError =
+    hasAnyProfileData &&
+    (hasProfileError || hasVerificationRequestError || hasSocialCountsError || hasRecentAppsError);
+
+  const retryProfileQueries = useCallback(() => {
+    if (!user?.id) return;
+    void Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["userProfile", user.id] }),
+      queryClient.invalidateQueries({ queryKey: ["verification-request", user.id, "latest"] }),
+      queryClient.invalidateQueries({ queryKey: ["profile-social-counts", user.id] }),
+      queryClient.invalidateQueries({ queryKey: ["profile-recent-apps", user.id] }),
+    ]);
+  }, [queryClient, user?.id]);
 
   const handlePullRefresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["user-profile"] });
@@ -934,8 +957,27 @@ const Profile = () => {
                 <Loader2 className="h-8 w-8 text-primary" />
               </motion.div>
             </div>
+          ) : hasProfileError && !profile ? (
+            <LoadFailureCard
+              className="px-4 lg:px-0 py-10"
+              title="Profile refresh failed"
+              description="We couldn&apos;t load your profile right now. Retry to reconnect and restore your account data."
+              onRetry={retryProfileQueries}
+              onSecondary={() => navigate("/feed")}
+              secondaryLabel="Go Home"
+              trackingContext="profile"
+            />
           ) : (
             <div className="space-y-2 pt-0 lg:pt-1">
+              {hasProfileRefreshError && (
+                <DegradedDataBanner
+                  className="px-4 lg:px-0 pt-2"
+                  message="Showing cached profile data. Refresh failed."
+                  onRetry={retryProfileQueries}
+                  trackingContext="profile"
+                />
+              )}
+
               {/* ── Profile Card with Cover Photo ──
                   No ParallaxSection here: the hero card must paint immediately
                   to avoid a giant blank area at the top of the viewport. */}

@@ -281,7 +281,7 @@ export default function MarketplacePage() {
     staleTime: 60_000,
   });
 
-  const { data: listings = [], isLoading, refetch, isFetching } = useQuery({
+  const { data: listings = [], isLoading, isError: isListingsError, refetch, isFetching } = useQuery({
     queryKey: ["marketplace-listings", conditionFilter, categoryFilter, sort, user?.id ?? null, pageSize],
     queryFn: async () => {
       let query = (supabase as any)
@@ -1198,6 +1198,7 @@ export default function MarketplacePage() {
             </button>
           ) : null}
           <select
+            title="Sort listings"
             value={sort}
             onChange={(e) => setSort(e.target.value)}
             className="text-xs bg-muted/40 rounded-full px-3 py-1 focus:outline-none"
@@ -1326,6 +1327,35 @@ export default function MarketplacePage() {
             className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-lg flex items-center gap-1.5"
           >
             <Sparkles className="h-3.5 w-3.5" /> {newCount} new {newCount === 1 ? "listing" : "listings"}
+          </button>
+        </div>
+      )}
+
+      {/* Browse error recovery card */}
+      {tab === "browse" && isListingsError && (listings as any[]).length === 0 && !isLoading && (
+        <div className="mx-4 mt-4 p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-center">
+          <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-2">Couldn't load listings</p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-bold"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Stale-data banner */}
+      {tab === "browse" && isListingsError && (listings as any[]).length > 0 && (
+        <div className="mx-4 mt-3 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2">
+          <p className="flex-1 text-[11px] text-amber-700 dark:text-amber-400 font-medium">Showing cached results — couldn't refresh</p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="shrink-0 text-[11px] font-bold text-amber-700 dark:text-amber-400 disabled:opacity-50"
+          >
+            {isFetching ? "Refreshing…" : "Retry"}
           </button>
         </div>
       )}
@@ -1721,6 +1751,7 @@ export default function MarketplacePage() {
                           <span className="absolute bottom-0 left-0 right-0 bg-primary text-primary-foreground text-[9px] font-bold text-center py-0.5">COVER</span>
                         )}
                         <button type="button"
+                          aria-label="Remove photo"
                           onClick={() => {
                             setImageFiles((f) => f.filter((_, i) => i !== idx));
                             setImagePreviews((p) => p.filter((_, i) => i !== idx));
@@ -1776,6 +1807,7 @@ export default function MarketplacePage() {
                     />
                   </div>
                   <select
+                    title="Currency"
                     value={newListing.currency}
                     onChange={(e) => setNewListing({ ...newListing, currency: e.target.value })}
                     className="px-3 py-3 rounded-xl bg-muted/40 text-sm font-semibold focus:outline-none"
@@ -1848,6 +1880,7 @@ export default function MarketplacePage() {
                 })()}
                 {categories.length > 0 && (
                   <select
+                    title="Category"
                     value={newListing.category_id}
                     onChange={(e) => setNewListing({ ...newListing, category_id: e.target.value })}
                     className="w-full px-4 py-3 rounded-xl bg-muted/40 text-sm focus:outline-none"
@@ -1857,6 +1890,7 @@ export default function MarketplacePage() {
                   </select>
                 )}
                 <select
+                  title="Condition"
                   value={newListing.condition}
                   onChange={(e) => setNewListing({ ...newListing, condition: e.target.value })}
                   className="w-full px-4 py-3 rounded-xl bg-muted/40 text-sm focus:outline-none"
@@ -1945,7 +1979,7 @@ export default function MarketplacePage() {
                     .filter(Boolean) as any[];
                   if (items.length === 0) return <p className="text-xs text-muted-foreground">No items to compare</p>;
                   return (
-                    <div className={`grid gap-3`} style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
+                    <div className={`grid gap-3 ${items.length === 2 ? "grid-cols-2" : items.length === 3 ? "grid-cols-3" : "grid-cols-1"}`}>
                       {items.map((it) => {
                         const img = Array.isArray(it.images) ? it.images[0] : null;
                         return (
@@ -2366,6 +2400,7 @@ function ListingDetail({
                     <button
                       key={i}
                       type="button"
+                      aria-label={`View image ${i + 1}`}
                       onClick={() => setImageIdx(i)}
                       className={`h-1.5 rounded-full transition-all ${i === imageIdx ? "w-6 bg-white" : "w-1.5 bg-white/50"}`}
                     />
@@ -2376,7 +2411,7 @@ function ListingDetail({
           ) : (
             <div className="w-full h-full flex items-center justify-center"><ShoppingBag className="h-12 w-12 text-muted-foreground/20" /></div>
           )}
-          <button type="button" onClick={onClose} className="absolute top-2 right-2 p-1.5 rounded-full bg-black/40 backdrop-blur-sm">
+          <button type="button" aria-label="Close" onClick={onClose} className="absolute top-2 right-2 p-1.5 rounded-full bg-black/40 backdrop-blur-sm">
             <XIcon className="h-4 w-4 text-white" />
           </button>
           {listing.status === "sold" && (
@@ -2392,6 +2427,7 @@ function ListingDetail({
               <button
                 key={i}
                 type="button"
+                aria-label={`View image ${i + 1}`}
                 onClick={() => setImageIdx(i)}
                 className={`shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all ${
                   i === imageIdx ? "border-primary scale-105" : "border-transparent opacity-70"
@@ -2422,7 +2458,7 @@ function ListingDetail({
                 <Heart className={`h-5 w-5 ${isFav ? "fill-red-500 text-red-500" : ""}`} />
               </button>
             )}
-            <button type="button" onClick={handleShare} className="p-2.5 rounded-full bg-muted/40">
+            <button type="button" aria-label="Share listing" onClick={handleShare} className="p-2.5 rounded-full bg-muted/40">
               <Share2 className="h-5 w-5" />
             </button>
           </div>
@@ -2681,6 +2717,7 @@ function ListingDetail({
                     if (confirm("Delete this listing? This cannot be undone.")) deleteListing.mutate();
                   }}
                   disabled={deleteListing.isPending}
+                  title="Delete listing"
                   className="px-4 rounded-2xl bg-red-500/10 text-red-600 font-semibold text-sm flex items-center gap-1.5 hover:bg-red-500/15 active:scale-95 transition-all"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -2770,6 +2807,7 @@ function ListingDetail({
                 />
                 <button
                   type="button"
+                  aria-label="Send question"
                   disabled={!qText.trim() || askQuestion.isPending}
                   onClick={() => { askQuestion.mutate(qText.trim()); setQText(""); }}
                   className="px-4 rounded-xl bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-50"
@@ -2971,6 +3009,7 @@ function ListingDetail({
             >
               <button
                 type="button"
+                aria-label="Close lightbox"
                 onClick={(e) => { e.stopPropagation(); setLightbox(false); }}
                 className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 backdrop-blur-sm"
               >
@@ -2979,6 +3018,7 @@ function ListingDetail({
               {imageIdx > 0 && (
                 <button
                   type="button"
+                  aria-label="Previous image"
                   onClick={(e) => { e.stopPropagation(); setImageIdx((i) => Math.max(0, i - 1)); }}
                   className="absolute left-3 z-10 p-2 rounded-full bg-white/10 text-white"
                 >
@@ -2988,6 +3028,7 @@ function ListingDetail({
               {imageIdx < images.length - 1 && (
                 <button
                   type="button"
+                  aria-label="Next image"
                   onClick={(e) => { e.stopPropagation(); setImageIdx((i) => Math.min(images.length - 1, i + 1)); }}
                   className="absolute right-3 z-10 p-2 rounded-full bg-white/10 text-white"
                 >

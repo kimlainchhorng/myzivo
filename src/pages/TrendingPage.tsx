@@ -2,8 +2,8 @@
  * TrendingPage — Discover what's popular right now
  * Tabs: Posts · Hashtags · People · Communities
  */
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useMemo, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +22,8 @@ import Eye from "lucide-react/dist/esm/icons/eye";
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
 import Flame from "lucide-react/dist/esm/icons/flame";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import DegradedDataBanner from "@/components/reliability/DegradedDataBanner";
+import LoadFailureCard from "@/components/reliability/LoadFailureCard";
 
 type Tab = "posts" | "hashtags" | "people" | "communities";
 
@@ -86,10 +88,11 @@ const TRENDING_COMMUNITIES_FALLBACK = [
 
 export default function TrendingPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState<Tab>("posts");
 
   /* ── Trending Posts (user + store merged) ── */
-  const { data: userPosts = TRENDING_POST_FALLBACK, isLoading: loadingPosts } = useQuery({
+  const { data: userPosts = TRENDING_POST_FALLBACK, isLoading: loadingPosts, isError: hasUserPostsError } = useQuery({
     queryKey: ["trending-user-posts"],
     queryFn: async () => {
       const { data } = await (supabase as any)
@@ -119,7 +122,7 @@ export default function TrendingPage() {
     retry: false,
   });
 
-  const { data: storePosts = [], isLoading: loadingStorePosts } = useQuery({
+  const { data: storePosts = [], isLoading: loadingStorePosts, isError: hasStorePostsError } = useQuery({
     queryKey: ["trending-store-posts"],
     queryFn: async () => {
       const { data } = await (supabase as any)
@@ -155,7 +158,7 @@ export default function TrendingPage() {
   );
 
   /* ── Trending Hashtags ── */
-  const { data: hashtagCounts = TRENDING_HASHTAG_FALLBACK, isLoading: loadingTags } = useQuery({
+  const { data: hashtagCounts = TRENDING_HASHTAG_FALLBACK, isLoading: loadingTags, isError: hasTagsError } = useQuery({
     queryKey: ["trending-hashtags-page"],
     queryFn: async () => {
       const { data } = await (supabase as any)
@@ -182,7 +185,7 @@ export default function TrendingPage() {
   });
 
   /* ── Trending People ── */
-  const { data: trendingPeople = TRENDING_PEOPLE_FALLBACK, isLoading: loadingPeople } = useQuery({
+  const { data: trendingPeople = TRENDING_PEOPLE_FALLBACK, isLoading: loadingPeople, isError: hasPeopleError } = useQuery({
     queryKey: ["trending-people"],
     queryFn: async () => {
       const { data } = await (supabase as any)
@@ -198,7 +201,7 @@ export default function TrendingPage() {
   });
 
   /* ── Trending Communities ── */
-  const { data: communities = TRENDING_COMMUNITIES_FALLBACK, isLoading: loadingCommunities } = useQuery({
+  const { data: communities = TRENDING_COMMUNITIES_FALLBACK, isLoading: loadingCommunities, isError: hasCommunitiesError } = useQuery({
     queryKey: ["trending-communities"],
     queryFn: async () => {
       const { data } = await (supabase as any)
@@ -226,13 +229,37 @@ export default function TrendingPage() {
     tab === "people" ? loadingPeople :
     loadingCommunities;
 
+  const hasActiveTabError =
+    tab === "posts" ? hasUserPostsError || hasStorePostsError :
+    tab === "hashtags" ? hasTagsError :
+    tab === "people" ? hasPeopleError :
+    hasCommunitiesError;
+
+  const hasActiveTabData =
+    tab === "posts" ? trendingPosts.length > 0 :
+    tab === "hashtags" ? hashtagCounts.length > 0 :
+    tab === "people" ? trendingPeople.length > 0 :
+    communities.length > 0;
+
+  const shouldShowTrendingRecovery = hasActiveTabError && !hasActiveTabData;
+
+  const retryTrendingQueries = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["trending-user-posts"] }),
+      queryClient.invalidateQueries({ queryKey: ["trending-store-posts"] }),
+      queryClient.invalidateQueries({ queryKey: ["trending-hashtags-page"] }),
+      queryClient.invalidateQueries({ queryKey: ["trending-people"] }),
+      queryClient.invalidateQueries({ queryKey: ["trending-communities"] }),
+    ]);
+  }, [queryClient]);
+
   return (
     <>
       <SEOHead title="Trending | ZIVO" description="Discover what's trending on ZIVO right now." />
 
       <div className="min-h-screen bg-background pb-24">
         {/* Header */}
-        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/20" style={{ paddingTop: "var(--zivo-safe-top-sticky)" }}>
+        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/20 safe-area-top">
           <div className="flex items-center gap-3 px-4 py-3 max-w-2xl mx-auto">
             <button type="button" onClick={() => navigate(-1)} aria-label="Go back" className="min-h-[40px] min-w-[40px] inline-flex items-center justify-center rounded-full hover:bg-muted/60 transition-colors touch-manipulation">
               <ChevronLeft className="h-5 w-5 text-foreground" />
@@ -264,6 +291,14 @@ export default function TrendingPage() {
               </button>
             ))}
           </div>
+          {hasActiveTabError && hasActiveTabData && (
+            <DegradedDataBanner
+              className="max-w-2xl mx-auto px-4 pb-2"
+              message="Showing cached trending data. Refresh failed."
+              onRetry={() => void retryTrendingQueries()}
+              trackingContext="trending"
+            />
+          )}
         </div>
 
         <div className="max-w-2xl mx-auto">
@@ -277,6 +312,18 @@ export default function TrendingPage() {
                 {[0,1,2,3,4].map((i) => (
                   <div key={i} className="h-20 rounded-2xl bg-muted/40 animate-pulse" />
                 ))}
+              </motion.div>
+            ) : shouldShowTrendingRecovery ? (
+              <motion.div key="recovery" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <LoadFailureCard
+                  className="p-4"
+                  title="Trending refresh failed"
+                  description="We could not load fresh trending data right now. Retry to reconnect and restore live rankings."
+                  onRetry={() => void retryTrendingQueries()}
+                  onSecondary={() => navigate("/")}
+                  secondaryLabel="Go Home"
+                  trackingContext="trending"
+                />
               </motion.div>
             ) : tab === "posts" ? (
               <motion.div key="posts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
