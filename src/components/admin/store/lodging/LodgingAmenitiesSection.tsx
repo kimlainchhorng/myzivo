@@ -427,7 +427,7 @@ export default function LodgingAmenitiesSection({ storeId }: { storeId: string }
       </Card>
 
       {/* Sticky save bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t bg-background/95 pb-[var(--zivo-safe-bottom,0px)] backdrop-blur supports-[backdrop-filter]:bg-background/70">
         <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center justify-between gap-3">
           <span className="text-[11px] text-muted-foreground">
             {dirty ? (

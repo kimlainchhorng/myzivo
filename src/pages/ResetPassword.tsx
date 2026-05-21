@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,6 +27,8 @@ type ResetPasswordForm = z.infer<typeof resetPasswordSchema>;
 
 const ResetPassword = () => {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const redirect = params.get("redirect") || "/";
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -149,7 +151,7 @@ const ResetPassword = () => {
       
       // Redirect to login after a short delay
       setTimeout(() => {
-        navigate("/login");
+        navigate(`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`);
       }, 2000);
     } catch (error: any) {
       toast.error(error.message || "Failed to update password");

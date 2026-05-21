@@ -1072,7 +1072,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
               </div>
 
               {/* Bottom bar */}
-              <div className="p-4 space-y-3 shrink-0 bg-gradient-to-t from-black/80 to-transparent" style={{ paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 1rem), 1rem)" }}>
+              <div className="p-4 space-y-3 shrink-0 bg-gradient-to-t from-black/80 to-transparent" style={{ paddingBottom: "max(calc(var(--zivo-safe-bottom,0px) + 1rem), 1rem)" }}>
                 {editingCaption ? (
                   <div className="flex items-center gap-2">
                     <input

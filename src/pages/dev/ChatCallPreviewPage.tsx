@@ -187,7 +187,7 @@ export default function ChatCallPreviewPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background px-4 pb-24 pt-[calc(env(safe-area-inset-top,0px)+1rem)] text-foreground sm:px-6">
+    <main className="min-h-screen bg-background px-4 pb-24 pt-[calc(var(--zivo-safe-top,0px)+1rem)] text-foreground sm:px-6">
       <div className="mx-auto flex max-w-5xl flex-col gap-6">
         <header className="flex items-center justify-between gap-3">
           <button

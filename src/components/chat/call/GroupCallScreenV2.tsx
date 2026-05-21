@@ -56,7 +56,7 @@ export default function GroupCallScreenV2({
       {/* Top bar — Google Meet style: minimal chrome, info chips on the right */}
       <header
         className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 sm:px-6 pointer-events-none"
-        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 12px)", paddingBottom: 8 }}
+        style={{ paddingTop: "calc(var(--zivo-safe-top,0px) + 12px)", paddingBottom: 8 }}
       >
         {/* Recording chip — only when active */}
         <div className="pointer-events-auto">
@@ -123,7 +123,7 @@ export default function GroupCallScreenV2({
         {(call.state === "connected" || call.participants.length > 0) && (
           <>
             {call.mediaError && (
-              <div className="absolute left-4 top-[calc(env(safe-area-inset-top,0px)+4rem)] z-20 w-[min(calc(100vw-2rem),460px)] rounded-2xl border border-amber-300/25 bg-zinc-950/85 px-4 py-3 text-sm text-white shadow-2xl backdrop-blur sm:left-6">
+              <div className="absolute left-4 top-[calc(var(--zivo-safe-top,0px)+4rem)] z-20 w-[min(calc(100vw-2rem),460px)] rounded-2xl border border-amber-300/25 bg-zinc-950/85 px-4 py-3 text-sm text-white shadow-2xl backdrop-blur sm:left-6">
                 <div className="flex gap-3 pr-7">
                   <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
                   <div>

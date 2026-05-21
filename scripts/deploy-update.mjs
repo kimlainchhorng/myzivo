@@ -2,12 +2,14 @@
 /**
  * ZIVO OTA Update Deploy Script
  * Usage: npm run deploy:update
+ *        npm run deploy:update:immediate -- --message="Critical fix"
  *
  * Requires .env.deploy with:
  *   SUPABASE_SERVICE_ROLE_KEY=eyJ...
  */
 
 import { execSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync, unlinkSync, existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -24,6 +26,26 @@ config({ path: join(ROOT, ".env.deploy") });
 const SUPABASE_URL = "https://slirphzzwcogdbkeicff.supabase.co";
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const BUCKET = "app-updates";
+const args = process.argv.slice(2);
+
+function readOption(name) {
+  const inline = args.find((arg) => arg.startsWith(`${name}=`));
+  if (inline) return inline.slice(name.length + 1);
+
+  const index = args.indexOf(name);
+  if (index >= 0 && args[index + 1] && !args[index + 1].startsWith("--")) return args[index + 1];
+
+  return null;
+}
+
+const activation = args.includes("--immediate")
+  ? "immediate"
+  : args.includes("--next-launch")
+    ? "next_launch"
+    : "prompt";
+const mandatory = args.includes("--mandatory") || activation === "immediate";
+const message = readOption("--message");
+const minNativeVersion = readOption("--min-native-version");
 
 if (!SERVICE_ROLE_KEY) {
   console.error("\nERROR: SUPABASE_SERVICE_ROLE_KEY not found.");
@@ -73,6 +95,7 @@ if (!buckets?.find((b) => b.name === BUCKET)) {
 
 console.log("\nUploading bundle...");
 const zipData = await readFile(zipPath);
+const checksum = createHash("sha256").update(zipData).digest("hex");
 const { error: uploadError } = await supabase.storage
   .from(BUCKET)
   .upload(zipName, zipData, { contentType: "application/zip", upsert: true });
@@ -86,7 +109,17 @@ const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(zipNa
 
 // ── 5. Update latest.json ─────────────────────────────────────────────────────
 console.log("\nUpdating latest.json...");
-const manifest = JSON.stringify({ version: newVersion, url: publicUrl }, null, 2);
+const manifestPayload = {
+  version: newVersion,
+  url: publicUrl,
+  checksum,
+  createdAt: new Date().toISOString(),
+  activation,
+  mandatory,
+  ...(message ? { message } : {}),
+  ...(minNativeVersion ? { minNativeVersion } : {}),
+};
+const manifest = JSON.stringify(manifestPayload, null, 2);
 const { error: manifestError } = await supabase.storage
   .from(BUCKET)
   .upload("latest.json", Buffer.from(manifest), {
@@ -109,4 +142,6 @@ Users on iOS & Android will download the update silently
 in the background and get it on next app launch.
 
 Bundle URL: ${publicUrl}
+Checksum: ${checksum}
+Activation: ${activation}${mandatory ? " (required)" : ""}
 `);

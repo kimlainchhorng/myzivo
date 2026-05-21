@@ -302,7 +302,7 @@ export default function RideOptionsSheet({
       </div>
 
       {/* Payment + Confirm — pinned bottom */}
-      <div className="mt-auto border-t border-border bg-background px-5 pb-safe-bottom">
+      <div className="mt-auto border-t border-border bg-background px-5 pb-[var(--zivo-safe-bottom,0px)]">
         <button type="button" className="flex w-full items-center gap-3 py-3 hover:bg-muted/40 transition-colors rounded-xl px-1">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
             <CreditCard className="h-5 w-5 text-muted-foreground" />

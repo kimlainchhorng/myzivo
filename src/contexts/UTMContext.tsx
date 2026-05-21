@@ -66,7 +66,7 @@ export function TrackingBadge() {
   return (
     <div
       className="fixed right-4 z-40 bg-primary/10 backdrop-blur-sm text-primary text-xs px-3 py-1.5 rounded-full border border-primary/20 flex items-center gap-2"
-      style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
+      style={{ bottom: "calc(var(--zivo-safe-bottom,0px) + 1rem)" }}
     >
       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
       <span>Tracking active</span>

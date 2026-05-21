@@ -294,7 +294,10 @@ const EmbeddedCheckout = () => {
       </main>
 
       {/* Bottom Disclosure Bar */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-background border-t border-border py-3 z-40">
+      <footer
+        className="fixed bottom-0 left-0 right-0 bg-background border-t border-border py-3 z-40"
+        style={{ paddingBottom: "calc(var(--zivo-safe-bottom,0px) + 0.75rem)" }}
+      >
         <div className="container mx-auto px-4">
           <p className="text-center text-xs text-muted-foreground">
             {FLIGHT_DISCLAIMERS.ticketing}

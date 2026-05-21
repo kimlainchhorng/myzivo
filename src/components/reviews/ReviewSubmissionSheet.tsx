@@ -116,7 +116,7 @@ export function ReviewSubmissionSheet({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl p-6 max-w-lg mx-auto w-full"
+            className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl p-6 pb-[calc(var(--zivo-safe-bottom,0px)+1.5rem)] max-w-lg mx-auto w-full"
           >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold">Write a Review</h2>

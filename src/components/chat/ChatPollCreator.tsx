@@ -120,7 +120,7 @@ export default function ChatPollCreator({ open, onClose, onSubmit }: ChatPollCre
             exit={{ y: "100%", opacity: 0.7 }}
             transition={{ type: "spring", damping: 32, stiffness: 360 }}
             className="fixed inset-x-0 bottom-0 sm:inset-x-auto sm:left-1/2 sm:bottom-auto sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md z-[1501] bg-background rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[88vh] sm:max-h-[80vh] overflow-y-auto"
-            style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}
+            style={{ paddingBottom: "calc(var(--zivo-safe-bottom,0px) + 16px)" }}
           >
             <div className="sticky top-0 z-10 flex items-center justify-between px-4 sm:px-5 py-3 border-b border-border/30 bg-background/95 backdrop-blur-md rounded-t-3xl">
               <button type="button"

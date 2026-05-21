@@ -365,7 +365,7 @@ export default function ZivoCardPicker({ open, onClose, onPick }: Props) {
             exit={{ y: 80, opacity: 0 }}
             transition={{ type: "spring", damping: 26, stiffness: 280 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full sm:max-w-md bg-background rounded-t-2xl sm:rounded-2xl p-4 pb-[max(1rem,env(safe-area-inset-bottom))] max-h-[80dvh] overflow-y-auto"
+            className="w-full sm:max-w-md bg-background rounded-t-2xl sm:rounded-2xl p-4 pb-[max(1rem,var(--zivo-safe-bottom,0px))] max-h-[80dvh] overflow-y-auto"
           >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2 min-w-0">

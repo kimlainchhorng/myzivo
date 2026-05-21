@@ -529,7 +529,7 @@ export default function GroceryStorePage() {
             exit={{ opacity: 0, y: -16, scale: 0.97 }}
             transition={{ type: "spring" as const, stiffness: 300, damping: 25 }}
             className="fixed left-4 right-4 z-50 bg-card/95 backdrop-blur-xl rounded-[24px] border border-border/40 shadow-2xl overflow-hidden max-h-[70vh] overflow-y-auto"
-            style={{ top: "calc(env(safe-area-inset-top, 0px) + 4rem)" }}
+            style={{ top: "calc(var(--zivo-safe-top,0px) + 4rem)" }}
           >
             <div className="p-4">
               <div className="flex items-center justify-between mb-3">
@@ -782,7 +782,7 @@ export default function GroceryStorePage() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
             transition={{ type: "spring" as const, stiffness: 300, damping: 25 }}
-            className="fixed bottom-24 left-4 right-4 z-30"
+            className="fixed bottom-[calc(var(--zivo-safe-bottom,0px)+6rem)] left-4 right-4 z-30"
           >
             <motion.button
               whileTap={{ scale: 0.97 }}

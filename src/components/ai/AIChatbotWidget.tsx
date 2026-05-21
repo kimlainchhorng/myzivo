@@ -145,7 +145,7 @@ export default function AIChatbotWidget() {
       <AnimatePresence>
         {isOpen && (
           <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 5rem)" }}
+            style={{ bottom: "calc(var(--zivo-safe-bottom,0px) + 5rem)" }}
             className="fixed right-4 z-50 w-[340px] max-w-[calc(100vw-2rem)]">
             <Card className="flex flex-col h-[480px] shadow-2xl border-border overflow-hidden">
               {/* Header */}
@@ -213,7 +213,7 @@ export default function AIChatbotWidget() {
           of the iOS home indicator on devices that have one. */}
       <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
+        style={{ bottom: "calc(var(--zivo-safe-bottom,0px) + 1rem)" }}
         className="fixed right-4 z-50 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center">
         {isOpen ? <X className="h-5 w-5" /> : <MessageCircle className="h-5 w-5" />}
       </motion.button>

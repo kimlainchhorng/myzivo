@@ -534,7 +534,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
           </div>
 
           {/* Create button */}
-          <div className="p-4 border-t border-border/30 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="p-4 border-t border-border/30 pb-[max(1rem,var(--zivo-safe-bottom,0px))]">
             <button type="button"
               onClick={handleCreate}
               disabled={!canSubmit}

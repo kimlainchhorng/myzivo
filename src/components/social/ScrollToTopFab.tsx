@@ -50,7 +50,7 @@ export default function ScrollToTopFab() {
           transition={{ type: "spring", damping: 22, stiffness: 320 }}
           onClick={handleScrollTop}
           className="fixed right-4 z-[300] h-11 w-11 rounded-full bg-foreground text-background shadow-xl flex items-center justify-center active:scale-90 transition-transform"
-          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 84px)" }}
+          style={{ bottom: "calc(var(--zivo-safe-bottom,0px) + 84px)" }}
         >
           <ChevronUp className="h-5 w-5" />
         </motion.button>

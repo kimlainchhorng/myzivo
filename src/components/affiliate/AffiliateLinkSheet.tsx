@@ -68,7 +68,7 @@ export default function AffiliateLinkSheet() {
           className="fixed inset-0 z-[180] flex items-end sm:items-center justify-center bg-black/55 backdrop-blur-sm">
           <motion.div initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 80, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full sm:max-w-md bg-background rounded-t-2xl sm:rounded-2xl pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col overflow-hidden">
+            className="w-full sm:max-w-md bg-background rounded-t-2xl sm:rounded-2xl pb-[max(1rem,var(--zivo-safe-bottom,0px))] flex flex-col overflow-hidden">
             <div className="flex items-center justify-between px-4 pt-4 pb-2 border-b border-border/30">
               <h3 className="text-base font-bold">Share & earn</h3>
               <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="h-9 w-9 -mr-1.5 flex items-center justify-center rounded-full hover:bg-muted">

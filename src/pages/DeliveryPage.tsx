@@ -165,7 +165,7 @@ function DeliveryRoutePreview() {
       <div className="absolute left-[46%] top-[43%] flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card shadow-lg">
         <Truck className="h-5 w-5 text-foreground" />
       </div>
-      <div className="absolute left-4 right-4 top-[calc(env(safe-area-inset-top)+3.75rem)] rounded-2xl border border-border/60 bg-background/88 p-3 shadow-sm backdrop-blur">
+      <div className="absolute left-4 right-4 top-[calc(var(--zivo-safe-top,0px)+3.75rem)] rounded-2xl border border-border/60 bg-background/88 p-3 shadow-sm backdrop-blur">
         <div className="flex items-center gap-3">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
             <Package className="h-4 w-4 text-primary" />

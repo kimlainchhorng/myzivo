@@ -71,7 +71,7 @@ export default function MobileDatePickerSheet({
       <SheetContent
         side="bottom"
         className="rounded-t-3xl px-0 bg-transparent border-0 shadow-none"
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 16px)" }}
+        style={{ paddingBottom: "var(--zivo-safe-bottom,16px)" }}
       >
         <div
           className="mx-3 mb-2 rounded-3xl overflow-hidden animate-scale-in"
@@ -239,7 +239,7 @@ export function MobileDateRangePickerSheet({
       <SheetContent
         side="bottom"
         className="rounded-t-3xl px-0 bg-transparent border-0 shadow-none"
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 16px)" }}
+        style={{ paddingBottom: "var(--zivo-safe-bottom,16px)" }}
       >
         <div
           className="mx-3 mb-2 rounded-3xl overflow-hidden animate-scale-in"

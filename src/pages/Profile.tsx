@@ -296,7 +296,11 @@ const Profile = () => {
     document.body.removeChild(textArea);
     if (!copied) throw new Error("Copy command failed");
   }, []);
-  const handleToggleNotif = useCallback(() => { selectionChanged(); setShowNotifPanel(p => !p); }, [selectionChanged]);
+  const handleToggleNotif = useCallback(() => {
+    selectionChanged();
+    setShowLangPicker(false);
+    setShowNotifPanel(p => !p);
+  }, [selectionChanged]);
   const [notifFilter, setNotifFilter] = useState<"all" | "unread">("all");
   const notifPanelRef = useRef<HTMLDivElement>(null);
   const notifBellRef = useRef<HTMLButtonElement>(null);
@@ -728,13 +732,111 @@ const Profile = () => {
             </Avatar>
           </span>
           <div className="flex items-center gap-1 min-w-0 flex-1" aria-live="polite">
-            <span className={cn(
+            <span
+              translate="no"
+              className={cn(
               "font-semibold text-sm truncate",
               "text-foreground"
             )}>
               {headerName || "Profile"}
             </span>
             {profile?.is_verified && <VerifiedBadge size={14} />}
+          </div>
+          <div className="relative">
+            <motion.button
+              ref={langTriggerRef}
+              type="button"
+              onClick={() => {
+                selectionChanged();
+                setShowNotifPanel(false);
+                setShowLangPicker((open) => !open);
+              }}
+              aria-label="Change language"
+              aria-expanded={showLangPicker}
+              aria-controls="profile-language-menu"
+              whileTap={{ scale: 0.86 }}
+              transition={{ type: "spring", stiffness: 400, damping: 22 }}
+              className={cn(
+                "relative h-9 w-9 flex items-center justify-center rounded-full transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                showLangPicker ? "bg-primary/10 text-primary" : "hover:bg-muted/60 text-foreground"
+              )}
+              title="Change language"
+            >
+              <Globe className="h-5 w-5" />
+              <img
+                src={getFlagUrl(currentLang.cc)}
+                alt=""
+                className="absolute -right-0.5 -bottom-0.5 h-4 w-4 rounded-full border border-background bg-background object-cover shadow-sm"
+              />
+            </motion.button>
+            <AnimatePresence>
+              {showLangPicker && (
+                <>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.14 }}
+                    onClick={() => setShowLangPicker(false)}
+                    className="fixed inset-0 z-40 bg-transparent"
+                    aria-hidden
+                  />
+                  <motion.div
+                    id="profile-language-menu"
+                    role="dialog"
+                    aria-label="Change language"
+                    initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                    transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                    className="fixed z-50 overflow-hidden rounded-2xl border border-border/60 bg-card/95 text-card-foreground shadow-2xl shadow-black/25 backdrop-blur-xl right-2 left-2 mx-auto max-w-[320px] lg:left-auto lg:right-20 lg:mx-0 lg:w-[260px]"
+                    style={{
+                      top: "calc(var(--zivo-safe-top-sticky) + 3rem + 6px)",
+                      maxHeight: "calc(100vh - var(--zivo-safe-top-sticky) - 3rem - 24px)",
+                    }}
+                  >
+                    <div className="border-b border-border/40 bg-muted/30 px-3 py-2.5">
+                      <p className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
+                        <Globe className="h-3.5 w-3.5" />
+                        {t("lang.select")}
+                      </p>
+                    </div>
+                    <div className="max-h-[320px] overflow-y-auto py-1">
+                      {LANGS.map((lang) => {
+                        const selected = currentLanguage === lang.code;
+                        return (
+                          <button
+                            type="button"
+                            key={lang.code}
+                            onClick={() => {
+                              changeLanguage(lang.code);
+                              setShowLangPicker(false);
+                            }}
+                            className={cn(
+                              "relative flex w-full items-center gap-3 overflow-hidden px-3 py-2.5 text-left text-sm transition-colors",
+                              selected ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted/60 text-foreground"
+                            )}
+                          >
+                            <img
+                              src={getFlagUrl(lang.cc)}
+                              alt=""
+                              className="absolute right-0 top-1/2 h-[120%] w-auto -translate-y-1/2 opacity-[0.07] pointer-events-none"
+                            />
+                            <img
+                              src={getFlagUrl(lang.cc)}
+                              alt=""
+                              className="relative z-10 h-5 w-5 rounded-full object-cover ring-1 ring-border/50"
+                            />
+                            <span className="relative z-10 min-w-0 flex-1 truncate">{lang.label}</span>
+                            {selected && <Check className="relative z-10 h-4 w-4 shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
           </div>
           <motion.button
             type="button"
@@ -1198,7 +1300,7 @@ const Profile = () => {
 
                     {/* Name & status */}
                     <div className="px-5 sm:px-6 pb-1 pt-1.5 sm:pt-2 text-left">
-                      <CardTitle className="flex items-center justify-start gap-2 text-xl sm:text-2xl font-bold tracking-tight">
+                      <CardTitle translate="no" className="flex items-center justify-start gap-2 text-xl sm:text-2xl font-bold tracking-tight">
                         <span>{headerName || t("profile.set_name")}</span>
                         {profile?.is_verified && <VerifiedBadge size={28} />}
                       </CardTitle>
@@ -1219,7 +1321,7 @@ const Profile = () => {
                       {/* Email hidden — only visible to account owner in settings */}
                       <div className="flex flex-wrap items-center justify-start gap-2 mt-2 sm:mt-3">
                         {isPlus && (
-                          <Badge className="bg-ig-gradient text-white border-0 font-semibold rounded-full px-3 py-1">
+                          <Badge translate="no" className="bg-ig-gradient text-white border-0 font-semibold rounded-full px-3 py-1">
                             <Crown className="w-3 h-3 mr-1" /> ZIVO+ {plan === "annual" ? "Annual" : "Monthly"}
                           </Badge>
                         )}

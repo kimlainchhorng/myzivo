@@ -47,7 +47,7 @@ export default function NewChatFab({ onNewChat, onNewGroup, onNewContact, onBroa
 
       <div
         className="fixed right-5 z-40 flex flex-col items-end gap-2.5"
-        style={{ bottom: "calc(var(--zivo-safe-bottom, 0px) + 7rem)" }}
+        style={{ bottom: "calc(var(--zivo-safe-bottom,0px) + 7rem)" }}
       >
         <AnimatePresence>
           {open && items.map((it, i) => {

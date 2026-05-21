@@ -694,9 +694,9 @@ export default function CallScreen({
     callState === "ringing"
       ? role === "caller"
         ? remoteAccepted
-          ? "Connecting..."
-          : callType === "video" ? "Video calling..." : "Calling..."
-        : "Connecting..."
+          ? "Connecting media..."
+          : callType === "video" ? "Ringing video..." : "Ringing..."
+        : "Answering..."
       : callState === "connected"
         ? formatDuration(duration)
         : "Call ended";
@@ -797,7 +797,7 @@ export default function CallScreen({
   if (callType === "video") {
     return (
       <motion.div
-        className="fixed inset-0 z-[60] bg-black"
+        className="fixed inset-0 z-[1900] bg-black"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -838,7 +838,7 @@ export default function CallScreen({
 
         {/* Top bar */}
         <div className="absolute top-0 left-0 right-0 px-5 flex items-center justify-between z-20"
-          style={{ paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 1rem)" }}>
+          style={{ paddingTop: "max(calc(var(--zivo-safe-top,0px) + 0.5rem), 1rem)" }}>
           <CallQualityBadge stats={qualityStats} />
           <div className="flex items-center gap-2">
             {onMinimize && (
@@ -855,7 +855,7 @@ export default function CallScreen({
 
         {/* Caller info overlay — top center */}
         <div className="absolute top-0 left-0 right-0 z-10 flex flex-col items-center"
-          style={{ paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 3.5rem), 4.5rem)" }}>
+          style={{ paddingTop: "max(calc(var(--zivo-safe-top,0px) + 3.5rem), 4.5rem)" }}>
           <h2 className="text-xl font-bold text-white tracking-tight drop-shadow-lg">{recipientName}</h2>
           <motion.p
             key={statusText}
@@ -915,7 +915,7 @@ export default function CallScreen({
 
         {/* Bottom controls */}
         <div className="absolute bottom-0 left-0 right-0 z-20 px-4"
-          style={{ paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 1rem), 1.5rem)" }}>
+          style={{ paddingBottom: "max(calc(var(--zivo-safe-bottom,0px) + 1rem), 1.5rem)" }}>
           <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/10 px-4 py-4 shadow-2xl">
             <div className="flex items-center justify-around">
               {/* Mute */}
@@ -987,36 +987,28 @@ export default function CallScreen({
   // Voice call layout — FaceTime 2026 style
   return (
     <motion.div
-      className="fixed inset-0 z-[60] flex flex-col items-center"
+      className="fixed inset-0 z-[1900] flex flex-col items-center"
       initial={{ opacity: 0, scale: 1.05 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.25 }}
       style={{
-        paddingTop: "max(env(safe-area-inset-top, 0px), 2.5rem)",
-        paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1.5rem)",
+        paddingTop: "max(var(--zivo-safe-top,0px), 2.5rem)",
+        paddingBottom: "max(var(--zivo-safe-bottom,0px), 1.5rem)",
         background: "linear-gradient(165deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.4) 50%, hsl(var(--primary) / 0.08) 100%)",
       }}
     >
-      {/* Ambient blur orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-20"
-          style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.4), transparent 70%)" }}
-          animate={{ scale: [1, 1.2, 1], x: [0, 20, 0], y: [0, -10, 0] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute -bottom-10 -left-10 w-56 h-56 rounded-full opacity-15"
-          style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.3), transparent 70%)" }}
-          animate={{ scale: [1.2, 1, 1.2], x: [0, -15, 0] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        />
-      </div>
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(180deg, hsl(var(--background) / 0.96), transparent 34%, hsl(var(--background) / 0.72))",
+        }}
+      />
 
       {/* Top bar */}
       <div className="absolute top-0 left-0 right-0 px-5 flex items-center justify-between z-10"
-        style={{ paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 1rem)" }}>
+        style={{ paddingTop: "max(calc(var(--zivo-safe-top,0px) + 0.5rem), 1rem)" }}>
         <CallQualityBadge stats={qualityStats} />
         <div className="flex items-center gap-2">
           {onMinimize && (

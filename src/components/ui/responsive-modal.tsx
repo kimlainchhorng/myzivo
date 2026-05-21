@@ -83,7 +83,7 @@ export function ResponsiveModal({
           {footer && (
             <div
               className="shrink-0 border-t border-border px-4 pt-3 bg-background"
-              style={{ paddingBottom: "calc(var(--zivo-mobile-nav-h, 64px) + env(safe-area-inset-bottom) + 0.75rem)" }}
+              style={{ paddingBottom: "calc(var(--zivo-mobile-nav-h, 64px) + var(--zivo-safe-bottom,0px) + 0.75rem)" }}
             >
               {footer}
             </div>

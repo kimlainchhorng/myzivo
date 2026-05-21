@@ -71,9 +71,14 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   },
   global: {
     // Keep TCP connection alive across requests to avoid cold-start latency
-    // on mobile networks (saves ~100-300 ms per API call after idle).
-    fetch: (url, options = {}) =>
-      fetch(url, { ...options, keepalive: true }),
+    // on mobile networks (saves ~100-300 ms per lightweight read after idle).
+    // Do not set keepalive on uploads/mutations: browsers cap keepalive
+    // request bodies at roughly 64KB, which breaks real photo/video sends.
+    fetch: (url, options = {}) => {
+      const method = (options.method || "GET").toUpperCase();
+      const canKeepAlive = !options.body && (method === "GET" || method === "HEAD");
+      return fetch(url, canKeepAlive ? { ...options, keepalive: true } : options);
+    },
   },
   realtime: {
     params: {

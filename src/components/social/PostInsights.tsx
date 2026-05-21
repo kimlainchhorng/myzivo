@@ -109,7 +109,7 @@ export default function PostInsights({ open, onClose, postId, source }: Props) {
             initial={{ y: 400, opacity: 0.5 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 400, opacity: 0 }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
             onClick={(e) => e.stopPropagation()}
-            style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}
+            style={{ paddingBottom: "max(2rem, var(--zivo-safe-bottom,0px))" }}
           >
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-muted-foreground/30 sm:hidden" />
             <h3 className="mb-3 text-base font-semibold">Post insights</h3>

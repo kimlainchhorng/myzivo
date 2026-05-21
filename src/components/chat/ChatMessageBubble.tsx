@@ -33,6 +33,7 @@ import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSignedMedia } from "@/hooks/useSignedMedia";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { openExternalUrl } from "@/lib/openExternalUrl";
@@ -49,6 +50,7 @@ import {
   extractAppleTrackId,
   lookupItunesPreviewUrlByTrackId,
 } from "./musicShare";
+import zivoLogoPng from "@/assets/zivo-logo.png";
 
 import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
 import { getAnimatedStickerUrl } from "@/config/animatedStickerMap";
@@ -60,6 +62,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 // Lazy-load TransparentStickerVideo — heavy chroma-key/WebGL component
 const TransparentStickerVideo = lazy(() => import("./TransparentStickerVideo").then(m => ({ default: m.TransparentStickerVideo })));
 const REACTION_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🔥", "🎉", "😍"];
+const AUTO_MEDIA_MESSAGES = new Set(["Photo", "Video"]);
+const CHAT_MEDIA_FRAME_CLASS = "w-[292px] max-w-[76vw]";
+const CHAT_MEDIA_MAX_HEIGHT = "min(520px, 58vh)";
 
 type IconLike = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -387,6 +392,11 @@ function MusicCard({ message, isMe }: { message: string; isMe: boolean; time: st
     : previewAvailable
       ? "Preview"
       : "Listen";
+  const playButtonClass = isMe
+    ? "bg-white/10 text-white border-white/10 hover:bg-white/20"
+    : "bg-background text-foreground border-border/50 hover:bg-background/80 shadow-black/5";
+  const playIconClass = isMe ? "text-white fill-white" : "text-foreground fill-foreground";
+  const unavailableIconClass = isMe ? "text-white/60" : "text-muted-foreground";
 
   return (
     <div className={`p-4 rounded-3xl border ${isMe ? "bg-black text-white border-white/10" : "bg-muted/50 border-border/30"} min-w-[260px] shadow-xl relative overflow-hidden group`}>
@@ -413,20 +423,23 @@ function MusicCard({ message, isMe }: { message: string; isMe: boolean; time: st
           }
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => void handlePrimaryAction(e)}
-          className="h-11 w-11 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition-all active:scale-90 shrink-0 shadow-lg border border-white/10"
+          className={`h-11 w-11 rounded-full backdrop-blur-md flex items-center justify-center transition-all active:scale-90 shrink-0 shadow-lg border ${playButtonClass}`}
         >
           {isPlaying ? (
-            <Pause className="w-5 h-5 fill-white text-white" />
+            <Pause className={`w-5 h-5 ${playIconClass}`} />
           ) : previewFailed ? (
-            <ExternalLink className="w-4.5 h-4.5 text-white/60" />
+            <ExternalLink className={`w-4.5 h-4.5 ${unavailableIconClass}`} />
           ) : (
-            <Play className="w-5 h-5 fill-white text-white ml-0.5" />
+            <Play className={`w-5 h-5 ml-0.5 ${playIconClass}`} />
           )}
         </button>
       </div>
 
       <div className="mt-3">
-        <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${isMe ? "bg-white/10 text-white/50" : "bg-foreground/5 text-foreground/40"}`}>Zivo</span>
+        <span className={`inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${isMe ? "bg-white/10 text-white/70" : "bg-background/80 text-foreground/70 border border-border/40"}`}>
+          <img src={zivoLogoPng} alt="" className="h-3 w-3 rounded-[3px] object-contain" />
+          ZIVO
+        </span>
       </div>
     </div>
   );
@@ -467,6 +480,12 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
   const [translation, setTranslation] = useState<{ text: string; sourceLang?: string } | null>(null);
   const [translating, setTranslating] = useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
+  const displayImageUrl = useSignedMedia(imageUrl, "chat-media-files", "display");
+  const displayVideoUrl = useSignedMedia(videoUrl, "chat-media-files", "display");
+  const [isTinyImage, setIsTinyImage] = useState(false);
+  const shouldHideAutoMediaMessage =
+    (Boolean(displayImageUrl || displayVideoUrl) || messageType === "image" || messageType === "video") &&
+    AUTO_MEDIA_MESSAGES.has((message || "").trim());
 
   const canEdit = isMe && !!createdAt && (Date.now() - new Date(createdAt).getTime() < 48 * 60 * 60 * 1000) && !!message?.trim() && !imageUrl && !videoUrl;
 
@@ -514,6 +533,10 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
   const lastTapTime = useRef(0);
   const parsedSticker = useMemo(() => parseStickerMessage(message || "", messageType), [message, messageType]);
   const parsedGif = useMemo(() => parseGifMessage(message || "", messageType), [message, messageType]);
+
+  useEffect(() => {
+    setIsTinyImage(false);
+  }, [displayImageUrl]);
 
   useEffect(() => {
     if (!parsedSticker || parsedSticker.animatedSrc) {
@@ -780,18 +803,19 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
         )}
 
         {/* Video — compact reel-style thumbnail (normal or locked) */}
-        {videoUrl && (
+        {displayVideoUrl && (
           <div
             onClick={(e) => {
               e.stopPropagation();
               if (!didLongPress.current && !isLocked) setShowVideoPlayer(true);
             }}
-            className={`overflow-hidden mb-1 relative cursor-pointer w-[180px] ${isMe ? "ml-auto" : ""}`}
+            className={`${CHAT_MEDIA_FRAME_CLASS} overflow-hidden mb-1 relative cursor-pointer ${isMe ? "ml-auto" : ""}`}
           >
-            <div className={`rounded-2xl overflow-hidden relative bg-muted ${isMe ? "rounded-br-[6px]" : "rounded-bl-[6px]"}`}>
+            <div className={`rounded-2xl overflow-hidden relative bg-muted shadow-sm border border-border/10 ${isMe ? "rounded-br-[6px]" : "rounded-bl-[6px]"}`}>
               <video
-                src={`${videoUrl}#t=0.1`}
-                className={`w-full aspect-[4/5] object-cover transition-all duration-300 ${isLocked ? "blur-xl scale-105" : ""}`}
+                src={`${displayVideoUrl}#t=0.1`}
+                className={`w-full aspect-[9/16] object-cover transition-all duration-300 ${isLocked ? "blur-xl scale-105" : ""}`}
+                style={{ maxHeight: CHAT_MEDIA_MAX_HEIGHT }}
                 playsInline
                 preload="none"
                 muted
@@ -859,14 +883,22 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
         )}
 
         {/* Image — normal or locked */}
-        {imageUrl && !videoUrl && (
-          <div className={`rounded-2xl overflow-hidden mb-1 shadow-sm relative ${isMe ? "rounded-br-[6px]" : "rounded-bl-[6px]"}`}>
+        {displayImageUrl && !displayVideoUrl && (
+          <div className={`${isTinyImage ? "w-28 max-w-[32vw]" : CHAT_MEDIA_FRAME_CLASS} rounded-2xl overflow-hidden mb-1 shadow-sm relative bg-muted border border-border/10 ${isMe ? "ml-auto rounded-br-[6px]" : "rounded-bl-[6px]"}`}>
             <img
-              src={imageUrl}
+              src={displayImageUrl}
               alt=""
-              onClick={(e) => { if (!isLocked) { e.stopPropagation(); import("@/lib/chat/openMedia").then(m => m.openMedia({ url: imageUrl, type: "image", id })); } }}
-              className={`max-w-full max-h-60 object-cover rounded-2xl transition-all duration-300 cursor-zoom-in ${isLocked ? "blur-xl scale-105" : ""}`}
+              onClick={(e) => { if (!isLocked) { e.stopPropagation(); import("@/lib/chat/openMedia").then(m => m.openMedia({ url: displayImageUrl, type: "image", id })); } }}
+              className={`block w-full object-contain transition-all duration-300 cursor-zoom-in ${isLocked ? "blur-xl scale-105" : ""}`}
+              style={{
+                maxHeight: CHAT_MEDIA_MAX_HEIGHT,
+                imageRendering: isTinyImage ? "pixelated" : undefined,
+              }}
               loading="lazy"
+              onLoad={(e) => {
+                const img = e.currentTarget;
+                setIsTinyImage((img.naturalWidth || 0) <= 16 && (img.naturalHeight || 0) <= 16);
+              }}
             />
             {/* Locked overlay */}
             {isLocked && (
@@ -903,7 +935,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
         )}
 
         {/* Message body */}
-        {message && (() => {
+        {message && !shouldHideAutoMediaMessage && (() => {
           if (messageType === "poll" || messageType === "todo" || messageType === "split_bill" || messageType === "book_table" || messageType === "trip_idea") {
             return <MiniAppCard type={messageType} message={message} isMe={isMe} time={time} onAction={onMiniAppAction} />;
           }
@@ -1188,8 +1220,8 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
 
       {/* Fullscreen Reel-style video player */}
       <AnimatePresence>
-        {showVideoPlayer && videoUrl && (
-          <ReelVideoPlayer videoUrl={videoUrl} onClose={() => setShowVideoPlayer(false)} />
+        {showVideoPlayer && displayVideoUrl && (
+          <ReelVideoPlayer videoUrl={displayVideoUrl} onClose={() => setShowVideoPlayer(false)} />
         )}
       </AnimatePresence>
     </div>
@@ -1274,7 +1306,7 @@ function ReelVideoPlayer({ videoUrl, onClose }: { videoUrl: string; onClose: () 
       {/* Top bar */}
       <motion.div
         animate={{ opacity: showControls ? 1 : 0 }}
-        className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/60 to-transparent pt-[max(env(safe-area-inset-top),12px)] px-4 pb-8"
+        className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/60 to-transparent pt-[max(var(--zivo-safe-top,0px),12px)] px-4 pb-8"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -1355,7 +1387,7 @@ function ReelVideoPlayer({ videoUrl, onClose }: { videoUrl: string; onClose: () 
       </div>
 
       {/* Bottom progress bar */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/50 to-transparent pb-[max(env(safe-area-inset-bottom),8px)] px-4 pt-6">
+      <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/50 to-transparent pb-[max(var(--zivo-safe-bottom,0px),8px)] px-4 pt-6">
         <div
           className="w-full h-1 rounded-full bg-white/20 cursor-pointer mb-3"
           onClick={handleSeek}
@@ -1658,7 +1690,8 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
             <img src={preview.mediaUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
           )}
           {/* ZIVO badge on media */}
-          <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase bg-black/40 text-white backdrop-blur-sm">
+          <div className="absolute top-2 right-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase bg-black/45 text-white backdrop-blur-sm">
+            <img src={zivoLogoPng} alt="" className="h-3 w-3 rounded-[3px] object-contain" />
             ZIVO
           </div>
         </div>
@@ -1676,11 +1709,14 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
               className="h-9 w-auto object-contain"
             />
           )}
-          <div className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase ${
+          <div className={`absolute top-2 right-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase ${
             preview.socialPlatform
               ? `bg-black/25 ${preview.socialPlatform.textColor}`
               : (isMe ? "bg-primary-foreground/20 text-primary-foreground/60" : "bg-foreground/10 text-foreground/40")
           }`}>
+            {!preview.socialPlatform && (
+              <img src={zivoLogoPng} alt="" className="h-3 w-3 rounded-[3px] object-contain" />
+            )}
             {preview.socialPlatform ? preview.socialPlatform.label : "ZIVO"}
           </div>
         </div>

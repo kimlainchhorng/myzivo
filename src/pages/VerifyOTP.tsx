@@ -1,14 +1,14 @@
 /**
- * VerifyOTP — passwordless email OTP confirmation page.
- * Flow: user enters email on /login → clicks "Email me a code" → lands here
- * with ?email=... → enters 6-digit code → Supabase signs them in.
+ * VerifyOTP — passwordless email confirmation page.
+ * Login flow uses a Supabase magic link. Signup can still use a 6-digit code.
  */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2, Mail, ArrowLeft, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SEOHead from "@/components/SEOHead";
+import { saveAccount } from "@/hooks/useSavedAccounts";
 
 const RESEND_COOLDOWN = 30;
 
@@ -18,17 +18,48 @@ const VerifyOTP = () => {
   const email = params.get("email") || "";
   const redirect = params.get("redirect") || "/";
   const mode = params.get("mode") === "signup" ? "signup" : "login";
+  const isSignup = mode === "signup";
 
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(RESEND_COOLDOWN);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  // Some Supabase email templates only contain the magic link (no 6-digit
-  // token). Default the page to "waiting for link tap" which is the primary
-  // path; users who DO have a code can click "Use code instead" to reveal the
-  // 6-box input.
-  const [showCodeEntry, setShowCodeEntry] = useState(false);
+  // Login emails are magic-link first. Signup emails use the custom 6-digit
+  // verification code, so show code entry immediately for signup only.
+  const [showCodeEntry, setShowCodeEntry] = useState(isSignup);
+
+  const getEmailRedirectTo = () => {
+    const redirectParams = new URLSearchParams();
+    redirectParams.set("redirect", redirect);
+    return `${window.location.origin}/auth-callback?${redirectParams.toString()}`;
+  };
+
+  const persistVerifiedAccount = useCallback(async () => {
+    if (!email) return;
+    try {
+      const [{ data: profile }, { data: sessionData }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("full_name, avatar_url, role")
+          .eq("email", email)
+          .maybeSingle(),
+        supabase.auth.getSession(),
+      ]);
+      saveAccount({
+        email,
+        fullName: profile?.full_name || email.split("@")[0],
+        avatarUrl: profile?.avatar_url ?? null,
+        lastLoginAt: new Date().toISOString(),
+        role: profile?.role ?? null,
+        refreshToken: sessionData?.session?.refresh_token ?? null,
+        accessToken: sessionData?.session?.access_token ?? null,
+        expiresAt: sessionData?.session?.expires_at ?? null,
+      });
+    } catch {
+      // Saving the quick-login card is nice-to-have; auth itself succeeded.
+    }
+  }, [email]);
 
   useEffect(() => {
     if (!email) {
@@ -53,12 +84,14 @@ const VerifyOTP = () => {
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.user) {
-        toast.success("Signed in!");
-        navigate(redirect, { replace: true });
+        void persistVerifiedAccount().finally(() => {
+          toast.success("Signed in!");
+          navigate(redirect, { replace: true });
+        });
       }
     });
     return () => sub.subscription.unsubscribe();
-  }, [navigate, redirect]);
+  }, [navigate, persistVerifiedAccount, redirect]);
 
   const submit = async (fullCode: string) => {
     if (submitting) return;
@@ -119,6 +152,7 @@ const VerifyOTP = () => {
       inputRefs.current[0]?.focus();
       return;
     }
+    await persistVerifiedAccount();
     toast.success("Signed in!");
     navigate(redirect, { replace: true });
   };
@@ -164,19 +198,25 @@ const VerifyOTP = () => {
       return;
     }
 
-    const { error } = await supabase.auth.signInWithOtp({ email });
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: getEmailRedirectTo() },
+    });
     setResending(false);
     if (error) {
-      toast.error(error.message || "Could not resend code.");
+      toast.error(error.message || "Could not resend sign-in link.");
       return;
     }
-    toast.success("New code sent!");
+    toast.success("New sign-in link sent!");
     setCooldown(RESEND_COOLDOWN);
   };
 
   return (
     <div className="relative min-h-[100dvh] w-full overflow-hidden flex items-center justify-center px-5 py-8 bg-white dark:bg-black">
-      <SEOHead title="Verify your code" description="Enter the 6-digit code we emailed you." />
+      <SEOHead
+        title={isSignup ? "Verify your code" : "Check your email"}
+        description={isSignup ? "Enter the 6-digit code we emailed you." : "Tap the secure sign-in link we emailed you."}
+      />
 
       {/* Subtle ZIVO gradient backdrop */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
@@ -194,46 +234,56 @@ const VerifyOTP = () => {
             <div className="relative w-14 h-14 rounded-2xl bg-ig-gradient flex items-center justify-center mb-4 shadow-lg shadow-rose-500/20">
               <Mail className="w-7 h-7 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-zinc-900 dark:text-white">Check your email</h1>
+            <h1 className="text-xl font-bold text-zinc-900 dark:text-white">
+              {isSignup ? "Enter your code" : "Check your email"}
+            </h1>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1.5 text-center">
-              We sent a sign-in link to<br />
+              {isSignup ? "We sent a 6-digit code to" : "We sent a secure sign-in link to"}<br />
               <span className="font-semibold text-zinc-900 dark:text-white">{email}</span>
             </p>
           </div>
 
           <div className="space-y-4">
-            {/* Primary CTA — open the user's webmail directly */}
-            {(() => {
-              const domain = email.split("@")[1]?.toLowerCase() || "";
-              const provider =
-                domain === "gmail.com" || domain === "googlemail.com" ? { name: "Gmail", url: "https://mail.google.com/mail/u/0/#inbox" } :
-                domain.includes("outlook") || domain.includes("hotmail") || domain.includes("live.com") ? { name: "Outlook", url: "https://outlook.live.com/mail/" } :
-                domain === "yahoo.com" || domain === "ymail.com" ? { name: "Yahoo Mail", url: "https://mail.yahoo.com/" } :
-                domain === "icloud.com" || domain === "me.com" || domain === "mac.com" ? { name: "iCloud Mail", url: "https://www.icloud.com/mail" } :
-                domain === "proton.me" || domain === "protonmail.com" ? { name: "Proton Mail", url: "https://mail.proton.me/" } :
-                null;
-              return provider ? (
-                <a
-                  href={provider.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full h-10 rounded-lg text-sm font-semibold text-white bg-ig-gradient hover:opacity-95 active:scale-[0.99] transition flex items-center justify-center gap-2 shadow-md"
-                >
-                  <ExternalLink className="w-4 h-4" /> Open {provider.name}
-                </a>
-              ) : (
-                <div className="text-center text-xs text-zinc-500 dark:text-zinc-400 py-2 px-3 rounded-md bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/70 dark:border-zinc-700/60">
-                  Open your email app and tap the sign-in link.
-                </div>
-              );
-            })()}
+            {!isSignup && (
+              <>
+                {/* Primary CTA — open the user's webmail directly */}
+                {(() => {
+                  const domain = email.split("@")[1]?.toLowerCase() || "";
+                  const provider =
+                    domain === "gmail.com" || domain === "googlemail.com" ? { name: "Gmail", url: "https://mail.google.com/mail/u/0/#inbox" } :
+                    domain.includes("outlook") || domain.includes("hotmail") || domain.includes("live.com") ? { name: "Outlook", url: "https://outlook.live.com/mail/" } :
+                    domain === "yahoo.com" || domain === "ymail.com" ? { name: "Yahoo Mail", url: "https://mail.yahoo.com/" } :
+                    domain === "icloud.com" || domain === "me.com" || domain === "mac.com" ? { name: "iCloud Mail", url: "https://www.icloud.com/mail" } :
+                    domain === "proton.me" || domain === "protonmail.com" ? { name: "Proton Mail", url: "https://mail.proton.me/" } :
+                    null;
+                  return provider ? (
+                    <a
+                      href={provider.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full h-10 rounded-lg text-sm font-semibold text-white bg-ig-gradient hover:opacity-95 active:scale-[0.99] transition flex items-center justify-center gap-2 shadow-md"
+                    >
+                      <ExternalLink className="w-4 h-4" /> Open {provider.name}
+                    </a>
+                  ) : (
+                    <div className="text-center text-xs text-zinc-500 dark:text-zinc-400 py-2 px-3 rounded-md bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/70 dark:border-zinc-700/60">
+                      Open your email app and tap the sign-in link.
+                    </div>
+                  );
+                })()}
 
-            {/* Waiting indicator — auto-redirects via the onAuthStateChange
-                listener once the user clicks the link. */}
-            <div className="flex items-center justify-center gap-2 py-2 text-xs text-zinc-500 dark:text-zinc-400">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>Waiting for you to tap the link…</span>
-            </div>
+                <div className="rounded-lg border border-rose-100 bg-rose-50/60 px-3 py-2 text-center text-xs font-medium text-zinc-600 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-zinc-300">
+                  In your email, tap <span className="font-semibold text-zinc-900 dark:text-white">Log in now</span>. ZIVO will finish sign-in here.
+                </div>
+
+                {/* Waiting indicator — auto-redirects via the onAuthStateChange
+                    listener once the user clicks the link. */}
+                <div className="flex items-center justify-center gap-2 py-2 text-xs text-zinc-500 dark:text-zinc-400">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Waiting for you to tap the link…</span>
+                </div>
+              </>
+            )}
 
             {/* Resend */}
             <div className="text-center text-sm text-zinc-500 dark:text-zinc-400">
@@ -244,16 +294,18 @@ const VerifyOTP = () => {
                 disabled={cooldown > 0 || resending}
                 className="font-semibold text-rose-500 hover:text-rose-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {resending ? "Sending…" : cooldown > 0 ? `Resend in ${cooldown}s` : "Resend"}
+                {resending ? "Sending…" : cooldown > 0 ? `Resend in ${cooldown}s` : isSignup ? "Resend code" : "Resend link"}
               </button>
             </div>
 
             {/* OR divider */}
-            <div className="flex items-center gap-3 py-1">
-              <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
-              <span className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 tracking-wider">OR</span>
-              <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
-            </div>
+            {!isSignup && (
+              <div className="flex items-center gap-3 py-1">
+                <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
+                <span className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 tracking-wider">OR</span>
+                <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
+              </div>
+            )}
 
             {/* Secondary: collapsible code entry (for emails that include
                 a 6-digit token). Hidden by default to keep the page clean. */}
@@ -270,7 +322,7 @@ const VerifyOTP = () => {
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 text-center">
                   Enter the 6-digit code from your email
                 </p>
-                <div className="flex justify-between gap-2" onPaste={handlePaste}>
+                <div className="grid grid-cols-6 gap-2" onPaste={handlePaste}>
                   {code.map((digit, idx) => (
                     <input
                       key={idx}
@@ -285,7 +337,7 @@ const VerifyOTP = () => {
                       onChange={(e) => handleChange(idx, e.target.value)}
                       onKeyDown={(e) => handleKeyDown(idx, e)}
                       disabled={submitting}
-                      className="w-11 h-12 text-center text-xl font-bold rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 focus:border-border dark:focus:border-border outline-none text-zinc-900 dark:text-white transition"
+                      className="h-12 min-w-0 w-full text-center text-xl font-bold rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 focus:border-border dark:focus:border-border outline-none text-zinc-900 dark:text-white transition"
                     />
                   ))}
                 </div>
@@ -304,7 +356,7 @@ const VerifyOTP = () => {
 
         {/* Footer card */}
         <div className="mt-3 bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-6 py-4 text-center shadow-sm">
-          <Link to="/login" className="flex items-center justify-center gap-1 text-sm font-semibold text-zinc-700 dark:text-zinc-200 hover:text-rose-500 dark:hover:text-rose-400 transition-colors">
+          <Link to={`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`} className="flex items-center justify-center gap-1 text-sm font-semibold text-zinc-700 dark:text-zinc-200 hover:text-rose-500 dark:hover:text-rose-400 transition-colors">
             <ArrowLeft className="w-4 h-4" /> Back to sign in
           </Link>
         </div>

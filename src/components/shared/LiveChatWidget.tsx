@@ -251,7 +251,7 @@ const LiveChatWidget = () => {
       {/* Floating Action Button */}
       <AnimatePresence>
         {!isOpen && (
-          <div className="fixed right-4 md:right-6 z-50" style={{ bottom: "calc(72px + 88px + env(safe-area-inset-bottom, 0px))" }}>
+          <div className="fixed right-4 md:right-6 z-50" style={{ bottom: "calc(72px + 88px + var(--zivo-safe-bottom,0px))" }}>
             <motion.button
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -290,7 +290,7 @@ const LiveChatWidget = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed bottom-20 md:bottom-6 right-2 md:right-6 z-50 w-[calc(100vw-16px)] md:w-[380px] h-[520px] bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+            className="fixed bottom-[calc(var(--zivo-safe-bottom,0px)+5rem)] md:bottom-6 right-2 md:right-6 z-50 w-[calc(100vw-16px)] md:w-[380px] h-[520px] bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="p-4 bg-gradient-to-r from-primary to-primary/80 flex items-center justify-between shrink-0">

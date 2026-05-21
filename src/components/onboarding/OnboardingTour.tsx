@@ -64,12 +64,12 @@ export default function OnboardingTour() {
       {open && step && (
         <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]"
+          className="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 pb-[calc(var(--zivo-safe-bottom,0px)+1rem)]"
         >
           <motion.div
             initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 80, opacity: 0 }}
             transition={{ type: "spring", damping: 26, stiffness: 280 }}
-            className="w-full sm:max-w-md max-h-[min(560px,calc(100dvh-2rem-env(safe-area-inset-bottom)))] bg-background rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+            className="w-full sm:max-w-md max-h-[min(560px,calc(100dvh-2rem-var(--zivo-safe-bottom,0px)))] bg-background rounded-2xl shadow-2xl overflow-hidden flex flex-col"
           >
             <div className="relative shrink-0 bg-foreground text-background h-28 sm:h-32 flex items-center justify-center text-5xl">
               {stepIdx === 0 ? "👋" : stepIdx === 1 ? "💬" : stepIdx === 2 ? "✈️" : stepIdx === 3 ? "💵" : "✨"}

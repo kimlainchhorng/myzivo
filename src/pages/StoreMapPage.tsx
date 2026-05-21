@@ -2800,7 +2800,7 @@ export default function StoreMapPage() {
 
         {/* ── Header ── */}
         <div className="absolute top-0 left-0 right-0 z-[1100]"
-          style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 12px)" }}>
+          style={{ paddingTop: "max(var(--zivo-safe-top,0px), 12px)" }}>
           <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-background/90 via-background/45 to-transparent" />
           <div className="relative px-3 pb-1 sm:px-4 lg:px-6">
             <AnimatePresence mode="wait">

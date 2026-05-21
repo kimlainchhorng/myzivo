@@ -108,8 +108,8 @@ const TOPICS = [
 
 type StreamType = "video" | "audio" | "pk" | "multi";
 const STREAM_TYPES: { id: StreamType; label: string; desc: string; emoji: string; gradient: string }[] = [
- { id: "video", label: "Video Live", desc: "Standard camera stream", emoji: "", gradient: "from-muted to-muted" },
- { id: "audio", label: "Voice Room", desc: "Audio only · multi-host", emoji: "", gradient: "from-muted to-muted" },
+ { id: "video", label: "Video Live", desc: "Standard camera stream", emoji: "", gradient: "from-red-500 to-rose-600" },
+ { id: "audio", label: "Voice Room", desc: "Audio only · multi-host", emoji: "", gradient: "from-indigo-500 to-violet-600" },
  { id: "pk", label: "PK Battle", desc: "Compete head-to-head", emoji: "", gradient: "from-amber-500 to-orange-500" },
  { id: "multi", label: "Multi-Guest", desc: "Up to 9 guests", emoji: "", gradient: "from-emerald-500 to-teal-500" },
 ];
@@ -267,6 +267,7 @@ export default function GoLivePage() {
  const [qaQueue, setQaQueue] = useState<boolean>(false);
  const [multistream, setMultistream] = useState<string[]>([]);
  const [subscriberOnly, setSubscriberOnly] = useState<boolean>(false);
+ const [showSetupDetails, setShowSetupDetails] = useState(false);
  const [newPollQ, setNewPollQ] = useState<string>("");
  const [voiceEffect, setVoiceEffect] = useState<string>("none");
  const [autoClip, setAutoClip] = useState<boolean>(true);
@@ -924,11 +925,16 @@ export default function GoLivePage() {
 <div className="absolute inset-0 lg:max-w-md lg:left-1/2 lg:-translate-x-1/2 lg:rounded-[32px] lg:overflow-hidden lg:my-6 lg:bottom-6 lg:h-auto lg:bg-zinc-950 lg:shadow-2xl lg:ring-1 lg:ring-white/10">
 <video ref={videoRef} autoPlay muted playsInline className={cn("absolute inset-0 w-full h-full object-cover", facingMode === "user" && "scale-x-[-1]")} />
  {cameraError && (
-<div className="absolute inset-0 flex items-center justify-center bg-black">
-<div className="text-center px-6">
-<CameraOff className="w-12 h-12 text-white/40 mx-auto mb-3" />
-<p className="text-white/60 text-sm">Camera unavailable. Check permissions.</p>
-<Button onClick={startCamera} className="mt-4" variant="outline">Retry</Button>
+<div className="absolute left-4 right-4 top-[calc(var(--zivo-safe-top,0px)+4.75rem)] h-20 overflow-hidden rounded-[24px] border border-white/10 bg-zinc-900/95 shadow-2xl shadow-black/50">
+<div className="flex h-full items-center gap-3 px-4">
+<div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/10">
+<CameraOff className="h-5 w-5 text-white/50" />
+</div>
+<div className="min-w-0 flex-1">
+<p className="text-white/85 text-sm font-semibold">Camera unavailable</p>
+<p className="mt-0.5 truncate text-white/45 text-xs">Allow camera access, then retry.</p>
+</div>
+<Button onClick={startCamera} className="h-8 shrink-0 rounded-full px-4 text-xs" variant="outline">Retry</Button>
 </div>
 </div>
  )}
@@ -940,7 +946,7 @@ export default function GoLivePage() {
 
  {phase === "setup" && (
 <div className="relative z-10 w-full h-full flex flex-col lg:max-w-md lg:mx-auto lg:my-6 lg:rounded-[32px] lg:overflow-hidden">
-<div className="relative z-10 flex items-center gap-2 px-3 pt-2" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}>
+<div className="relative z-10 flex items-center gap-2 px-3 pt-2" style={{ paddingTop: "calc(var(--zivo-safe-top,0px) + 8px)" }}>
 <button type="button" onClick={goBack} aria-label="Back" className="relative z-20 min-w-[44px] min-h-[44px] rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center shrink-0 pointer-events-auto">
 <ArrowLeft className="h-5 w-5 text-white" />
 </button>
@@ -975,7 +981,109 @@ export default function GoLivePage() {
  )}
 </div>
 
-<div className="relative z-10 mt-auto px-4 pb-6 space-y-3 max-h-[75vh] overflow-y-auto scrollbar-hide" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}>
+<div className={cn("relative z-10 mt-24 overflow-y-auto rounded-t-[28px] border-t border-white/10 bg-black/[0.72] px-4 pb-6 pt-4 shadow-2xl shadow-black/60 backdrop-blur-md space-y-3 scrollbar-hide", cameraError ? "max-h-[80vh]" : "max-h-[84vh]")} style={{ paddingBottom: "calc(var(--zivo-safe-bottom,0px) + 24px)" }}>
+ {/* Streamer Pro Tips carousel (kept out of the primary setup flow) */}
+<div className="hidden">
+<div className="flex items-center justify-between mb-1.5 px-1">
+<span className="text-white/80 text-xs font-semibold flex items-center gap-1">
+ Pro tips
+</span>
+<span className="text-[10px] text-white/40">Swipe →</span>
+</div>
+<div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 snap-x snap-mandatory">
+ {[
+ { tip: "Start with a strong title to grab viewers", icon: "", gradient: "from-white/10 to-white/5" },
+ { tip: "Greet new viewers within 10 seconds", icon: "", gradient: "from-white/10 to-white/5" },
+ { tip: "Use good lighting — face a window", icon: "", gradient: "from-amber-500/30 via-yellow-500/20 to-orange-500/10" },
+ { tip: "Respond to comments to boost engagement", icon: "", gradient: "from-emerald-500/30 via-green-500/20 to-teal-500/10" },
+ { tip: "Stream for at least 30 mins for algo boost", icon: "⏱", gradient: "from-white/10 to-white/5" },
+ { tip: "Set a coin goal to motivate gifts", icon: "", gradient: "from-white/10 to-white/5" },
+ { tip: "Add hashtags for discovery", icon: "#", gradient: "from-white/10 to-white/5" },
+ { tip: "Schedule streams to build a routine", icon: "", gradient: "from-white/10 to-white/5" },
+ ].map((p, i) =>(
+<div
+ key={i}
+ className={cn(
+ "shrink-0 snap-start w-[220px] rounded-2xl p-3 bg-gradient-to-br border border-white/15 backdrop-blur-sm",
+ p.gradient,
+ )}
+ >
+<span className="text-2xl">{p.icon}</span>
+<p className="text-[12px] font-semibold text-white leading-tight mt-1.5">{p.tip}</p>
+</div>
+ ))}
+</div>
+</div>
+
+ {/* Stream type selector */}
+<div>
+<span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Stream type</span>
+<div className="grid grid-cols-4 gap-1.5">
+ {STREAM_TYPES.map((t) =>{
+ const active = streamType === t.id;
+ return (
+<button type="button"
+ key={t.id}
+ onClick={() =>setStreamType(t.id)}
+ className={cn(
+ "rounded-2xl p-2 flex flex-col items-center gap-0.5 border-2 transition-all",
+ active
+ ? `bg-gradient-to-br ${t.gradient} border-white/30 shadow-lg`
+ : "bg-white/[0.08] border-white/15",
+ )}
+ >
+<span className="text-2xl">{t.emoji}</span>
+<span className={cn("text-[10px] font-bold leading-tight", active ? "text-white" : "text-white/80")}>{t.label}</span>
+</button>
+ );
+ })}
+</div>
+</div>
+
+<Input
+ value={title}
+ onChange={(e) =>setTitle(e.target.value)}
+ placeholder="What are you streaming?"
+ maxLength={80}
+ className="!bg-white/10 !border-white/20 !text-white [-webkit-text-fill-color:white] placeholder:!text-white/40 h-12 text-base"
+ />
+
+ {/* Topics */}
+<div>
+<span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Category · {topic}</span>
+<div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+ {TOPICS.map((t) =>(
+<button type="button"
+ key={t.name}
+ onClick={() =>setTopic(t.name)}
+ className={cn(
+ "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 border transition-colors",
+ topic === t.name ? "bg-red-500 border-red-400 text-white" : "bg-white/10 border-white/20 text-white/70"
+ )}
+ >
+<span>{t.emoji}</span>{t.name}
+</button>
+ ))}
+</div>
+</div>
+
+<button type="button"
+ onClick={() =>setShowSetupDetails((v) =>!v)}
+ className="w-full rounded-2xl border border-white/15 bg-white/[0.08] px-3 py-2.5 text-left active:scale-[0.99] transition-transform"
+>
+<div className="flex items-center justify-between gap-3">
+<div>
+<p className="text-[12px] font-bold text-white">More setup options</p>
+<p className="text-[10px] text-white/40">Templates, cover, tags, effects, background</p>
+</div>
+<span className="rounded-full bg-white/10 px-2 py-1 text-[10px] font-bold text-white/70">
+ {showSetupDetails ? "Hide" : "Open"}
+</span>
+</div>
+</button>
+
+ {showSetupDetails && (
+<div className="space-y-3 rounded-[24px] border border-white/10 bg-white/[0.04] p-3">
  {/* Stream Templates (load preset config) */}
 <div>
 <div className="flex items-center justify-between mb-1.5 px-1">
@@ -1014,72 +1122,6 @@ export default function GoLivePage() {
 </div>
 <p className="text-[9px] text-white/40 mt-0.5 px-1">Pre-configured settings for your stream type</p>
 </div>
-
- {/* Streamer Pro Tips carousel (visible at the top) */}
-<div>
-<div className="flex items-center justify-between mb-1.5 px-1">
-<span className="text-white/80 text-xs font-semibold flex items-center gap-1">
- Pro tips
-</span>
-<span className="text-[10px] text-white/40">Swipe →</span>
-</div>
-<div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 snap-x snap-mandatory">
- {[
- { tip: "Start with a strong title to grab viewers", icon: "", gradient: "from-muted to-muted" },
- { tip: "Greet new viewers within 10 seconds", icon: "", gradient: "from-muted to-muted" },
- { tip: "Use good lighting — face a window", icon: "", gradient: "from-amber-500/30 via-yellow-500/20 to-orange-500/10" },
- { tip: "Respond to comments to boost engagement", icon: "", gradient: "from-emerald-500/30 via-green-500/20 to-teal-500/10" },
- { tip: "Stream for at least 30 mins for algo boost", icon: "⏱", gradient: "from-muted to-muted" },
- { tip: "Set a coin goal to motivate gifts", icon: "", gradient: "from-muted to-muted" },
- { tip: "Add hashtags for discovery", icon: "#", gradient: "from-muted to-muted" },
- { tip: "Schedule streams to build a routine", icon: "", gradient: "from-muted to-muted" },
- ].map((p, i) =>(
-<div
- key={i}
- className={cn(
- "shrink-0 snap-start w-[220px] rounded-2xl p-3 bg-gradient-to-br border border-white/15 backdrop-blur-sm",
- p.gradient,
- )}
- >
-<span className="text-2xl">{p.icon}</span>
-<p className="text-[12px] font-semibold text-white leading-tight mt-1.5">{p.tip}</p>
-</div>
- ))}
-</div>
-</div>
-
- {/* Stream type selector */}
-<div>
-<span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Stream type</span>
-<div className="grid grid-cols-4 gap-1.5">
- {STREAM_TYPES.map((t) =>{
- const active = streamType === t.id;
- return (
-<button type="button"
- key={t.id}
- onClick={() =>setStreamType(t.id)}
- className={cn(
- "rounded-2xl p-2 flex flex-col items-center gap-0.5 border-2 transition-all",
- active
- ? `bg-gradient-to-br ${t.gradient} border-white/30 shadow-lg`
- : "bg-white/8 border-white/15",
- )}
- >
-<span className="text-2xl">{t.emoji}</span>
-<span className={cn("text-[10px] font-bold leading-tight", active ? "text-white" : "text-white/80")}>{t.label}</span>
-</button>
- );
- })}
-</div>
-</div>
-
-<Input
- value={title}
- onChange={(e) =>setTitle(e.target.value)}
- placeholder="What are you streaming?"
- maxLength={80}
- className="bg-white/10 border-white/20 text-white placeholder:text-white/40 h-12 text-base"
- />
 
  {/* Stream description */}
 <div>
@@ -1132,25 +1174,6 @@ export default function GoLivePage() {
 </label>
 </div>
 
- {/* Topics */}
-<div>
-<span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Category · {topic}</span>
-<div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
- {TOPICS.map((t) =>(
-<button type="button"
- key={t.name}
- onClick={() =>setTopic(t.name)}
- className={cn(
- "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 border transition-colors",
- topic === t.name ? "bg-red-500 border-red-400 text-white" : "bg-white/10 border-white/20 text-white/70"
- )}
- >
-<span>{t.emoji}</span>{t.name}
-</button>
- ))}
-</div>
-</div>
-
  {/* Predefined Stream Tags */}
 <div>
 <div className="flex items-center justify-between mb-1.5 px-1">
@@ -1172,7 +1195,7 @@ export default function GoLivePage() {
  onClick={() =>setStreamTags((prev) =>(prev.includes(tag) ? prev.filter((x) =>x !== tag) : [...prev, tag]))}
  className={cn(
  "px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-colors",
- on ? "bg-blue-500 border-blue-400 text-white" : "bg-white/8 border-white/15 text-white/65",
+ on ? "bg-blue-500 border-blue-400 text-white" : "bg-white/[0.08] border-white/15 text-white/65",
  )}
  >
  {on && " "}{tag}
@@ -1189,7 +1212,7 @@ export default function GoLivePage() {
  value={hashtags}
  onChange={(e) =>setHashtags(e.target.value)}
  placeholder="#newyearlive, #khmernewyear, #vibes"
- className="bg-white/10 border-white/20 text-white placeholder:text-white/40 h-10 text-sm"
+ className="!bg-white/10 !border-white/20 !text-white [-webkit-text-fill-color:white] placeholder:!text-white/40 h-10 text-sm"
  />
 </div>
 
@@ -1261,14 +1284,14 @@ export default function GoLivePage() {
 <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
  {[
  { id: null, label: "None", emoji: "", gradient: "from-zinc-700 to-zinc-800" },
- { id: "beauty", label: "Beauty", emoji: "", gradient: "from-muted to-muted" },
- { id: "anime", label: "Anime", emoji: "", gradient: "from-muted to-muted" },
- { id: "cat", label: "Cat", emoji: "", gradient: "from-muted to-muted" },
- { id: "bunny", label: "Bunny", emoji: "", gradient: "from-muted to-muted" },
+ { id: "beauty", label: "Beauty", emoji: "", gradient: "from-white/10 to-white/5" },
+ { id: "anime", label: "Anime", emoji: "", gradient: "from-white/10 to-white/5" },
+ { id: "cat", label: "Cat", emoji: "", gradient: "from-white/10 to-white/5" },
+ { id: "bunny", label: "Bunny", emoji: "", gradient: "from-white/10 to-white/5" },
  { id: "crown", label: "Crown", emoji: "", gradient: "from-amber-300 to-yellow-200" },
- { id: "galaxy", label: "Galaxy", emoji: "", gradient: "from-muted to-muted" },
+ { id: "galaxy", label: "Galaxy", emoji: "", gradient: "from-white/10 to-white/5" },
  { id: "vintage", label: "Vintage", emoji: "", gradient: "from-amber-200 to-orange-200" },
- { id: "neon", label: "Neon", emoji: "", gradient: "from-muted to-muted" },
+ { id: "neon", label: "Neon", emoji: "", gradient: "from-white/10 to-white/5" },
  ].map((e) =>{
  const active = arEffect === e.id;
  return (
@@ -1383,7 +1406,7 @@ export default function GoLivePage() {
  onClick={() =>setPrivacy(p.id)}
  className={cn(
  "rounded-2xl p-2 flex flex-col items-center gap-0.5 border-2 transition-all",
- active ? "bg-red-500/20 border-red-500" : "bg-white/8 border-white/15",
+ active ? "bg-red-500/20 border-red-500" : "bg-white/[0.08] border-white/15",
  )}
  >
 <span className="text-lg">{p.emoji}</span>
@@ -1432,14 +1455,14 @@ export default function GoLivePage() {
 <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Stream vibe</span>
 <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
  {[
- { id: "chill", label: "Chill", emoji: "", gradient: "from-muted to-muted" },
+ { id: "chill", label: "Chill", emoji: "", gradient: "from-white/10 to-white/5" },
  { id: "hype", label: "Hype", emoji: "", gradient: "from-red-500/40 to-orange-500/30" },
  { id: "cozy", label: "Cozy", emoji: "", gradient: "from-amber-500/40 to-yellow-500/30" },
- { id: "spicy", label: "Spicy", emoji: "", gradient: "from-muted to-muted" },
- { id: "wholesome", label: "Wholesome", emoji: "", gradient: "from-muted to-muted" },
+ { id: "spicy", label: "Spicy", emoji: "", gradient: "from-white/10 to-white/5" },
+ { id: "wholesome", label: "Wholesome", emoji: "", gradient: "from-white/10 to-white/5" },
  { id: "savage", label: "Savage", emoji: "", gradient: "from-zinc-500/40 to-slate-500/30" },
- { id: "romantic", label: "Romantic", emoji: "", gradient: "from-muted to-muted" },
- { id: "mysterious", label: "Mysterious", emoji: "", gradient: "from-muted to-muted" },
+ { id: "romantic", label: "Romantic", emoji: "", gradient: "from-white/10 to-white/5" },
+ { id: "mysterious", label: "Mysterious", emoji: "", gradient: "from-white/10 to-white/5" },
  { id: "energetic", label: "Energetic", emoji: "", gradient: "from-yellow-500/40 to-amber-500/30" },
  ].map((m) =>(
 <button type="button"
@@ -1731,7 +1754,7 @@ export default function GoLivePage() {
  onChange={(e) =>setWelcomeMsg(e.target.value)}
  placeholder="Hi! Drop a like if you're new here"
  maxLength={150}
- className="bg-white/10 border-white/20 text-white placeholder:text-white/40 h-10 text-sm"
+ className="!bg-white/10 !border-white/20 !text-white [-webkit-text-fill-color:white] placeholder:!text-white/40 h-10 text-sm"
  />
 <p className="text-[9px] text-white/40 mt-0.5 px-1">DM'd to viewers when they join</p>
 </div>
@@ -2061,7 +2084,7 @@ export default function GoLivePage() {
  onChange={(e) =>setPinnedMessage(e.target.value)}
  placeholder="Welcome! Drop a like "
  maxLength={120}
- className="bg-white/10 border-white/20 text-white placeholder:text-white/40 h-10 text-sm"
+ className="!bg-white/10 !border-white/20 !text-white [-webkit-text-fill-color:white] placeholder:!text-white/40 h-10 text-sm"
  />
 </div>
 
@@ -2072,7 +2095,7 @@ export default function GoLivePage() {
  value={bannedWords}
  onChange={(e) =>setBannedWords(e.target.value)}
  placeholder="spam, scam, link"
- className="bg-white/10 border-white/20 text-white placeholder:text-white/40 h-10 text-sm"
+ className="!bg-white/10 !border-white/20 !text-white [-webkit-text-fill-color:white] placeholder:!text-white/40 h-10 text-sm"
  />
 </div>
 
@@ -2118,7 +2141,7 @@ export default function GoLivePage() {
  value={bannedUsers}
  onChange={(e) =>setBannedUsers(e.target.value)}
  placeholder="@spammer1, @troll22, @scam"
- className="bg-white/10 border-white/20 text-white placeholder:text-white/40 h-10 text-sm"
+ className="!bg-white/10 !border-white/20 !text-white [-webkit-text-fill-color:white] placeholder:!text-white/40 h-10 text-sm"
  />
 </div>
 
@@ -2355,6 +2378,9 @@ export default function GoLivePage() {
 </div>
 </div>
 
+</div>
+ )}
+
 <div className="flex justify-center gap-3 py-2">
 <button type="button" onClick={toggleCamera} className="w-12 h-12 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center">
  {cameraOn ?<Camera className="h-5 w-5 text-white" />:<CameraOff className="h-5 w-5 text-white/50" />}
@@ -2369,16 +2395,16 @@ export default function GoLivePage() {
 
  {(() =>{
  const hasMedia = !!localStream && localStream.getVideoTracks().some((t) =>t.readyState === "live");
- const disabled = (!user && !isPaired) || !hasMedia || cameraError;
+ const disabled = (!user && !isPaired) || (!hasMedia && !cameraError);
  let label: string;
  if (!user && !isPaired) label = "Sign in to go live";
- else if (cameraError) label = "Camera unavailable";
+ else if (cameraError) label = "Retry camera";
  else if (!hasMedia) label = "Preparing camera…";
  else if (isPaired) label = `Go Live as ${hostDisplayName}`;
  else label = "Go Live";
  return (
-<Button onClick={goLive} disabled={disabled} className="w-full h-14 rounded-full bg-red-500 hover:bg-red-600 text-white font-bold text-base shadow-lg shadow-red-500/40 disabled:opacity-60">
-<Radio className="h-5 w-5 mr-2" />{label}
+<Button onClick={cameraError ? startCamera : goLive} disabled={disabled} className={cn("w-full h-14 rounded-full font-bold text-base disabled:opacity-60", cameraError ? "border border-white/15 bg-white/10 text-white/85 hover:bg-white/15 shadow-none" : "bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/40")}>
+ {cameraError ? <CameraOff className="h-5 w-5 mr-2" /> : <Radio className="h-5 w-5 mr-2" />}{label}
 </Button>
  );
  })()}
@@ -2438,7 +2464,7 @@ export default function GoLivePage() {
 <div className="absolute inset-x-0 bottom-0 h-56 z-[5] pointer-events-none bg-gradient-to-t from-black/60 via-black/25 to-transparent" />
 
  {/* Top bar */}
-<div className="relative z-10 flex items-center gap-1.5 px-3 pt-2" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}>
+<div className="relative z-10 flex items-center gap-1.5 px-3 pt-2" style={{ paddingTop: "calc(var(--zivo-safe-top,0px) + 8px)" }}>
 <div className="flex items-center gap-1 bg-red-500 rounded-full px-2 py-1 shadow-lg shrink-0">
 <Radio className="h-3 w-3 text-white animate-pulse" />
 <span className="text-white text-[10px] font-black tracking-wider">LIVE</span>
@@ -2478,7 +2504,7 @@ export default function GoLivePage() {
 </div>
 
  {/* Chat */}
-<div className="absolute left-0 right-16 z-10" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)" }}>
+<div className="absolute left-0 right-16 z-10" style={{ bottom: "calc(var(--zivo-safe-bottom,0px) + 80px)" }}>
 <div className="pl-3 pr-3 max-h-[200px] overflow-y-auto scrollbar-hide space-y-1.5 flex flex-col items-start">
  {chatMessages.length === 0 ? (
 <div className="text-[11px] text-white/80 italic px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm drop-shadow inline-block self-start">Waiting for viewers…</div>
@@ -2508,7 +2534,7 @@ export default function GoLivePage() {
  {/* Right tools — single glass rail (legible on any background) */}
 <div
  className="absolute right-2.5 z-10 flex flex-col gap-1.5 items-center bg-black/35 backdrop-blur-md rounded-full px-1.5 py-2 border border-white/10 shadow-xl shadow-black/40"
- style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)" }}
+ style={{ bottom: "calc(var(--zivo-safe-bottom,0px) + 80px)" }}
  >
 <button type="button" onClick={toggleMic} className="w-11 h-11 rounded-full bg-white/5 hover:bg-white/15 active:scale-95 transition flex items-center justify-center">
  {micOn ?<Mic className="h-4 w-4 text-white" />:<MicOff className="h-4 w-4 text-red-400" />}
@@ -2563,7 +2589,7 @@ export default function GoLivePage() {
  initial={{ y: 300 }} animate={{ y: 0 }} exit={{ y: 300 }}
  transition={{ type: "spring", damping: 28, stiffness: 280 }}
  className="w-full bg-zinc-900 rounded-t-3xl p-5 border-t border-white/10"
- style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)" }}
+ style={{ paddingBottom: "calc(var(--zivo-safe-bottom,0px) + 20px)" }}
  onClick={(e) =>e.stopPropagation()}
  >
 <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-4" />
@@ -2614,7 +2640,7 @@ export default function GoLivePage() {
  onClose={() =>setShowRechargeSheet(false)}
  currentBalance={coinBalance}
  onPurchase={async (coins) =>{
- try { await recharge(coins); } catch (e: any) { throw new Error(e?.message ?? "Recharge failed"); }
+ try { await recharge(coins); } catch (e: any) { throw new Error(e?.message ?? "Recharge failed", { cause: e }); }
  }}
  />
 </Suspense>

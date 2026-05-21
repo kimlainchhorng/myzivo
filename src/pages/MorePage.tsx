@@ -115,6 +115,9 @@ const whatsNew: { date: string; title: string; items: string[] }[] = [
   },
 ];
 
+const formatNotificationText = (text: string | null | undefined) =>
+  (text ?? "").replace(/\$(\d+(?:,\d{3})*)\.(\d{2})0{3,}\b/g, "$$$1.$2");
+
 /* ============================================= */
 /*  PARTNER OPTIONS                              */
 /* ============================================= */
@@ -1715,6 +1718,13 @@ export default function MorePage() {
             second search bar after 400px of scroll, which left two visually
             competing search inputs on screen at the same time. */}
         <h1 className="font-bold text-[17px] flex-1">More</h1>
+        <button type="button"
+          onClick={() => setShowHelpSheet(true)}
+          aria-label="Open help"
+          className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-muted/60 active:scale-90 transition-transform text-foreground"
+        >
+          <HelpCircle className="h-5 w-5" />
+        </button>
       </header>
 
       <div className="flex-1 lg:flex lg:pt-16">
@@ -2078,7 +2088,9 @@ export default function MorePage() {
                     <div className="w-1.5 h-1.5 rounded-full bg-foreground mt-1.5 shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-[12px] leading-tight truncate">{n.title}</p>
-                      <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{n.body}</p>
+                      <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">
+                        {formatNotificationText(n.body)}
+                      </p>
                     </div>
                     <ChevronRight className="w-4 h-4 text-muted-foreground/30 shrink-0 mt-0.5" />
                   </Link>
@@ -2633,7 +2645,7 @@ export default function MorePage() {
             exit={{ opacity: 0, scale: 0.8, y: 10 }}
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             aria-label="Back to top"
-            className="fixed bottom-40 lg:bottom-24 right-5 z-30 w-10 h-10 rounded-full bg-card border border-border/60 shadow-md flex items-center justify-center active:scale-90 transition-transform"
+            className="fixed bottom-[calc(var(--zivo-safe-bottom,0px)+10rem)] lg:bottom-24 right-5 z-30 w-10 h-10 rounded-full bg-card border border-border/60 shadow-md flex items-center justify-center active:scale-90 transition-transform"
           >
             <ArrowLeft className="w-4 h-4 text-foreground rotate-90" />
           </motion.button>
@@ -2644,7 +2656,7 @@ export default function MorePage() {
       <button type="button"
         onClick={() => setShowHelpSheet(true)}
         aria-label="Open help"
-        className="fixed bottom-24 lg:bottom-8 right-5 z-30 w-12 h-12 rounded-full bg-gradient-to-br from-primary shadow-lg shadow-primary/30 flex items-center justify-center active:scale-90 transition-transform"
+        className="fixed bottom-[calc(var(--zivo-safe-bottom,0px)+6rem)] lg:bottom-8 right-5 z-30 hidden w-12 h-12 rounded-full bg-gradient-to-br from-primary shadow-lg shadow-primary/30 lg:flex items-center justify-center active:scale-90 transition-transform"
       >
         <HelpCircle className="w-5 h-5 text-white" />
       </button>

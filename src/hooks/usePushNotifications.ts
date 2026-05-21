@@ -223,6 +223,17 @@ export const usePushNotifications = () => {
     return false;
   }, []);
 
+  useEffect(() => {
+    const handleRegisterRequest = () => {
+      void register();
+    };
+
+    window.addEventListener("zivo-register-push", handleRegisterRequest);
+    return () => {
+      window.removeEventListener("zivo-register-push", handleRegisterRequest);
+    };
+  }, [register]);
+
   // Save token to database so server-side push delivery can target this device.
   const saveToken = useCallback(async (token: string, saveAttempt = 0) => {
     if (!user?.id) return;

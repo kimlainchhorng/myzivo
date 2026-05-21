@@ -36,7 +36,7 @@ export default function FeedSkeleton() {
         {/* Right action rail — full TikTok stack: avatar + 6 buttons + sound disk */}
         <div
           className="absolute right-2 sm:right-3 lg:right-4 flex flex-col items-center gap-4 sm:gap-5 lg:gap-6"
-          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 100px)" }}
+          style={{ bottom: "calc(var(--zivo-safe-bottom,0px) + 100px)" }}
         >
           {/* Author avatar */}
           <div className="h-11 w-11 sm:h-12 sm:w-12 lg:h-14 lg:w-14 rounded-full bg-white/15 animate-pulse" />
@@ -56,7 +56,7 @@ export default function FeedSkeleton() {
         {/* Bottom-left — author block + caption + hashtags + top comment + music */}
         <div
           className="absolute left-4 right-20 sm:right-24 space-y-2"
-          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 96px)" }}
+          style={{ bottom: "calc(var(--zivo-safe-bottom,0px) + 96px)" }}
         >
           {/* Author row */}
           <div className="flex items-center gap-2.5">

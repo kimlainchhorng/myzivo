@@ -682,7 +682,7 @@ export default function EatsLanding() {
           the system clock. Mirrors AppHome's strip. */}
       <div
         aria-hidden
-        className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl pointer-events-none [height:env(safe-area-inset-top,0px)]"
+        className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl pointer-events-none [height:var(--zivo-safe-top,0px)]"
       />
 
       <AnimatePresence mode="wait">
@@ -1271,7 +1271,7 @@ export default function EatsLanding() {
 
             {cartCount > 0 && (
               <motion.button initial={{ y: 100 }} animate={{ y: 0 }} whileHover={{ y: -2 }} onClick={() => setStep("cart")}
-                className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 pl-3 pr-5 py-2.5 rounded-2xl bg-gradient-to-r from-primary to-emerald-500 text-primary-foreground shadow-xl shadow-primary/40 hover:shadow-2xl hover:shadow-primary/50 font-bold text-sm touch-manipulation active:scale-[0.97] transition-shadow">
+                className="fixed bottom-[calc(var(--zivo-safe-bottom,0px)+6rem)] left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 pl-3 pr-5 py-2.5 rounded-2xl bg-gradient-to-r from-primary to-emerald-500 text-primary-foreground shadow-xl shadow-primary/40 hover:shadow-2xl hover:shadow-primary/50 font-bold text-sm touch-manipulation active:scale-[0.97] transition-shadow">
                 <div className="flex -space-x-2">
                   {cart.slice(0, 3).map((it, idx) => (
                     <div key={it.menuItemId} className="w-8 h-8 rounded-full bg-white/30 ring-2 ring-primary overflow-hidden flex items-center justify-center" style={{ zIndex: 3 - idx }}>
@@ -1295,7 +1295,7 @@ export default function EatsLanding() {
             {/* Notification opt-in banner */}
             {showNotifPrompt && cartCount === 0 && (
               <div className="fixed left-1/2 -translate-x-1/2 bottom-6 z-40 w-[min(560px,calc(100%-2rem))] rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-xl shadow-violet-500/30 px-4 py-3 flex items-center gap-3"
-                style={{ bottom: `calc(env(safe-area-inset-bottom, 0px) + 24px)` }}>
+                style={{ bottom: `calc(var(--zivo-safe-bottom,0px) + 24px)` }}>
                 <Sparkles className="w-4 h-4 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold">Get order updates</p>
@@ -1316,7 +1316,7 @@ export default function EatsLanding() {
             {/* PWA install banner */}
             {pwaPrompt && !pwaDismissed && (
               <div className="fixed left-1/2 -translate-x-1/2 bottom-6 z-40 w-[min(560px,calc(100%-2rem))] rounded-2xl bg-foreground text-background shadow-xl shadow-foreground/30 px-4 py-3 flex items-center gap-3"
-                style={{ bottom: `calc(env(safe-area-inset-bottom, 0px) + ${cartCount > 0 ? 96 : 24}px)` }}>
+                style={{ bottom: `calc(var(--zivo-safe-bottom,0px) + ${cartCount > 0 ? 96 : 24}px)` }}>
                 <Sparkles className="w-4 h-4 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold">Install ZIVO Eats</p>
@@ -1338,7 +1338,7 @@ export default function EatsLanding() {
 
             {/* Floating help button — group lets us reveal label on hover */}
             <div className="fixed right-4 z-30 group flex flex-col items-end"
-              style={{ bottom: `calc(env(safe-area-inset-bottom, 0px) + ${cartCount > 0 ? 96 : 24}px)` }}>
+              style={{ bottom: `calc(var(--zivo-safe-bottom,0px) + ${cartCount > 0 ? 96 : 24}px)` }}>
               <div className="mb-2 px-3 py-1.5 rounded-xl bg-foreground text-background text-[11px] font-bold shadow-lg shadow-foreground/20 opacity-0 -translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 pointer-events-none whitespace-nowrap">
                 Need help?
               </div>
@@ -1357,7 +1357,7 @@ export default function EatsLanding() {
                   initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
                   onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                   aria-label="Back to top"
-                  style={{ bottom: `calc(env(safe-area-inset-bottom, 0px) + ${cartCount > 0 ? 156 : 84}px)` }}
+                  style={{ bottom: `calc(var(--zivo-safe-bottom,0px) + ${cartCount > 0 ? 156 : 84}px)` }}
                   className="fixed right-4 z-30 w-10 h-10 rounded-full bg-card border border-border/40 shadow-lg flex items-center justify-center text-muted-foreground active:scale-90 transition-transform touch-manipulation">
                   <ArrowLeft className="w-4 h-4 rotate-90" />
                 </motion.button>

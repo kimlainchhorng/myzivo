@@ -60,7 +60,7 @@ export default function MarketingOverviewHeader({ storeId }: { storeId: string }
         size="lg"
         onClick={() => setPickerOpen(true)}
         className="sm:hidden fixed right-4 z-30 rounded-full shadow-lg h-14 w-14 p-0"
-        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 5rem)" }}
+        style={{ bottom: "calc(var(--zivo-safe-bottom,0px) + 5rem)" }}
         aria-label="New campaign"
       >
         <Plus className="w-6 h-6" />

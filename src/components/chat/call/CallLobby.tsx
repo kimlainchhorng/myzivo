@@ -146,7 +146,7 @@ export default function CallLobby({
     <div className="fixed inset-0 z-[1500] flex flex-col bg-zinc-950 text-white">
       <header
         className="flex shrink-0 items-center justify-between px-4"
-        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 12px)", paddingBottom: 12 }}
+        style={{ paddingTop: "calc(var(--zivo-safe-top,0px) + 12px)", paddingBottom: 12 }}
       >
         <div className="min-w-0 pr-2">
           <p className="text-[11px] uppercase tracking-wider text-white/50">Ready to join</p>
@@ -335,7 +335,7 @@ export default function CallLobby({
       {/* Footer */}
       <div
         className="mx-4 mt-4 flex shrink-0 items-center gap-3"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}
+        style={{ paddingBottom: "calc(var(--zivo-safe-bottom,0px) + 16px)" }}
       >
         <Button variant="secondary" className="flex-1" onClick={handleCancel}>
           Cancel

@@ -100,6 +100,7 @@ import { useHiddenPosts } from "@/hooks/useHiddenPosts";
 import { useHaptic } from "@/hooks/useHaptic";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useChatPrefs } from "@/hooks/useChatPrefs";
+import { useAuth } from "@/contexts/AuthContext";
 import RelativeTime from "@/components/social/RelativeTime";
 import { topicForUserSync } from "@/lib/security/channelName";
 import TrendingHashtags, { postHasHashtag } from "@/components/social/TrendingHashtags";
@@ -121,6 +122,8 @@ import LoadFailureCard from "@/components/reliability/LoadFailureCard";
 const INITIAL_REELS_PAGE_SIZE = 18;
 const REELS_PAGE_INCREMENT = 12;
 const REELS_PAGE_MAX = 180;
+const REEL_CLOSE_SWIPE_THRESHOLD = 92;
+const REEL_CLOSE_SWIPE_MAX_OFFSET = 180;
 let reelsFirstMediaMetadataLogged = false;
 
 // ── Lazy components ──────────────────────────────────────────────────────────
@@ -505,6 +508,7 @@ export default function ReelsFeedPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [userProfile, setUserProfile] = useState<{ name: string; avatar: string | null } | null>(null);
+  const { user: authUser, isLoading: authLoading } = useAuth();
   const { unreadCount: notificationUnread } = useNotifications(20);
   const { prefs: chatPrefs } = useChatPrefs(userId ?? undefined);
   const { data: unreadChatSenders } = useQuery({
@@ -529,6 +533,35 @@ export default function ReelsFeedPage() {
     }
     return real.size + manualOnly;
   })();
+
+  useEffect(() => {
+    if (typeof document === "undefined") return undefined;
+
+    const isEditable = (target: EventTarget | null) =>
+      target instanceof HTMLElement && Boolean(target.closest("input, textarea, [contenteditable='true']"));
+    const clearSelection = () => {
+      const selection = window.getSelection?.();
+      if (selection && !selection.isCollapsed) selection.removeAllRanges();
+    };
+    const preventNativeSelection = (event: Event) => {
+      if (isEditable(event.target)) return;
+      event.preventDefault();
+      clearSelection();
+    };
+
+    document.body.classList.add("zivo-reels-active");
+    document.addEventListener("selectstart", preventNativeSelection, true);
+    document.addEventListener("contextmenu", preventNativeSelection, true);
+    document.addEventListener("selectionchange", clearSelection, true);
+
+    return () => {
+      document.body.classList.remove("zivo-reels-active");
+      document.removeEventListener("selectstart", preventNativeSelection, true);
+      document.removeEventListener("contextmenu", preventNativeSelection, true);
+      document.removeEventListener("selectionchange", clearSelection, true);
+    };
+  }, []);
+
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
   const [reelsStartIndex, setReelsStartIndex] = useState<number | null>(null);
   const reelsScrollRef = useRef<HTMLDivElement>(null);
@@ -584,6 +617,23 @@ export default function ReelsFeedPage() {
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
   const isFeedRoute = location.pathname.startsWith("/feed");
+  const closeReelsViewer = useCallback(() => {
+    setReelsStartIndex(null);
+
+    const params = new URLSearchParams(location.search);
+    if (!params.has("post")) return;
+
+    params.delete("post");
+    params.delete("src");
+    params.delete("comments");
+    navigate(
+      {
+        pathname: location.pathname,
+        search: params.toString(),
+      },
+      { replace: true },
+    );
+  }, [location.pathname, location.search, navigate]);
   const reliabilityTrackingContext = isFeedRoute ? "feed" : "reels";
   const feedSuperAppResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -735,42 +785,46 @@ export default function ReelsFeedPage() {
   }, [queryClient]);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      const authUser = data.user;
-      const uid = authUser?.id || null;
-      setUserId(uid);
-      if (!uid) {
-        setAuthReady(true);
-        return;
-      }
+    if (authLoading) {
+      setAuthReady(false);
+      return;
+    }
 
-      const metaAvatar = authUser?.user_metadata?.avatar_url || authUser?.user_metadata?.picture || null;
-      const metaName = authUser?.user_metadata?.full_name || authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "You";
-      setUserProfile({
-        name: metaName,
-        avatar: optimizeAvatar(metaAvatar, 96) || metaAvatar || null,
+    const uid = authUser?.id || null;
+    setUserId(uid);
+    setAuthReady(true);
+
+    if (!uid || !authUser) {
+      setUserProfile(null);
+      return;
+    }
+
+    const metaAvatar = authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || null;
+    const metaName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email?.split("@")[0] || "You";
+    setUserProfile({
+      name: metaName,
+      avatar: optimizeAvatar(metaAvatar, 96) || metaAvatar || null,
+    });
+
+    let cancelled = false;
+    supabase
+      .from("profiles")
+      .select("full_name, avatar_url")
+      .or(`id.eq.${uid},user_id.eq.${uid}`)
+      .limit(1)
+      .maybeSingle()
+      .then(({ data: p }) => {
+        if (cancelled || !p) return;
+        setUserProfile({
+          name: (p as any).full_name || metaName,
+          avatar: optimizeAvatar((p as any).avatar_url, 96) || optimizeAvatar(metaAvatar, 96) || metaAvatar || null,
+        });
       });
 
-      supabase
-        .from("profiles")
-        .select("full_name, avatar_url")
-        .or(`id.eq.${uid},user_id.eq.${uid}`)
-        .limit(1)
-        .maybeSingle()
-        .then(({ data: p }) => {
-          if (p) {
-            setUserProfile({
-              name: (p as any).full_name || metaName,
-              avatar: optimizeAvatar((p as any).avatar_url, 96) || optimizeAvatar(metaAvatar, 96) || metaAvatar || null,
-            });
-          }
-        });
-    }).catch(() => {
-      setUserId(null);
-    }).finally(() => {
-      setAuthReady(true);
-    });
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, authUser]);
 
   // Sidebar contacts + trending tags
   useEffect(() => {
@@ -1859,7 +1913,7 @@ export default function ReelsFeedPage() {
             <Suspense fallback={null}><FeedStoryRing /></Suspense>
           </div>
 
-          {!userId && (
+          {authReady && !userId && (
             <GuestFeedCta onLogin={() => goLogin("/feed")} onSignup={goSignup} />
           )}
 
@@ -1995,7 +2049,7 @@ export default function ReelsFeedPage() {
           )}
 
           {/* Posts */}
-          {isLoading ? (
+          {!authReady || isLoading ? (
             <div className="space-y-2 pb-4" aria-label="Loading posts" aria-busy="true">
               {[0, 1, 2].map((i) => (
                 <div key={i} className="bg-card border-b border-border/20">
@@ -2374,23 +2428,23 @@ export default function ReelsFeedPage() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="fixed inset-0 z-[1500] bg-black"
+                  className="zivo-reel-no-callout fixed inset-0 z-[1500] bg-black"
                 >
                   {/* Snap-scroll container */}
-                  <div ref={reelsScrollRef} className="h-full w-full overflow-y-scroll snap-y snap-mandatory">
+                  <div ref={reelsScrollRef} className="zivo-reel-no-callout h-full w-full overflow-y-scroll snap-y snap-mandatory">
                     {items.filter((it) => it.media_type === 'video').map((item) => (
                       <ReelSlide
                         key={item.id}
                         item={item}
                         currentUserId={userId}
-                        onClose={() => setReelsStartIndex(null)}
+                        onClose={closeReelsViewer}
                       />
                     ))}
                   </div>
                   {/* Always-visible close button — desktop. */}
                   <button
                     type="button"
-                    onClick={() => setReelsStartIndex(null)}
+                    onClick={closeReelsViewer}
                     aria-label="Close reels viewer"
                     title="Close reels viewer"
                     className="hidden lg:flex fixed top-4 right-4 z-[1510] h-11 w-11 items-center justify-center rounded-full bg-background/90 text-foreground shadow-xl ring-1 ring-border/50 backdrop-blur-md hover:bg-background transition-colors"
@@ -2696,6 +2750,8 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
   const [holdSpeedActive, setHoldSpeedActive] = useState(false);
   const [speedLocked, setSpeedLocked] = useState(false);
   const [speedHud, setSpeedHud] = useState<{ label: string; detail: string } | null>(null);
+  const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
+  const [closeSwipeOffset, setCloseSwipeOffset] = useState(0);
   const interactionPostId = getFeedInteractionPostId(item);
   const likesTable = getFeedLikesTable(item);
   const isSharedReel = Boolean(item.shared_from_post_id || item.shared_from_user_id);
@@ -2760,6 +2816,8 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
   const longPressTimerRef = useRef<number | null>(null);
   const singleTapTimerRef = useRef<number | null>(null);
   const speedHudTimerRef = useRef<number | null>(null);
+  const doubleTapHeartTimerRef = useRef<number | null>(null);
+  const doubleTapLikeInFlightRef = useRef(false);
   const lastTapRef = useRef<{ time: number; x: number; y: number; side: "left" | "right" } | null>(null);
   const gestureRef = useRef({
     pointerId: -1,
@@ -2873,15 +2931,55 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
     }, duration);
   }, []);
 
-  const seekBy = useCallback((seconds: number) => {
-    const video = videoRef.current;
-    if (!video) return;
-    const duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : undefined;
-    const nextTime = Math.max(0, Math.min(duration ?? Number.MAX_SAFE_INTEGER, video.currentTime + seconds));
-    video.currentTime = nextTime;
-    haptic("selection");
-    showReelHud(seconds > 0 ? "+15s" : "-15s", seconds > 0 ? "Forward" : "Back", 700);
-  }, [haptic, showReelHud]);
+  const showDoubleTapLikeBurst = useCallback(() => {
+    setShowDoubleTapHeart(true);
+    if (doubleTapHeartTimerRef.current) {
+      window.clearTimeout(doubleTapHeartTimerRef.current);
+    }
+    doubleTapHeartTimerRef.current = window.setTimeout(() => {
+      setShowDoubleTapHeart(false);
+      doubleTapHeartTimerRef.current = null;
+    }, 650);
+  }, []);
+
+  const likeReelFromDoubleTap = useCallback(async () => {
+    showDoubleTapLikeBurst();
+    haptic(liked ? "light" : "medium");
+
+    if (!currentUserId) {
+      showGuestActionPrompt("Log in to like posts", "/feed");
+      return;
+    }
+
+    if (liked || doubleTapLikeInFlightRef.current) return;
+    doubleTapLikeInFlightRef.current = true;
+    setLiked(true);
+    setLocalLikes((prev) => prev + 1);
+
+    try {
+      const { error } = await (supabase as any)
+        .from(likesTable)
+        .insert({ post_id: interactionPostId, user_id: currentUserId });
+      if (error) throw error;
+
+      if (item.author_id && item.author_id !== currentUserId && shouldSendLikeNotification(item.id)) {
+        try {
+          const { data: sp } = await supabase.from("profiles").select("full_name").eq("user_id", currentUserId).single();
+          await supabase.functions.invoke("send-push-notification", {
+            body: { user_id: item.author_id, notification_type: "post_liked", title: "New Like ❤️", body: `${sp?.full_name || "Someone"} liked your post`, data: { type: "post_liked", post_id: item.id, liker_id: currentUserId, action_url: `/reels?post=${item.id}` } },
+          });
+        } catch {}
+      }
+
+      void queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+    } catch {
+      setLiked(false);
+      setLocalLikes((prev) => Math.max(0, prev - 1));
+      toast.error("Failed to update like");
+    } finally {
+      doubleTapLikeInFlightRef.current = false;
+    }
+  }, [currentUserId, haptic, interactionPostId, item.author_id, item.id, liked, likesTable, queryClient, showDoubleTapLikeBurst]);
 
   const handleReelTap = useCallback((x: number, y: number) => {
     const now = Date.now();
@@ -2895,7 +2993,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
     if (isDoubleTap) {
       clearSingleTapTimer();
       lastTapRef.current = null;
-      seekBy(side === "right" ? 15 : -15);
+      void likeReelFromDoubleTap();
       return;
     }
 
@@ -2906,7 +3004,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
       lastTapRef.current = null;
       singleTapTimerRef.current = null;
     }, 260);
-  }, [clearSingleTapTimer, seekBy, togglePlay]);
+  }, [clearSingleTapTimer, likeReelFromDoubleTap, togglePlay]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -2920,10 +3018,14 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
     if (speedHudTimerRef.current) {
       window.clearTimeout(speedHudTimerRef.current);
     }
+    if (doubleTapHeartTimerRef.current) {
+      window.clearTimeout(doubleTapHeartTimerRef.current);
+    }
   }, [clearLongPressTimer, clearSingleTapTimer]);
 
   const handleGesturePointerDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
     if (event.pointerType === "mouse" && event.button !== 0) return;
+    event.currentTarget.setPointerCapture?.(event.pointerId);
 
     gestureRef.current = {
       pointerId: event.pointerId,
@@ -2932,6 +3034,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
       moved: false,
       longPress: false,
     };
+    setCloseSwipeOffset(0);
 
     clearLongPressTimer();
     longPressTimerRef.current = window.setTimeout(() => {
@@ -2961,7 +3064,14 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
     }
 
     if (!gesture.longPress) {
+      const isRightCloseSwipe = dx > 18 && Math.abs(dx) > Math.abs(dy) * 1.2;
       if (distance > 14) clearLongPressTimer();
+      if (isRightCloseSwipe) {
+        event.preventDefault();
+        setCloseSwipeOffset(Math.min(dx, REEL_CLOSE_SWIPE_MAX_OFFSET));
+      } else if (closeSwipeOffset > 0) {
+        setCloseSwipeOffset(0);
+      }
       return;
     }
 
@@ -2981,14 +3091,29 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
       haptic("selection");
       showReelHud("1x", "Normal speed", 1000);
     }
-  }, [clearLongPressTimer, haptic, holdSpeedActive, showReelHud, speedLocked]);
+  }, [clearLongPressTimer, closeSwipeOffset, haptic, holdSpeedActive, showReelHud, speedLocked]);
 
   const handleGesturePointerEnd = useCallback((event: PointerEvent<HTMLDivElement>) => {
     const gesture = gestureRef.current;
     if (gesture.pointerId !== event.pointerId) return;
 
+    const dx = event.clientX - gesture.startX;
+    const dy = event.clientY - gesture.startY;
+    const isCloseSwipe = dx >= REEL_CLOSE_SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy) * 1.2;
+
     clearLongPressTimer();
     gestureRef.current.pointerId = -1;
+
+    if (isCloseSwipe) {
+      clearSingleTapTimer();
+      setCloseSwipeOffset(0);
+      haptic("light");
+      onClose();
+      return;
+    }
+    if (closeSwipeOffset > 0) {
+      setCloseSwipeOffset(0);
+    }
 
     if (gesture.longPress) {
       clearSingleTapTimer();
@@ -2999,7 +3124,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
     if (!gesture.moved) {
       handleReelTap(event.clientX, event.clientY);
     }
-  }, [clearLongPressTimer, clearSingleTapTimer, handleReelTap, speedLocked]);
+  }, [clearLongPressTimer, clearSingleTapTimer, closeSwipeOffset, handleReelTap, haptic, onClose, speedLocked]);
 
   const handleGesturePointerCancel = useCallback((event: PointerEvent<HTMLDivElement>) => {
     const gesture = gestureRef.current;
@@ -3008,6 +3133,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
     clearLongPressTimer();
     clearSingleTapTimer();
     gestureRef.current.pointerId = -1;
+    setCloseSwipeOffset(0);
     if (gesture.longPress && !speedLocked) {
       setHoldSpeedActive(false);
     }
@@ -3133,7 +3259,13 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
   return (
     <div
       ref={containerRef}
-      className="relative h-[100dvh] lg:h-full w-full snap-start snap-always flex-shrink-0"
+      className="zivo-reel-no-callout relative h-[100dvh] lg:h-full w-full snap-start snap-always flex-shrink-0"
+      onContextMenu={(event) => event.preventDefault()}
+      style={{
+        transform: closeSwipeOffset ? `translateX(${closeSwipeOffset}px)` : undefined,
+        opacity: closeSwipeOffset ? Math.max(0.82, 1 - closeSwipeOffset / 520) : undefined,
+        transition: closeSwipeOffset ? "none" : "transform 180ms ease-out, opacity 180ms ease-out",
+      }}
     >
       {/* Video */}
       <video
@@ -3198,6 +3330,21 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
             <div className="h-20 w-20 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
               <Play className="h-10 w-10 text-white fill-white ml-1" />
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Double-tap like feedback */}
+      <AnimatePresence>
+        {showDoubleTapHeart && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.45 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.35 }}
+            transition={{ duration: 0.22 }}
+            className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center"
+          >
+            <Heart className="h-24 w-24 fill-red-500 text-red-500 drop-shadow-2xl" />
           </motion.div>
         )}
       </AnimatePresence>
@@ -3651,6 +3798,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
   const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [selectedReaction, setSelectedReaction] = useState<string | null>(null);
+  const [doubleTapPoint, setDoubleTapPoint] = useState<{ x: number; y: number } | null>(null);
   const [showEditCaption, setShowEditCaption] = useState(false);
   const [editCaptionText, setEditCaptionText] = useState(item.caption || "");
   const [editSaving, setEditSaving] = useState(false);
@@ -3675,6 +3823,9 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
   // suppress the trailing click so the post doesn't also get a plain Like.
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFired = useRef(false);
+  const feedTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const feedHeartTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const feedLikeInFlight = useRef(false);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -4037,16 +4188,70 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
     }
   };
 
-  // Double-tap to like
-  const handleDoubleTap = () => {
+  const showFeedHeart = (event: React.MouseEvent<HTMLElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setDoubleTapPoint({
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    });
+    setShowDoubleTapHeart(true);
+    if (feedHeartTimer.current) clearTimeout(feedHeartTimer.current);
+    feedHeartTimer.current = setTimeout(() => {
+      setShowDoubleTapHeart(false);
+      setDoubleTapPoint(null);
+      feedHeartTimer.current = null;
+    }, 560);
+  };
+
+  const likeFeedOnceFromDoubleTap = async () => {
+    if (!currentUserId) {
+      showGuestActionPrompt("Log in to like posts", "/feed");
+      return;
+    }
+    if (liked || feedLikeInFlight.current) return;
+    feedLikeInFlight.current = true;
+    try {
+      await handleLike();
+    } finally {
+      feedLikeInFlight.current = false;
+    }
+  };
+
+  const handleFeedMediaDoubleTap = (event: React.MouseEvent<HTMLElement>) => {
     const now = Date.now();
     if (now - lastTapRef.current < 300) {
-      if (!liked) handleLike();
-      setShowDoubleTapHeart(true);
-      setTimeout(() => setShowDoubleTapHeart(false), 800);
+      showFeedHeart(event);
+      void likeFeedOnceFromDoubleTap();
     }
     lastTapRef.current = now;
   };
+
+  const handleFeedVideoTap = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      if (feedTapTimer.current) {
+        clearTimeout(feedTapTimer.current);
+        feedTapTimer.current = null;
+      }
+      lastTapRef.current = 0;
+      showFeedHeart(event);
+      void likeFeedOnceFromDoubleTap();
+      return;
+    }
+
+    lastTapRef.current = now;
+    if (feedTapTimer.current) clearTimeout(feedTapTimer.current);
+    feedTapTimer.current = setTimeout(() => {
+      togglePlay();
+      feedTapTimer.current = null;
+    }, 250);
+  };
+
+  useEffect(() => () => {
+    if (feedTapTimer.current) clearTimeout(feedTapTimer.current);
+    if (feedHeartTimer.current) clearTimeout(feedHeartTimer.current);
+  }, []);
 
   // Emoji reactions — persisted to post_reactions (matches usePostReactions hook).
   // Emojis are constrained by the DB CHECK: ❤️ 😂 😮 😢 😡 🔥 (👏 is not allowed).
@@ -4352,7 +4557,10 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
   const isSharedPost = Boolean(item.shared_from_post_id || item.shared_from_user_id);
 
   return (
-    <div className="bg-card">
+    <div
+      className={cn("bg-card", item.media_type === "video" && "zivo-reel-no-callout")}
+      onContextMenu={item.media_type === "video" ? (event) => event.preventDefault() : undefined}
+    >
       {isSharedPost ? (
         /* ── Facebook-style shared post layout ────────────────── */
         <>
@@ -4516,11 +4724,11 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                           setVideoAspect(v.videoWidth / v.videoHeight);
                         }
                       }}
-                      onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()}
+                      onClick={handleFeedVideoTap}
                       className="h-full w-full object-contain cursor-pointer"
                     />
                     {!isPlaying && (
-                      <button type="button" onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} aria-label="Play video" title="Play video" className="absolute inset-0 flex items-center justify-center bg-black/10">
+                      <button type="button" onClick={handleFeedVideoTap} aria-label="Play video" title="Play video" className="absolute inset-0 flex items-center justify-center bg-black/10">
                         <Play className="h-14 w-14 text-white/80 fill-white/80 drop-shadow-lg" />
                       </button>
                     )}
@@ -4720,7 +4928,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
            {/* Media */}
           <div
             ref={containerRef}
-            onClick={handleDoubleTap}
+            onClick={item.media_type === "video" ? undefined : handleFeedMediaDoubleTap}
             onTouchStart={item.media_urls.length > 1 && item.media_type !== "video" ? undefined : (item.media_urls.length > 1 ? handleTouchStart : undefined)}
             onTouchMove={item.media_urls.length > 1 && item.media_type !== "video" ? undefined : (item.media_urls.length > 1 ? handleTouchMove : undefined)}
             onTouchEnd={item.media_urls.length > 1 && item.media_type !== "video" ? undefined : (item.media_urls.length > 1 ? handleTouchEnd : undefined)}
@@ -4745,11 +4953,11 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                         setVideoAspect(v.videoWidth / v.videoHeight);
                       }
                     }}
-                    onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()}
+                    onClick={handleFeedVideoTap}
                     className="h-full w-full object-contain cursor-pointer"
                   />
                   {!isPlaying && (
-                    <button type="button" onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} aria-label="Play video" title="Play video" className="absolute inset-0 flex items-center justify-center bg-black/10">
+                    <button type="button" onClick={handleFeedVideoTap} aria-label="Play video" title="Play video" className="absolute inset-0 flex items-center justify-center bg-black/10">
                       <Play className="h-14 w-14 text-white/80 fill-white/80 drop-shadow-lg" />
                     </button>
                   )}
@@ -4900,13 +5108,17 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
             <AnimatePresence>
               {showDoubleTapHeart && (
                 <motion.div
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 1.5, opacity: 0 }}
-                  transition={{ duration: 0.4 }}
-                  className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
+                  initial={{ scale: 0.55, opacity: 0, y: 12 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 1.45, opacity: 0, y: -18 }}
+                  transition={{ duration: 0.24 }}
+                  className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-1/2"
+                  style={{
+                    left: doubleTapPoint?.x ?? "50%",
+                    top: doubleTapPoint?.y ?? "50%",
+                  }}
                 >
-                  <Heart className="h-20 w-20 text-white fill-white drop-shadow-2xl" />
+                  <Heart className="h-14 w-14 fill-red-500 text-red-500 drop-shadow-2xl" />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -5716,6 +5928,3 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
     prev.detailMode === next.detailMode
   );
 });
-
-
-

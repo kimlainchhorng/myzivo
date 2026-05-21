@@ -125,7 +125,7 @@ export default function VoiceBubbleActionSheet({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="pb-[max(env(safe-area-inset-bottom),16px)]">
+      <DrawerContent className="pb-[max(var(--zivo-safe-bottom,0px),16px)]">
         <DrawerHeader className="pb-2">
           <DrawerTitle className="text-sm text-muted-foreground font-normal text-center">
             Voice message

@@ -7,6 +7,7 @@ import { useExchangeAuthToken } from "@/hooks/useCrossAppAuth";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { getSafeRedirectTarget, withRedirectParam } from "@/lib/authRedirect";
+import { saveAccount } from "@/hooks/useSavedAccounts";
 
 const AuthCallback = () => {
   const [searchParams] = useSearchParams();
@@ -34,7 +35,7 @@ const AuthCallback = () => {
       const userId = user.id;
       const { data: profile } = await supabase
         .from("profiles")
-        .select("setup_complete, email_verified")
+        .select("setup_complete, email_verified, full_name, avatar_url, role")
         .or(`user_id.eq.${userId},id.eq.${userId}`)
         .maybeSingle();
 
@@ -58,7 +59,7 @@ const AuthCallback = () => {
                   ? user.user_metadata.name
                   : null,
           })
-          .select("setup_complete, email_verified")
+          .select("setup_complete, email_verified, full_name, avatar_url, role")
           .single();
 
         if (createProfileError) {
@@ -66,7 +67,7 @@ const AuthCallback = () => {
           // Profile may already exist (created by trigger) — try fetching again
           const { data: retryProfile } = await supabase
             .from("profiles")
-            .select("setup_complete, email_verified")
+            .select("setup_complete, email_verified, full_name, avatar_url, role")
             .or(`user_id.eq.${userId},id.eq.${userId}`)
             .maybeSingle();
 
@@ -105,6 +106,32 @@ const AuthCallback = () => {
         } else {
           resolvedProfile = { ...resolvedProfile, email_verified: true };
         }
+      }
+
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (user.email) {
+          saveAccount({
+            email: user.email,
+            fullName:
+              resolvedProfile.full_name ||
+              (typeof user.user_metadata?.full_name === "string"
+                ? user.user_metadata.full_name
+                : typeof user.user_metadata?.name === "string"
+                  ? user.user_metadata.name
+                  : user.email.split("@")[0]),
+            avatarUrl:
+              resolvedProfile.avatar_url ||
+              (typeof user.user_metadata?.avatar_url === "string" ? user.user_metadata.avatar_url : null),
+            role: resolvedProfile.role ?? null,
+            lastLoginAt: new Date().toISOString(),
+            refreshToken: sessionData?.session?.refresh_token ?? null,
+            accessToken: sessionData?.session?.access_token ?? null,
+            expiresAt: sessionData?.session?.expires_at ?? null,
+          });
+        }
+      } catch {
+        // Saved-account refresh is best-effort; authenticated navigation should continue.
       }
 
       if (!isEmailVerified && user.email) {

@@ -202,7 +202,7 @@ export default function DriverHomePage() {
             exit={{ y: "100%", opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="fixed inset-x-0 bottom-0 z-50 px-4 pb-6"
-            style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}
+            style={{ paddingBottom: "calc(var(--zivo-safe-bottom,0px) + 24px)" }}
           >
             <div className="rounded-3xl bg-card border border-border/50 shadow-2xl overflow-hidden">
               {/* Countdown bar */}

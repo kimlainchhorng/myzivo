@@ -38,12 +38,12 @@ const sheetVariants = cva(
   {
     variants: {
       side: {
-        top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top pt-[max(1.5rem,calc(env(safe-area-inset-top)+0.5rem))] pb-6",
+        top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top pt-[max(1.5rem,calc(var(--zivo-safe-top,0px)+0.5rem))] pb-6",
         bottom:
-          "inset-x-0 bottom-0 border-t rounded-t-2xl data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom pt-6 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+0.5rem))]",
-        left: "inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm pt-[max(1.5rem,calc(env(safe-area-inset-top)+0.5rem))] pb-[max(1.5rem,env(safe-area-inset-bottom))]",
+          "inset-x-0 bottom-0 border-t rounded-t-2xl data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom pt-6 pb-[max(1.5rem,calc(var(--zivo-safe-bottom,0px)+0.5rem))]",
+        left: "inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm pt-[max(1.5rem,calc(var(--zivo-safe-top,0px)+0.5rem))] pb-[max(1.5rem,var(--zivo-safe-bottom,0px))]",
         right:
-          "inset-y-0 right-0 h-full w-3/4  border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm pt-[max(1.5rem,calc(env(safe-area-inset-top)+0.5rem))] pb-[max(1.5rem,env(safe-area-inset-bottom))]",
+          "inset-y-0 right-0 h-full w-3/4  border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm pt-[max(1.5rem,calc(var(--zivo-safe-top,0px)+0.5rem))] pb-[max(1.5rem,var(--zivo-safe-bottom,0px))]",
       },
     },
     defaultVariants: {
@@ -76,7 +76,7 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
               top:
                 side === "bottom"
                   ? "0.75rem"
-                  : "calc(env(safe-area-inset-top, 0px) + 0.75rem)",
+                  : "calc(var(--zivo-safe-top,0px) + 0.75rem)",
             }}
           >
             <X className="h-4 w-4" />

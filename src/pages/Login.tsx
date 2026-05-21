@@ -1,10 +1,10 @@
 /**
  * ZIVO ID — Login page
- * - Facebook-style saved accounts: tap an avatar, enter password only
+ * - Drive-style saved accounts: tap an avatar, restore session or ask password
  * - Full email+password form for new/other accounts
  * - Remember me saves avatar/name to localStorage for quick re-login
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2, Eye, EyeOff, UserPlus, X, ChevronLeft, AlertTriangle, MoreHorizontal, ExternalLink } from "lucide-react";
 import { supabase, setRememberMePreference } from "@/integrations/supabase/client";
@@ -39,8 +39,7 @@ function AccountCard({
 
   return (
     <div
-      className={`relative group flex flex-col items-center gap-2 ${editing ? "cursor-default" : "cursor-pointer"}`}
-      onClick={handleClick}
+      className="relative"
     >
       {/* Remove button — only shown in edit mode, after the user taps "..." */}
       {editing && (
@@ -63,22 +62,31 @@ function AccountCard({
         </button>
       )}
 
-      {/* Avatar — Instagram-style circular ring with brand gradient. The
-          gentle wiggle in edit mode hints "tap the X to remove" without
-          requiring any extra label. */}
-      <div className={`w-16 h-16 rounded-full p-[2px] bg-ig-gradient shadow-md transition ${editing ? "animate-pulse opacity-90" : "group-hover:scale-105 group-active:scale-95"}`}>
-        <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-zinc-900 flex items-center justify-center">
-          {account.avatarUrl ? (
-            <img src={account.avatarUrl} alt={account.fullName} className="w-full h-full object-cover" />
-          ) : (
-            <span className="bg-ig-gradient bg-clip-text text-transparent font-bold text-lg">{initials}</span>
-          )}
+      <button
+        type="button"
+        onClick={handleClick}
+        tabIndex={editing ? -1 : 0}
+        aria-disabled={editing}
+        aria-label={`Continue as ${account.fullName || account.email}`}
+        className={`group flex flex-col items-center gap-2 ${editing ? "cursor-default" : "cursor-pointer"}`}
+      >
+        {/* Avatar — Instagram-style circular ring with brand gradient. The
+            gentle wiggle in edit mode hints "tap the X to remove" without
+            requiring any extra label. */}
+        <div className={`w-16 h-16 rounded-full p-[2px] bg-ig-gradient shadow-md transition ${editing ? "animate-pulse opacity-90" : "group-hover:scale-105 group-active:scale-95"}`}>
+          <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-zinc-900 flex items-center justify-center">
+            {account.avatarUrl ? (
+              <img src={account.avatarUrl} alt={account.fullName} className="w-full h-full object-cover" />
+            ) : (
+              <span className="bg-ig-gradient bg-clip-text text-transparent font-bold text-lg">{initials}</span>
+            )}
+          </div>
         </div>
-      </div>
 
-      <span className="text-xs text-zinc-700 dark:text-zinc-300 font-medium text-center max-w-[72px] truncate">
-        {account.fullName || account.email.split("@")[0]}
-      </span>
+        <span className="text-xs text-zinc-700 dark:text-zinc-300 font-medium text-center max-w-[72px] truncate">
+          {account.fullName || account.email.split("@")[0]}
+        </span>
+      </button>
     </div>
   );
 }
@@ -141,9 +149,18 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [capsLockOn, setCapsLockOn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [quickSignInLabel, setQuickSignInLabel] = useState("Signing in...");
   // Edit mode — toggled by the "..." button in picker, surfaces the X delete
   // buttons on each avatar. Default off so the picker feels clean (FB/IG).
   const [editingAccounts, setEditingAccounts] = useState(false);
+  const activeEmail = (mode === "password" ? selectedAccount?.email ?? "" : email).trim().toLowerCase();
+  const forgotPasswordHref = useMemo(() => {
+    const forgotParams = new URLSearchParams();
+    if (activeEmail) forgotParams.set("email", activeEmail);
+    if (redirect) forgotParams.set("redirect", redirect);
+    const query = forgotParams.toString();
+    return `/forgot-password${query ? `?${query}` : ""}`;
+  }, [activeEmail, redirect]);
 
   const canSubmit =
     !submitting &&
@@ -180,15 +197,45 @@ const Login = () => {
   }, [accounts.length, mode]);
 
   const handleSelectAccount = async (account: SavedAccount) => {
-    // Tap-to-sign-in flow with three escalating fallbacks so the user almost
-    // never has to type a password again:
-    //   1) Restore session via stored refresh_token   (instant — Facebook-style)
-    //   2) If that fails, auto-email a 6-digit code   (one tap → /verify-otp)
-    //   3) If even OTP send fails, show password mode (the security fallback)
+    if (submitting) return;
+    // Tap-to-sign-in flow:
+    //   1) If the live session already matches this account, continue.
+    //   2) Otherwise restore via stored refresh_token.
+    //   3) If the trusted token is absent/expired, ask for password.
+    //
+    // Do not auto-send an email link from an account tap. Saved accounts should
+    // feel like a trusted-device picker; email link stays an explicit fallback.
     setSelectedAccount(account);
+    setEmail(account.email);
+    setPassword("");
+    setShowPassword(false);
+    setMode("picker");
     setSubmitting(true);
+    setQuickSignInLabel("Checking saved login...");
 
-    // ── Step 1: try one-tap session restore ──────────────────────────────
+    // ── Step 1: reuse a still-live session ────────────────────────────────
+    try {
+      const { data } = await supabase.auth.getSession();
+      const session = data?.session;
+      if (session?.user?.email?.toLowerCase() === account.email.toLowerCase()) {
+        saveAccount({
+          ...account,
+          lastLoginAt: new Date().toISOString(),
+          refreshToken: session.refresh_token ?? account.refreshToken,
+          accessToken: session.access_token ?? account.accessToken,
+          expiresAt: session.expires_at ?? account.expiresAt ?? null,
+        });
+        refresh();
+        setSubmitting(false);
+        toast.success(`Welcome back, ${account.fullName?.split(" ")[0] || ""}!`);
+        navigate(redirect, { replace: true });
+        return;
+      }
+    } catch {
+      // Continue to the trusted-token check.
+    }
+
+    // ── Step 2: try one-tap session restore ──────────────────────────────
     // We use refreshSession() (not setSession()) because the stored access
     // token expires after 1 hour while the refresh token lives much longer
     // (~30 days). setSession({access_token, refresh_token}) installs the
@@ -219,18 +266,16 @@ const Login = () => {
           return;
         }
       } catch {
-        // fall through to password mode
+        // Fall through to password mode.
       }
     }
 
-    // ── Step 2: show password mode with both options ────────────────────
-    // The stored token failed (signed out elsewhere, password rotated, etc.)
-    // so we can't do silent one-tap. Drop the user on password mode where
-    // they get TWO clear choices: type their password, OR tap "Email me &
-    // open Gmail" to use the magic-link path. They stay in control.
+    // ── Step 3: password fallback ─────────────────────────────────────────
+    // If the saved token is missing or expired, the user can still continue
+    // with the password manager. The email sign-in link remains available from
+    // the password screen, but only when the user asks for it.
     setSubmitting(false);
-    setEmail(account.email);
-    setPassword("");
+    setQuickSignInLabel("Signing in...");
     setMode("password");
   };
 
@@ -238,16 +283,17 @@ const Login = () => {
     setSelectedAccount(null);
     setEmail("");
     setPassword("");
+    setQuickSignInLabel("Signing in...");
     setMode("full");
   };
 
   const handleBack = () => {
     setPassword("");
+    setQuickSignInLabel("Signing in...");
     setMode(accounts.length > 0 ? "picker" : "full");
   };
 
-  // Webmail provider detection — used by the "Open Gmail/Outlook" button so
-  // the secondary option goes straight to the user's inbox.
+  // Webmail provider detection — used to label the secondary email-code option.
   const detectMailProvider = (addr: string): { name: string; url: string } | null => {
     const domain = addr.split("@")[1]?.toLowerCase() || "";
     if (!domain) return null;
@@ -259,25 +305,47 @@ const Login = () => {
     return null;
   };
 
-  // Passwordless "Email me a code" — sends a 6-digit OTP to the given email
+  const getEmailRedirectTo = () => {
+    const redirectParams = new URLSearchParams();
+    redirectParams.set("redirect", redirect);
+    return `${window.location.origin}/auth-callback?${redirectParams.toString()}`;
+  };
+
+  const getVerifyOtpPath = (targetEmail: string) =>
+    `/verify-otp?email=${encodeURIComponent(targetEmail)}&mode=login&entry=link${redirect ? `&redirect=${encodeURIComponent(redirect)}` : ""}`;
+
+  const requestSignInCode = async (targetEmail: string): Promise<
+    { ok: true; email: string } | { ok: false; message: string }
+  > => {
+    const trimmed = targetEmail.trim().toLowerCase();
+    if (!trimmed) {
+      return { ok: false, message: "Please enter your email first." };
+    }
+    const { error } = await supabase.auth.signInWithOtp({
+      email: trimmed,
+      options: { emailRedirectTo: getEmailRedirectTo() },
+    });
+    if (error) {
+      return { ok: false, message: error.message || "Could not send sign-in link. Try again." };
+    }
+    return { ok: true, email: trimmed };
+  };
+
+  // Passwordless sign-in — sends the Supabase magic-link email
   // and routes to /verify-otp. Used as a fallback when the user can't remember
   // their password and doesn't want a full reset cycle.
   const sendEmailCode = async (targetEmail: string) => {
-    const trimmed = targetEmail.trim().toLowerCase();
-    if (!trimmed) {
-      toast.error("Please enter your email first.");
-      return;
-    }
-    if (submitting) return;
+    if (submitting) return false;
     setSubmitting(true);
-    const { error } = await supabase.auth.signInWithOtp({ email: trimmed });
+    const result = await requestSignInCode(targetEmail);
     setSubmitting(false);
-    if (error) {
-      toast.error(error.message || "Could not send sign-in code. Try again.");
-      return;
+    if (result.ok === false) {
+      toast.error(result.message);
+      return false;
     }
-    toast.success("We sent a 6-digit code to your email.");
-    navigate(`/verify-otp?email=${encodeURIComponent(trimmed)}&mode=login${redirect ? `&redirect=${encodeURIComponent(redirect)}` : ""}`);
+    toast.success("We sent a secure sign-in link to your email.");
+    navigate(getVerifyOtpPath(result.email));
+    return true;
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -318,7 +386,7 @@ const Login = () => {
         });
       } else if (facts.isBadCredentials) {
         toast.error(facts.emailExists === true ? "Wrong password - please try again." : "Email or password is incorrect.", {
-          action: { label: "Forgot?", onClick: () => navigate("/forgot-password") },
+          action: { label: "Forgot?", onClick: () => navigate(forgotPasswordHref) },
         });
       } else if (facts.isRateLimited) {
         toast.error("Too many login attempts. Please wait a moment and try again.");
@@ -416,7 +484,7 @@ const Login = () => {
                 <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/70 dark:bg-zinc-900/70 backdrop-blur-sm rounded-lg pointer-events-auto">
                   <div className="flex flex-col items-center gap-2">
                     <Loader2 className="w-6 h-6 animate-spin text-rose-500" />
-                    <span className="text-xs font-medium text-zinc-700 dark:text-zinc-200">Signing in…</span>
+                    <span className="text-xs font-medium text-zinc-700 dark:text-zinc-200">{quickSignInLabel}</span>
                   </div>
                 </div>
               )}
@@ -435,7 +503,8 @@ const Login = () => {
                   />
                 ))}
 
-                <div
+                <button
+                  type="button"
                   className="flex flex-col items-center gap-2 cursor-pointer group"
                   onClick={handleAddAccount}
                 >
@@ -443,7 +512,7 @@ const Login = () => {
                     <UserPlus className="w-6 h-6 text-zinc-400 group-hover:text-rose-500 transition" />
                   </div>
                   <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Add account</span>
-                </div>
+                </button>
               </div>
 
               <button
@@ -550,20 +619,19 @@ const Login = () => {
                       type="button"
                       onClick={async () => {
                         await sendEmailCode(selectedAccount.email);
-                        if (provider) window.open(provider.url, "_blank", "noopener,noreferrer");
                       }}
                       disabled={submitting}
                       className="w-full h-11 rounded-lg text-sm font-semibold text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-[0.99] disabled:opacity-40 transition flex items-center justify-center gap-2"
                     >
                       <ExternalLink className="w-4 h-4" />
-                      {provider ? `Email me & open ${provider.name}` : "Email me a sign-in link"}
+                      {provider ? `Email me a sign-in link for ${provider.name}` : "Email me a sign-in link"}
                     </button>
                   </div>
                 );
               })()}
 
               <div className="flex items-center justify-between text-xs pt-1">
-                <Link to="/forgot-password" className="inline-flex min-h-[40px] items-center font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white">
+                <Link to={forgotPasswordHref} className="inline-flex min-h-[40px] items-center font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white">
                   Forgot password?
                 </Link>
                 <button
@@ -668,19 +736,18 @@ const Login = () => {
                     type="button"
                     onClick={async () => {
                       await sendEmailCode(email);
-                      if (provider) window.open(provider.url, "_blank", "noopener,noreferrer");
                     }}
                     disabled={submitting || !email.trim()}
                     className="w-full h-11 rounded-lg text-sm font-semibold text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-[0.99] disabled:opacity-40 transition flex items-center justify-center gap-2"
                   >
                     <ExternalLink className="w-4 h-4" />
-                    {provider ? `Email me & open ${provider.name}` : "Email me a sign-in link"}
+                    {provider ? `Email me a sign-in link for ${provider.name}` : "Email me a sign-in link"}
                   </button>
                 );
               })()}
 
               <div className="text-center pt-2">
-                <Link to="/forgot-password" className="inline-flex min-h-[40px] items-center px-1 text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white">
+                <Link to={forgotPasswordHref} className="inline-flex min-h-[40px] items-center px-1 text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white">
                   Forgot password?
                 </Link>
               </div>

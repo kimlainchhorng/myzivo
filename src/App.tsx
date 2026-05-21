@@ -62,6 +62,7 @@ const PaymentReturnHandler = lazyWithRetry(() => import("@/components/lodging/Pa
 const IncomingCallListener = lazyWithRetry(() => import("@/components/chat/IncomingCallListener"));
 const ChatNotificationListener = lazyWithRetry(() => import("@/components/chat/ChatNotificationListener"));
 const RuntimeSecurityGuard = lazyWithRetry(() => import("@/components/security/RuntimeSecurityGuard"));
+const GlobalAutoTranslator = lazyWithRetry(() => import("@/components/common/GlobalAutoTranslator"));
 const SpatialCursor = lazyWithRetry(() => import("./components/ui/SpatialCursor").then(m => ({ default: m.SpatialCursor })));
 const StoryDebugPanel = lazyWithRetry(() => import("@/components/stories/StoryDebugPanel"));
 const PostShareSheet = lazyWithRetry(() => import("@/components/social/PostShareSheet"));
@@ -1233,7 +1234,7 @@ function OTAUpdateBannerBridge() {
 }
 
 function OTAUpdateBootstrap() {
-  const ready = useAfterFirstPaint(5000);
+  const ready = useAfterFirstPaint(1500);
   return ready ? <OTAUpdateBannerBridge /> : null;
 }
 
@@ -1263,6 +1264,7 @@ const App = () => (
               <SkipToContent />
               <Toaster />
               <Sonner />
+              <Suspense fallback={null}><GlobalAutoTranslator /></Suspense>
               {import.meta.env.DEV && <RequestHealthBadge />}
               <DeferredPassiveChatOverlays />
               <BrowserRouter

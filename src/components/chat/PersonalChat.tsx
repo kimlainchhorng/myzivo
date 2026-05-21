@@ -25,6 +25,7 @@ import { openP2PTransfer } from "@/lib/p2pTransfer";
 import { signedUrlFor } from "@/lib/security/signedMedia";
 import { topicForPairSync } from "@/lib/security/channelName";
 import { subscribeToPooledPostgresChanges } from "@/services/chatRealtimePool";
+import { fileToInlineChatMediaUrl } from "@/lib/chat/mediaInlineFallback";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Send from "lucide-react/dist/esm/icons/send";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
@@ -65,6 +66,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
 import { primeCallAudio } from "@/lib/callAudio";
+import { classifyWebRTCFailure } from "@/hooks/useWebRTC";
 import ChatMessageBubble from "./ChatMessageBubble";
 import StickyDatePill from "./StickyDatePill";
 import AvatarPreviewSheet from "./AvatarPreviewSheet";
@@ -246,6 +248,58 @@ type RealtimeUpdatePayload<T> = { new: T };
 type RealtimeDeletePayload = { old?: { id?: string } };
 
 const dbFrom = (table: string): any => (supabase as any).from(table);
+const CHAT_MEDIA_BUCKET = "chat-media-files";
+const IMAGE_UPLOAD_LIMIT_BYTES = 10 * 1024 * 1024;
+const VIDEO_UPLOAD_LIMIT_BYTES = 50 * 1024 * 1024;
+const MEDIA_MESSAGE_TEXT = {
+  image: "Photo",
+  video: "Video",
+  voice: "Voice message",
+  file: "File",
+  location: "Location",
+} as const;
+
+function formatUploadLimit(bytes: number): string {
+  return `${Math.round(bytes / (1024 * 1024))}MB`;
+}
+
+function randomMediaId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function extensionForChatMedia(file: File, kind: "image" | "video"): string {
+  const fromName = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (fromName && fromName.length <= 8) return fromName;
+  if (file.type === "image/png") return "png";
+  if (file.type === "image/webp") return "webp";
+  if (file.type === "image/gif") return "gif";
+  if (file.type === "image/heic" || file.type === "image/heif") return "heic";
+  if (file.type === "video/quicktime") return "mov";
+  if (file.type === "video/webm") return "webm";
+  return kind === "video" ? "mp4" : "jpg";
+}
+
+function fallbackMessageForSend(opts: {
+  text?: string;
+  messageType: string;
+  imageUrl?: string | null;
+  videoUrl?: string | null;
+  voiceUrl?: string | null;
+  locationLat?: number | null;
+  filePayload?: FileBubbleData | null;
+}): string {
+  const text = opts.text?.trim();
+  if (text) return text;
+  if (opts.messageType === "image" || opts.imageUrl) return MEDIA_MESSAGE_TEXT.image;
+  if (opts.messageType === "video" || opts.videoUrl) return MEDIA_MESSAGE_TEXT.video;
+  if (opts.messageType === "voice" || opts.voiceUrl) return MEDIA_MESSAGE_TEXT.voice;
+  if (opts.messageType === "file" || opts.filePayload) return opts.filePayload?.filename || MEDIA_MESSAGE_TEXT.file;
+  if (opts.messageType === "location" || opts.locationLat != null) return MEDIA_MESSAGE_TEXT.location;
+  return "";
+}
 
 const getErrorMessage = (err: unknown): string => {
   if (err instanceof Error) return err.message;
@@ -367,6 +421,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [activeCall, setActiveCall] = useState<"voice" | "video" | null>(null);
+  const [callStarting, setCallStarting] = useState<"voice" | "video" | null>(null);
   
   const [pipMode, setPipMode] = useState(false);
   const [pipData, setPipData] = useState<{ remoteStream: MediaStream | null; duration: number; isMuted: boolean; callType: "voice" | "video"; isCameraOff: boolean } | null>(null);
@@ -574,11 +629,35 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     () => (user?.id && recipientId ? [user.id, recipientId].sort().join("_") : ""),
     [user?.id, recipientId],
   );
+  const missedCallDismissKey = useMemo(
+    () => user?.id && recipientId ? `zivo:chat:dismissed-missed-call:${user.id}:${recipientId}` : "",
+    [user?.id, recipientId],
+  );
 
   // Sync draft to input on load
   useEffect(() => {
     if (draft && !input) setInput(draft);
   }, [draft, input]);
+
+  useEffect(() => {
+    if (!missedCallDismissKey) {
+      setDismissedMissedCallId(null);
+      return;
+    }
+    try {
+      setDismissedMissedCallId(window.localStorage.getItem(missedCallDismissKey));
+    } catch {
+      setDismissedMissedCallId(null);
+    }
+  }, [missedCallDismissKey]);
+
+  const dismissMissedCall = useCallback((callId: string) => {
+    setDismissedMissedCallId(callId);
+    if (!missedCallDismissKey) return;
+    try {
+      window.localStorage.setItem(missedCallDismissKey, callId);
+    } catch { /* ignore */ }
+  }, [missedCallDismissKey]);
 
   useEffect(() => {
     setVisibleTimelineCount(INITIAL_VISIBLE_TIMELINE_ITEMS);
@@ -683,9 +762,32 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   }, []);
 
   const handleStartCall = useCallback(async (type: "voice" | "video") => {
+    if (activeCall || callStarting) return;
+
+    setCallStarting(type);
     void primeCallAudio();
-    setActiveCall(type);
-  }, []);
+
+    let preflightStream: MediaStream | null = null;
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        const error = new Error("Media devices are not available on this device.");
+        error.name = "NotFoundError";
+        throw error;
+      }
+
+      preflightStream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: type === "video",
+      });
+      setActiveCall(type);
+    } catch (error) {
+      const failure = classifyWebRTCFailure(error, type);
+      toast.error(failure.description || failure.title);
+    } finally {
+      preflightStream?.getTracks().forEach((track) => track.stop());
+      setCallStarting(null);
+    }
+  }, [activeCall, callStarting]);
 
   // Auto-start call from profile page deep-link
   const autoStartFiredRef = useRef(false);
@@ -771,27 +873,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   useEffect(() => {
     if (!loading && messages.length > 0 && !initialScrollDone.current) {
       initialScrollDone.current = true;
-      // Snapshot the first unread once.
-      if (firstUnreadIdRef.current == null) {
-        const myId = user?.id;
-        const unread = myId
-          ? messages.filter((m) => m.receiver_id === myId && !m.is_read && !m.id.startsWith("opt-"))
-          : [];
-        if (unread.length > 0) {
-          firstUnreadIdRef.current = unread[0].id;
-          setFirstUnreadId(unread[0].id);
-          setUnreadOnOpenCount(unread.length);
-          requestAnimationFrame(() => {
-            const el = messageRefs.current.get(unread[0].id);
-            if (el) el.scrollIntoView({ block: "start" });
-            else scrollToBottom(true);
-          });
-          // Clear the divider 4s after it appears so it doesn't linger forever.
-          window.setTimeout(() => setFirstUnreadId(null), 4000);
-          return;
-        }
-      }
+      firstUnreadIdRef.current = null;
+      setFirstUnreadId(null);
+      setUnreadOnOpenCount(0);
+      setShowJumpToLatest(false);
+      setUnreadWhileScrolled(0);
+      isNearBottomRef.current = true;
       scrollToBottom(true);
+      window.setTimeout(() => scrollToBottom(true), 80);
     }
   }, [loading, messages.length, scrollToBottom, user?.id, messages]);
 
@@ -1146,9 +1235,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     messageType?: string;
     text?: string;
   }) => {
-    const text = opts?.text ?? input.trim();
+    const rawText = opts?.text ?? input.trim();
     const { imageUrl, voiceUrl, videoUrl, locationLat, locationLng, locationLabel, filePayload, messageType } = opts || {};
-    if (!text && !imageUrl && !voiceUrl && !videoUrl && !filePayload && locationLat == null) return;
+    if (!rawText && !imageUrl && !voiceUrl && !videoUrl && !filePayload && locationLat == null) return;
     const isComplexSend = Boolean(imageUrl || voiceUrl || videoUrl || filePayload || locationLat != null || messageType);
     if (!user?.id || (sending && isComplexSend)) return;
 
@@ -1160,6 +1249,15 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       : imageUrl ? "image"
       : locationLat != null ? "location"
       : "text");
+    const text = fallbackMessageForSend({
+      text: rawText,
+      messageType: msgType,
+      imageUrl,
+      videoUrl,
+      voiceUrl,
+      locationLat,
+      filePayload,
+    });
     if (!opts?.text) setInput("");
     clearDraft();
     const currentReply = replyTo;
@@ -1216,7 +1314,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       insertData = {
         sender_id: user.id,
         receiver_id: recipientId,
-        message: text || "",
+        message: text,
         message_type: msgType,
       };
       if (imageUrl) insertData.image_url = imageUrl;
@@ -1244,7 +1342,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         .insert(insertData);
 
       if (error) throw error;
-      void sendChatPush(msgType, text || filePayload?.filename || "");
+      void sendChatPush(msgType, rawText || filePayload?.filename || text);
     } catch {
       // Keep the optimistic bubble and surface a tap-to-retry control instead
       // of dropping the message. Also persist to the durable outbox so the
@@ -1405,7 +1503,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       const insertData: DirectMessageInsert = {
         sender_id: user.id,
         receiver_id: recipientId,
-        message: "",
+        message: MEDIA_MESSAGE_TEXT.voice,
         message_type: "voice",
         voice_url: publicUrl!,
         file_payload: {
@@ -1592,12 +1690,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const sendOptimisticMedia = (file: File, kind: "image" | "video") => {
     if (!user?.id) return;
     const localUrl = URL.createObjectURL(file);
-    const optimisticId = `opt-media-${Date.now()}`;
+    const clientSendId = randomMediaId();
+    const optimisticId = `opt-media-${clientSendId}`;
+    const messageText = MEDIA_MESSAGE_TEXT[kind];
     const optimisticMsg: Message = {
       id: optimisticId,
       sender_id: user.id,
       receiver_id: recipientId,
-      message: "",
+      message: messageText,
       image_url: kind === "image" ? localUrl : null,
       video_url: kind === "video" ? localUrl : null,
       voice_url: null,
@@ -1607,7 +1707,13 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       location_lng: null,
       location_label: null,
       is_pinned: false,
-      file_payload: null,
+      file_payload: {
+        client_send_id: clientSendId,
+        filename: file.name || messageText,
+        mime_type: file.type || (kind === "video" ? "video/mp4" : "image/jpeg"),
+        size: file.size,
+        source: "upload",
+      } as unknown as FileBubbleData,
       expires_at: null,
       created_at: new Date().toISOString(),
       is_read: false,
@@ -1618,35 +1724,67 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     setReplyTo(null);
 
     void (async () => {
+      let path: string | null = null;
+      let dbMediaUrl: string | null = null;
+      let filePayloadSource = "upload";
       try {
-        const ext = file.name.split(".").pop() || (kind === "video" ? "mp4" : "jpg");
-        const path = `${user.id}/${Date.now()}.${ext}`;
-        const { error: upErr } = await supabase.storage
-          .from("chat-media-files")
-          .upload(path, file, { contentType: file.type, upsert: true, cacheControl: "3600" });
-        if (upErr) throw upErr;
-        // Mint a short-lived signed URL for the sender's bubble; store the
-        // path in the DB so receivers can re-sign on view (avoids expiring URLs).
-        const signedUrl = await signedUrlFor("chat-media-files", path, "display");
-        setMessages((prev) => prev.map((m) => m.id === optimisticId
-          ? { ...m, image_url: kind === "image" ? signedUrl : null, video_url: kind === "video" ? signedUrl : null }
-          : m));
+        try {
+          const ext = extensionForChatMedia(file, kind);
+          path = `${user.id}/${kind}s/${Date.now()}-${clientSendId}.${ext}`;
+          const { error: upErr } = await supabase.storage
+            .from(CHAT_MEDIA_BUCKET)
+            .upload(path, file, {
+              contentType: file.type || (kind === "video" ? "video/mp4" : "image/jpeg"),
+              upsert: false,
+              cacheControl: "3600",
+            });
+          if (upErr) throw upErr;
+          // Mint a short-lived signed URL for the sender's bubble; store the
+          // path in the DB so receivers can re-sign on view (avoids expiring URLs).
+          const signedUrl = await signedUrlFor(CHAT_MEDIA_BUCKET, path, "display");
+          dbMediaUrl = path;
+          if (signedUrl) {
+            setMessages((prev) => prev.map((m) => m.id === optimisticId
+              ? { ...m, image_url: kind === "image" ? signedUrl : null, video_url: kind === "video" ? signedUrl : null }
+              : m));
+          }
+        } catch (uploadErr) {
+          console.warn("[media] storage unavailable, using inline fallback", uploadErr);
+          if (path) void supabase.storage.from(CHAT_MEDIA_BUCKET).remove([path]).catch(() => {});
+          path = null;
+          dbMediaUrl = await fileToInlineChatMediaUrl(file, kind);
+          filePayloadSource = "upload-inline";
+          setMessages((prev) => prev.map((m) => m.id === optimisticId
+            ? { ...m, image_url: kind === "image" ? dbMediaUrl : null, video_url: kind === "video" ? dbMediaUrl : null }
+            : m));
+        }
+        if (!dbMediaUrl) throw new Error(`Could not prepare ${kind}`);
         const insertData: DirectMessageInsert = {
           sender_id: user.id,
           receiver_id: recipientId,
-          message: "",
+          message: messageText,
           message_type: kind,
+          file_payload: {
+            client_send_id: clientSendId,
+            filename: file.name || messageText,
+            mime_type: file.type || (kind === "video" ? "video/mp4" : "image/jpeg"),
+            size: file.size,
+            source: filePayloadSource,
+          } as unknown as FileBubbleData,
         };
-        if (kind === "image") insertData.image_url = path;
-        if (kind === "video") insertData.video_url = path;
+        if (kind === "image") insertData.image_url = dbMediaUrl;
+        if (kind === "video") insertData.video_url = dbMediaUrl;
         if (currentReply) insertData.reply_to_id = currentReply.id;
         const { error: insErr } = await dbFrom("direct_messages").insert(insertData);
         if (insErr) throw insErr;
         void sendChatPush(kind, "");
       } catch (e) {
         console.warn("[media] upload/send failed", e);
+        if (path) void supabase.storage.from(CHAT_MEDIA_BUCKET).remove([path]).catch(() => {});
         setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
-        toast.error(`Failed to send ${kind}`);
+        toast.error(kind === "video" && file.size > 8 * 1024 * 1024
+          ? "Video storage is unavailable. Try a shorter clip for now."
+          : `Failed to send ${kind}`);
       } finally {
         setTimeout(() => URL.revokeObjectURL(localUrl), 30000);
       }
@@ -1657,7 +1795,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5MB"); return; }
+    if (file.size > IMAGE_UPLOAD_LIMIT_BYTES) {
+      toast.error(`Image must be under ${formatUploadLimit(IMAGE_UPLOAD_LIMIT_BYTES)}`);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
     sendOptimisticMedia(file, "image");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
@@ -1666,8 +1808,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
-    if (file.size > 25 * 1024 * 1024) { toast.error("Video must be under 25MB"); return; }
-    sendOptimisticMedia(file, "video");
+    const kind = file.type === "image/gif" ? "image" : "video";
+    const limit = kind === "image" ? IMAGE_UPLOAD_LIMIT_BYTES : VIDEO_UPLOAD_LIMIT_BYTES;
+    if (file.size > limit) {
+      toast.error(`${kind === "image" ? "Image" : "Video"} must be under ${formatUploadLimit(limit)}`);
+      if (videoInputRef.current) videoInputRef.current.value = "";
+      return;
+    }
+    sendOptimisticMedia(file, kind);
     if (videoInputRef.current) videoInputRef.current.value = "";
   };
 
@@ -1676,8 +1824,12 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
     const isVideo = file.type.startsWith("video");
-    const maxSize = isVideo ? 25 * 1024 * 1024 : 5 * 1024 * 1024;
-    if (file.size > maxSize) { toast.error(`File must be under ${isVideo ? "25MB" : "5MB"}`); return; }
+    const maxSize = isVideo ? VIDEO_UPLOAD_LIMIT_BYTES : IMAGE_UPLOAD_LIMIT_BYTES;
+    if (file.size > maxSize) {
+      toast.error(`File must be under ${formatUploadLimit(maxSize)}`);
+      if (lockedImageInputRef.current) lockedImageInputRef.current.value = "";
+      return;
+    }
     setPendingLockedFile(file);
     setShowLockedPricePicker(true);
     if (lockedImageInputRef.current) lockedImageInputRef.current.value = "";
@@ -1692,11 +1844,15 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     const isVideo = file.type.startsWith("video");
     setUploadingMedia(true);
     try {
-      const ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
-      const path = `${user.id}/locked_${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("chat-media-files").upload(path, file, { contentType: file.type });
+      const ext = extensionForChatMedia(file, isVideo ? "video" : "image");
+      const path = `${user.id}/locked/${Date.now()}-${randomMediaId()}.${ext}`;
+      const { error } = await supabase.storage.from(CHAT_MEDIA_BUCKET).upload(path, file, {
+        contentType: file.type || (isVideo ? "video/mp4" : "image/jpeg"),
+        cacheControl: "3600",
+        upsert: false,
+      });
       if (error) throw error;
-      const signedUrl = await signedUrlFor("chat-media-files", path, "display");
+      const signedUrl = await signedUrlFor(CHAT_MEDIA_BUCKET, path, "display");
       const messageType = isVideo ? "locked_video" : "locked_image";
       const priceLabel = `$${(priceCents / 100).toFixed(2)}`;
       const label = isVideo ? `🔒 Locked Video · ${priceLabel}` : `🔒 Locked Photo · ${priceLabel}`;
@@ -2137,21 +2293,27 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               <>
                 <motion.button
                   whileTap={{ scale: 0.85 }}
-                  onClick={() => { void primeCallAudio(); void handleStartCall("video"); }}
-                  className="h-11 w-11 rounded-full flex items-center justify-center hover:bg-blue-500/10 active:bg-blue-500/15 transition-colors"
+                  onClick={() => { void handleStartCall("video"); }}
+                  disabled={!!callStarting}
+                  className="h-11 w-11 rounded-full flex items-center justify-center hover:bg-blue-500/10 active:bg-blue-500/15 transition-colors disabled:pointer-events-none disabled:opacity-60"
                   aria-label="Video call"
                   title="Video call"
                 >
-                  <Video className="h-5 w-5 text-blue-500" />
+                  {callStarting === "video"
+                    ? <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                    : <Video className="h-5 w-5 text-blue-500" />}
                 </motion.button>
                 <motion.button
                   whileTap={{ scale: 0.85 }}
-                  onClick={() => { void primeCallAudio(); void handleStartCall("voice"); }}
-                  className="h-11 w-11 rounded-full flex items-center justify-center hover:bg-emerald-500/10 active:bg-emerald-500/15 transition-colors"
+                  onClick={() => { void handleStartCall("voice"); }}
+                  disabled={!!callStarting}
+                  className="h-11 w-11 rounded-full flex items-center justify-center hover:bg-emerald-500/10 active:bg-emerald-500/15 transition-colors disabled:pointer-events-none disabled:opacity-60"
                   aria-label="Voice call"
                   title="Voice call"
                 >
-                  <Phone className="h-[19px] w-[19px] text-emerald-500" />
+                  {callStarting === "voice"
+                    ? <Loader2 className="h-[19px] w-[19px] animate-spin text-emerald-500" />
+                    : <Phone className="h-[19px] w-[19px] text-emerald-500" />}
                 </motion.button>
               </>
             )}
@@ -2203,13 +2365,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             </div>
             <button type="button"
               onClick={() => { void handleStartCall(latestMissedCall.call_type as "voice" | "video"); }}
-              className="h-9 px-4 rounded-full bg-foreground text-background text-[13px] font-bold active:scale-95 transition-transform flex items-center gap-1.5"
+              disabled={!!callStarting}
+              className="h-9 px-4 rounded-full bg-foreground text-background text-[13px] font-bold active:scale-95 transition-transform flex items-center gap-1.5 disabled:pointer-events-none disabled:opacity-70"
             >
-              <Phone className="h-3.5 w-3.5 fill-current" />
+              {callStarting === latestMissedCall.call_type
+                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                : <Phone className="h-3.5 w-3.5 fill-current" />}
               Call back
             </button>
             <button type="button"
-              onClick={() => setDismissedMissedCallId(latestMissedCall.id)}
+              onClick={() => dismissMissedCall(latestMissedCall.id)}
               className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-background transition-colors"
               aria-label="Dismiss"
             >
@@ -2703,7 +2868,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               </div>
             )}
             {/* Bottom anchor — scrollToBottom targets this for instant, jank-free scrolling */}
-            <div ref={bottomAnchorRef} className="h-px shrink-0" aria-hidden />
+            <div ref={bottomAnchorRef} className="h-4 shrink-0" aria-hidden />
           </div>
         )}
       </div>
@@ -2765,7 +2930,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               setUnreadWhileScrolled(0);
             }}
             aria-label={unreadWhileScrolled > 0 ? `${unreadWhileScrolled} new ${unreadWhileScrolled === 1 ? "message" : "messages"} — jump to latest` : "Jump to latest"}
-            className="absolute right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+5.25rem)] z-20 inline-flex items-center gap-1.5 h-10 px-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-lg shadow-primary/25"
+            className="absolute right-4 bottom-[calc(var(--zivo-safe-bottom,0px)+5.25rem)] z-20 inline-flex items-center gap-1.5 h-10 px-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-lg shadow-primary/25"
           >
             Jump to latest
             {unreadWhileScrolled > 0 && (
@@ -2778,7 +2943,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       </AnimatePresence>
 
       {/* Smart reply suggestions — chips above the composer */}
-      <div className="bg-background/85 backdrop-blur-2xl border-t border-border/10 px-2.5 py-2 relative [padding-bottom:max(env(safe-area-inset-bottom,0px),0.5rem)]">
+      <div className="bg-background/85 backdrop-blur-2xl border-t border-border/10 px-2.5 py-2 relative [padding-bottom:max(var(--zivo-safe-bottom,0px),0.5rem)]">
           {/* AI smart-reply chips — appears when latest visible message is from
               the other side and the composer is empty. Tap a chip to seed the
               composer (does not auto-send so the user can edit). */}

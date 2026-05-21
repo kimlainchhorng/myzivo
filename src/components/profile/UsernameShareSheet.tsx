@@ -79,7 +79,7 @@ export default function UsernameShareSheet({ open, username, profileId, displayN
             exit={{ y: 80, opacity: 0 }}
             transition={{ type: "spring", damping: 26, stiffness: 280 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full sm:max-w-md bg-background rounded-t-2xl sm:rounded-2xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
+            className="w-full sm:max-w-md bg-background rounded-t-2xl sm:rounded-2xl p-5 pb-[max(1.25rem,var(--zivo-safe-bottom,0px))]"
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-foreground">Share your profile</h3>

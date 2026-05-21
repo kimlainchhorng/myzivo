@@ -1082,7 +1082,7 @@ function MobileFlightSearch() {
         onClick={() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
         aria-label="Back to search"
         className={cn(
-          "fixed bottom-20 right-4 z-40 h-12 px-4 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 inline-flex items-center gap-2 text-sm font-semibold transition-all duration-200",
+          "fixed bottom-[calc(var(--zivo-safe-bottom,0px)+5rem)] right-4 z-40 h-12 px-4 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 inline-flex items-center gap-2 text-sm font-semibold transition-all duration-200",
           showBackToTop
             ? "opacity-100 translate-y-0"
             : "opacity-0 translate-y-4 pointer-events-none",

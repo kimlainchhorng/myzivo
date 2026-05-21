@@ -96,7 +96,7 @@ idle(() => {
       };
       // Edge-to-edge: webview crosses behind the status bar so cover photos /
       // gradients reach the very top of the screen. Interactive controls use
-      // env(safe-area-inset-top) to stay clear of the notch / Dynamic Island.
+      // var(--zivo-safe-top,0px) to stay clear of the notch / Dynamic Island.
       void StatusBar.setOverlaysWebView({ overlay: true });
       void StatusBar.setStyle({ style: getStyle() });
       

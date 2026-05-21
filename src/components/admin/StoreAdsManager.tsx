@@ -609,7 +609,7 @@ export default function StoreAdsManager({ storeId }: Props) {
         onClick={openCreate}
         aria-label="New campaign"
         className="sm:hidden fixed right-4 z-40 flex items-center gap-1.5 h-12 px-4 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 active:scale-95 transition"
-        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)" }}
+        style={{ bottom: "calc(var(--zivo-safe-bottom,0px) + 80px)" }}
       >
         <Plus className="w-4 h-4" />
         <span className="text-sm font-semibold">New</span>

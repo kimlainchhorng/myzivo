@@ -45,7 +45,7 @@ export default function TwoStepSetupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-[env(safe-area-inset-bottom)]">
+    <div className="min-h-screen bg-background pb-[var(--zivo-safe-bottom,0px)]">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border safe-area-top">
         <div className="flex items-center gap-2 h-14 px-2">
           <button type="button" onClick={goBack} aria-label="Back" className="p-2 -ml-2 rounded-full hover:bg-muted">

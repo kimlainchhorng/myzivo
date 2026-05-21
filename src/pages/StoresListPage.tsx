@@ -1039,7 +1039,7 @@ export default function StoresListPage() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             className="fixed left-0 right-0 bottom-0 z-50 bg-card border-t border-border/40 shadow-2xl"
-            style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 8px)" }}
+            style={{ paddingBottom: "max(var(--zivo-safe-bottom,0px), 8px)" }}
           >
             <div className="px-3 py-3 flex items-center gap-2">
               <Button

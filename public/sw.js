@@ -134,21 +134,35 @@ self.addEventListener('push', (event) => {
     data = { title: 'ZIVO', body: event.data?.text() || 'You have a new notification' };
   }
 
+  const rawData = data.data && typeof data.data === 'object' ? data.data : {};
+  const nestedData = rawData.data && typeof rawData.data === 'object' ? rawData.data : {};
+  const notificationData = { ...nestedData, ...rawData };
+  const type = String(notificationData.type || notificationData.notification_type || data.type || '').toLowerCase();
+  const isIncomingCall = type === 'incoming_call';
+  const callerId = notificationData.caller_id || notificationData.sender_id || notificationData.from_user_id;
+  const callId = notificationData.call_id || notificationData.id || '';
+
   const options = {
     body: data.body || '',
-    icon: '/pwa-icons/icon-192x192.png',
+    icon: notificationData.caller_avatar || data.image_url || '/pwa-icons/icon-192x192.png',
     badge: '/pwa-icons/icon-192x192.png',
-    vibrate: [100, 50, 100],
-    data: data.data || {},
-    tag: data.tag || 'default',
+    vibrate: isIncomingCall ? [280, 120, 280, 700, 280, 120, 280] : [100, 50, 100],
+    data: notificationData,
+    tag: data.tag || (isIncomingCall ? `incoming-call-${callId || callerId || 'unknown'}` : (notificationData.type || 'default')),
     renotify: true,
-    requireInteraction: data.requireInteraction || false,
-    actions: data.actions || [],
+    requireInteraction: isIncomingCall || data.requireInteraction || false,
+    actions: isIncomingCall
+      ? [
+          { action: 'answer', title: 'Answer' },
+          { action: 'message', title: 'Message' },
+        ]
+      : (data.actions || []),
     silent: false,
+    timestamp: Date.now(),
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'ZIVO', options)
+    self.registration.showNotification(data.title || (isIncomingCall ? 'Incoming ZIVO call' : 'ZIVO'), options)
   );
 });
 
@@ -183,7 +197,15 @@ self.addEventListener('notificationclick', (event) => {
       urlToOpen = data.sender_id ? `/chat?with=${data.sender_id}` : '/chat';
       break;
     case 'incoming_call':
-      urlToOpen = data.sender_id ? `/chat?with=${data.sender_id}&call=1` : '/chat';
+      {
+        const callerId = data.caller_id || data.sender_id || data.from_user_id || '';
+        const callId = data.call_id || '';
+        const params = new URLSearchParams();
+        if (callerId) params.set('with', callerId);
+        if (callId) params.set('incomingCall', callId);
+        params.set('call', event.action === 'answer' ? 'answer' : '1');
+        urlToOpen = `/chat?${params.toString()}`;
+      }
       break;
 
     // Orders / Eats

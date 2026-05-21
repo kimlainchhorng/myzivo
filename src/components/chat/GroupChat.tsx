@@ -9,6 +9,7 @@ import MediaGalleryLightbox from "./MediaGalleryLightbox";
 import GroupReadReceipts from "./GroupReadReceipts";
 import { OPEN_MEDIA_EVENT, type OpenMediaDetail } from "@/lib/chat/openMedia";
 import { signedUrlFor } from "@/lib/security/signedMedia";
+import { fileToInlineChatMediaUrl } from "@/lib/chat/mediaInlineFallback";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Send from "lucide-react/dist/esm/icons/send";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
@@ -83,6 +84,7 @@ interface GroupMessage {
   sender_id: string;
   message: string;
   image_url: string | null;
+  video_url?: string | null;
   voice_url: string | null;
   message_type: string;
   reply_to_id: string | null;
@@ -128,12 +130,43 @@ type GroupMessageInsert = {
   message: string;
   message_type: string;
   image_url?: string;
+  video_url?: string;
   voice_url?: string;
   reply_to_id?: string;
   file_payload?: { duration_ms?: number; client_send_id?: string } | null;
 };
 
 const dbFrom = (table: string): any => (supabase as any).from(table);
+const CHAT_MEDIA_BUCKET = "chat-media-files";
+const IMAGE_UPLOAD_LIMIT_BYTES = 10 * 1024 * 1024;
+const VIDEO_UPLOAD_LIMIT_BYTES = 50 * 1024 * 1024;
+const MEDIA_MESSAGE_TEXT = {
+  image: "Photo",
+  video: "Video",
+} as const;
+
+function formatUploadLimit(bytes: number): string {
+  return `${Math.round(bytes / (1024 * 1024))}MB`;
+}
+
+function randomMediaId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function extensionForChatMedia(file: File, kind: "image" | "video"): string {
+  const fromName = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (fromName && fromName.length <= 8) return fromName;
+  if (file.type === "image/png") return "png";
+  if (file.type === "image/webp") return "webp";
+  if (file.type === "image/gif") return "gif";
+  if (file.type === "image/heic" || file.type === "image/heif") return "heic";
+  if (file.type === "video/quicktime") return "mov";
+  if (file.type === "video/webm") return "webm";
+  return kind === "video" ? "mp4" : "jpg";
+}
 
 function formatTime(dateStr: string) {
   const d = new Date(dateStr);
@@ -498,9 +531,9 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
     if (lockedImageInputRef.current) lockedImageInputRef.current.value = "";
     if (!file) return;
     const isVideo = file.type.startsWith("video");
-    const maxSize = isVideo ? 25 * 1024 * 1024 : 5 * 1024 * 1024;
+    const maxSize = isVideo ? VIDEO_UPLOAD_LIMIT_BYTES : IMAGE_UPLOAD_LIMIT_BYTES;
     if (file.size > maxSize) {
-      toast.error(`File must be under ${isVideo ? "25MB" : "5MB"}`);
+      toast.error(`File must be under ${formatUploadLimit(maxSize)}`);
       return;
     }
     setLockedMediaFile(file);
@@ -905,19 +938,26 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5MB"); return; }
+    if (file.size > IMAGE_UPLOAD_LIMIT_BYTES) {
+      toast.error(`Image must be under ${formatUploadLimit(IMAGE_UPLOAD_LIMIT_BYTES)}`);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
 
     const localUrl = URL.createObjectURL(file);
-    const optimisticId = `opt-img-${Date.now()}`;
+    const clientSendId = randomMediaId();
+    const optimisticId = `opt-img-${clientSendId}`;
     const optimisticMsg: GroupMessage = {
       id: optimisticId,
       group_id: groupId,
       sender_id: user.id,
-      message: "",
+      message: MEDIA_MESSAGE_TEXT.image,
       image_url: localUrl,
+      video_url: null,
       voice_url: null,
       message_type: "image",
       reply_to_id: replyTo?.id || null,
+      file_payload: { client_send_id: clientSendId, duration_ms: undefined },
       created_at: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, optimisticMsg]);
@@ -926,31 +966,55 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
     setReplyTo(null);
 
     void (async () => {
+      let path: string | null = null;
+      let dbImageUrl: string | null = null;
+      let filePayloadSource = "upload";
       try {
-        const ext = file.name.split(".").pop() || "jpg";
-        const path = `${user.id}/${Date.now()}.${ext}`;
-        const { error: upErr } = await supabase.storage
-          .from("chat-media-files")
-          .upload(path, file, { contentType: file.type, upsert: true, cacheControl: "3600" });
-        if (upErr) throw upErr;
-        // Sender sees a short-lived signed URL; DB row stores the storage path
-        // so receivers can re-sign on view (URLs would otherwise expire).
-        const signedUrl = await signedUrlFor("chat-media-files", path, "display");
-        setMessages((prev) => prev.map((m) => m.id === optimisticId
-          ? { ...m, image_url: signedUrl }
-          : m));
+        try {
+          const ext = extensionForChatMedia(file, "image");
+          path = `${user.id}/images/${Date.now()}-${clientSendId}.${ext}`;
+          const { error: upErr } = await supabase.storage
+            .from(CHAT_MEDIA_BUCKET)
+            .upload(path, file, {
+              contentType: file.type || "image/jpeg",
+              upsert: false,
+              cacheControl: "3600",
+            });
+          if (upErr) throw upErr;
+          // Sender sees a short-lived signed URL; DB row stores the storage path
+          // so receivers can re-sign on view (URLs would otherwise expire).
+          const signedUrl = await signedUrlFor(CHAT_MEDIA_BUCKET, path, "display");
+          dbImageUrl = path;
+          if (signedUrl) {
+            setMessages((prev) => prev.map((m) => m.id === optimisticId
+              ? { ...m, image_url: signedUrl }
+              : m));
+          }
+        } catch (uploadErr) {
+          console.warn("[group/image] storage unavailable, using inline fallback", uploadErr);
+          if (path) void supabase.storage.from(CHAT_MEDIA_BUCKET).remove([path]).catch(() => {});
+          path = null;
+          dbImageUrl = await fileToInlineChatMediaUrl(file, "image");
+          filePayloadSource = "upload-inline";
+          setMessages((prev) => prev.map((m) => m.id === optimisticId
+            ? { ...m, image_url: dbImageUrl }
+            : m));
+        }
+        if (!dbImageUrl) throw new Error("Could not prepare image");
         const insertData: GroupMessageInsert = {
           group_id: groupId,
           sender_id: user.id,
-          message: "",
+          message: MEDIA_MESSAGE_TEXT.image,
           message_type: "image",
-          image_url: path, // storage path, not URL
+          image_url: dbImageUrl,
+          file_payload: { client_send_id: clientSendId, source: filePayloadSource } as GroupMessageInsert["file_payload"],
         };
         if (currentReply) insertData.reply_to_id = currentReply.id;
         const { error: insErr } = await dbFrom("group_messages").insert(insertData);
         if (insErr) throw insErr;
       } catch (e) {
         console.warn("[group/image] upload/send failed", e);
+        if (path) void supabase.storage.from(CHAT_MEDIA_BUCKET).remove([path]).catch(() => {});
         setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
         toast.error("Failed to send image");
       } finally {
@@ -963,27 +1027,70 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
   const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
-    if (file.size > 25 * 1024 * 1024) { toast.error("Video must be under 25MB"); return; }
+    if (file.size > VIDEO_UPLOAD_LIMIT_BYTES) {
+      toast.error(`Video must be under ${formatUploadLimit(VIDEO_UPLOAD_LIMIT_BYTES)}`);
+      if (videoInputRef.current) videoInputRef.current.value = "";
+      return;
+    }
     const localUrl = URL.createObjectURL(file);
-    const optimisticId = `opt-vid-${Date.now()}`;
+    const clientSendId = randomMediaId();
+    const optimisticId = `opt-vid-${clientSendId}`;
     const optimisticMsg: GroupMessage = {
       id: optimisticId, group_id: groupId, sender_id: user.id,
-      message: "", image_url: null, voice_url: null, message_type: "video",
-      reply_to_id: replyTo?.id || null, created_at: new Date().toISOString(),
+      message: MEDIA_MESSAGE_TEXT.video, image_url: null, video_url: localUrl, voice_url: null, message_type: "video",
+      reply_to_id: replyTo?.id || null, file_payload: { client_send_id: clientSendId }, created_at: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, optimisticMsg]);
     scrollToBottom();
+    const currentReply = replyTo;
+    setReplyTo(null);
     void (async () => {
+      let path: string | null = null;
+      let dbVideoUrl: string | null = null;
+      let filePayloadSource = "upload";
       try {
-        const ext = file.name.split(".").pop() || "mp4";
-        const path = `${user.id}/${Date.now()}.${ext}`;
-        const { error: upErr } = await supabase.storage.from("chat-media-files").upload(path, file, { contentType: file.type, upsert: true, cacheControl: "3600" });
-        if (upErr) throw upErr;
-        const signedUrl = await signedUrlFor("chat-media-files", path, "display");
-        setMessages((prev) => prev.map((m) => m.id === optimisticId ? { ...m, image_url: signedUrl } : m));
-        const { error: insErr } = await dbFrom("group_messages").insert({ group_id: groupId, sender_id: user.id, message: "", message_type: "video", image_url: path });
+        try {
+          const ext = extensionForChatMedia(file, "video");
+          path = `${user.id}/videos/${Date.now()}-${clientSendId}.${ext}`;
+          const { error: upErr } = await supabase.storage.from(CHAT_MEDIA_BUCKET).upload(path, file, {
+            contentType: file.type || "video/mp4",
+            upsert: false,
+            cacheControl: "3600",
+          });
+          if (upErr) throw upErr;
+          const signedUrl = await signedUrlFor(CHAT_MEDIA_BUCKET, path, "display");
+          dbVideoUrl = path;
+          if (signedUrl) {
+            setMessages((prev) => prev.map((m) => m.id === optimisticId ? { ...m, video_url: signedUrl } : m));
+          }
+        } catch (uploadErr) {
+          console.warn("[group/video] storage unavailable, using inline fallback", uploadErr);
+          if (path) void supabase.storage.from(CHAT_MEDIA_BUCKET).remove([path]).catch(() => {});
+          path = null;
+          dbVideoUrl = await fileToInlineChatMediaUrl(file, "video");
+          filePayloadSource = "upload-inline";
+          setMessages((prev) => prev.map((m) => m.id === optimisticId ? { ...m, video_url: dbVideoUrl } : m));
+        }
+        if (!dbVideoUrl) throw new Error("Could not prepare video");
+        const insertData: GroupMessageInsert = {
+          group_id: groupId,
+          sender_id: user.id,
+          message: MEDIA_MESSAGE_TEXT.video,
+          message_type: "video",
+          video_url: dbVideoUrl,
+          file_payload: { client_send_id: clientSendId, source: filePayloadSource } as GroupMessageInsert["file_payload"],
+        };
+        if (currentReply) insertData.reply_to_id = currentReply.id;
+        const { error: insErr } = await dbFrom("group_messages").insert(insertData);
         if (insErr) throw insErr;
-      } catch { setMessages((prev) => prev.filter((m) => m.id !== optimisticId)); toast.error("Failed to send video"); }
+      } catch (e) {
+        console.warn("[group/video] upload/send failed", e);
+        if (path) void supabase.storage.from(CHAT_MEDIA_BUCKET).remove([path]).catch(() => {});
+        setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
+        toast.error(file.size > 8 * 1024 * 1024
+          ? "Video storage is unavailable. Try a shorter clip for now."
+          : "Failed to send video");
+      }
       finally { setTimeout(() => URL.revokeObjectURL(localUrl), 30000); }
     })();
     if (videoInputRef.current) videoInputRef.current.value = "";
@@ -1291,7 +1398,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
                         time={formatTime(msg.created_at)}
                         isMe={isMe}
                         imageUrl={msg.message_type === "image" ? msg.image_url : null}
-                        videoUrl={msg.message_type === "video" ? msg.image_url : null}
+                        videoUrl={msg.message_type === "video" ? msg.video_url : null}
                         messageType={msg.message_type}
                         senderId={msg.sender_id}
                         senderName={senderName}
@@ -1347,7 +1454,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
               setUnreadWhileScrolled(0);
             }}
             aria-label={unreadWhileScrolled > 0 ? `${unreadWhileScrolled} new ${unreadWhileScrolled === 1 ? "message" : "messages"} — jump to latest` : "Jump to latest"}
-            className="absolute right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+5.25rem)] z-20 inline-flex items-center gap-1.5 h-10 px-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-lg shadow-primary/25"
+            className="absolute right-4 bottom-[calc(var(--zivo-safe-bottom,0px)+5.25rem)] z-20 inline-flex items-center gap-1.5 h-10 px-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-lg shadow-primary/25"
           >
             Jump to latest
             {unreadWhileScrolled > 0 && (
@@ -1514,7 +1621,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
               className="fixed inset-0 z-[200] bg-black/40" onClick={() => setActionTarget(null)} />
             <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }}
               transition={{ type: "spring", damping: 26, stiffness: 400 }}
-              className="fixed bottom-0 left-0 right-0 z-[201] bg-background rounded-t-2xl px-4 pb-8 pt-3 shadow-2xl border-t border-border/20 max-w-lg mx-auto"
+              className="fixed bottom-0 left-0 right-0 z-[201] bg-background rounded-t-2xl px-4 pb-[calc(var(--zivo-safe-bottom,0px)+2rem)] pt-3 shadow-2xl border-t border-border/20 max-w-lg mx-auto"
             >
               <div className="w-10 h-1 bg-muted rounded-full mx-auto mb-4" />
               <p className="text-xs text-muted-foreground truncate mb-3 px-1">{actionTarget.message || "📷 Media"}</p>
@@ -1566,7 +1673,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
       </AnimatePresence>
 
       {/* Input */}
-      <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative [padding-bottom:max(env(safe-area-inset-bottom,0px),0.875rem)] lg:[&>*]:max-w-4xl lg:[&>*]:mx-auto lg:[&>*]:w-full">
+      <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative [padding-bottom:max(var(--zivo-safe-bottom,0px),0.875rem)] lg:[&>*]:max-w-4xl lg:[&>*]:mx-auto lg:[&>*]:w-full">
         {/* Sticker auto-suggestions (Telegram parity) — shown when the user types an emoji.
             Hidden during slash mode so the popovers don't fight. */}
         {stickerSuggestions.length > 0 && slashQuery == null && (

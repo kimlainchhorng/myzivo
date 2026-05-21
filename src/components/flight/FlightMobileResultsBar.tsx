@@ -48,7 +48,7 @@ export default function FlightMobileResultsBar({
       "border-t border-border/50 shadow-2xl shadow-black/10",
       className
     )}
-    style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}
+    style={{ paddingBottom: "var(--zivo-safe-bottom,8px)" }}
     >
       <div className="container mx-auto px-4 py-3">
         <div className="flex gap-3">
@@ -78,7 +78,7 @@ export default function FlightMobileResultsBar({
                 Sort
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="rounded-t-3xl" style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)' }}>
+            <SheetContent side="bottom" className="rounded-t-3xl" style={{ paddingBottom: "var(--zivo-safe-bottom,16px)" }}>
               <SheetHeader className="pb-4">
                 <SheetTitle>Sort by</SheetTitle>
               </SheetHeader>

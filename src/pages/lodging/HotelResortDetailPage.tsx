@@ -1703,7 +1703,7 @@ export default function HotelResortDetailPage() {
       {/* /body wrapper */}
 
       {/* Sticky CTA — mobile only */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-background/95 backdrop-blur border-t border-border px-4 py-3 pb-[max(env(safe-area-inset-bottom),12px)]">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-background/95 backdrop-blur border-t border-border px-4 py-3 pb-[max(var(--zivo-safe-bottom,0px),12px)]">
         <div className="mx-auto max-w-2xl flex items-center gap-3">
           {minPriceCents > 0 ? (
             <div className="flex flex-col leading-tight shrink-0">
@@ -1849,7 +1849,7 @@ export default function HotelResortDetailPage() {
               <h3 className="text-base font-bold text-foreground">All rooms · {activeRooms.length}</h3>
               <p className="text-[11px] text-muted-foreground mt-0.5">{store?.name}</p>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-3 pb-[max(env(safe-area-inset-bottom),16px)]">
+            <div className="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-3 pb-[max(var(--zivo-safe-bottom,0px),16px)]">
               {activeRooms.map((room) => {
                 const price = roomPricePresentation(room);
                 const hasDiscount = price.discountPct > 0 && price.strikeCents > price.displayCents;

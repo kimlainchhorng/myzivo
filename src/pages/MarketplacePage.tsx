@@ -1947,7 +1947,7 @@ export default function MarketplacePage() {
         {compareIds.length > 0 && tab === "browse" && (
           <motion.div
             initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 80, opacity: 0 }}
-            className="fixed bottom-16 left-0 right-0 z-40 px-4"
+            className="fixed bottom-[calc(var(--zivo-safe-bottom,0px)+4rem)] left-0 right-0 z-40 px-4"
           >
             <div className="max-w-md mx-auto bg-background/95 backdrop-blur-md border border-border rounded-2xl shadow-lg flex items-center gap-2 p-2">
               <span className="text-xs font-bold pl-2">⇄ {compareIds.length}/3</span>
@@ -2029,7 +2029,7 @@ export default function MarketplacePage() {
         {selectMode && tab === "mine" && (
           <motion.div
             initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 80, opacity: 0 }}
-            className="fixed bottom-16 left-0 right-0 z-40 px-4"
+            className="fixed bottom-[calc(var(--zivo-safe-bottom,0px)+4rem)] left-0 right-0 z-40 px-4"
           >
             <div className="max-w-md mx-auto bg-background/95 backdrop-blur-md border border-border rounded-2xl shadow-lg flex items-center gap-2 p-2">
               <span className="text-xs font-bold pl-2">{selectedIds.size} selected</span>

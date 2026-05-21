@@ -269,7 +269,7 @@ export default function HoldToRecordMic({ voice, className }: Props) {
             exit={{ opacity: 0, y: 12 }}
             transition={{ type: "spring", stiffness: 400, damping: 32 }}
             className="absolute inset-x-0 bottom-0 z-40 pointer-events-none"
-            style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}
+            style={{ paddingBottom: "max(var(--zivo-safe-bottom,0px), 0.5rem)" }}
           >
             {/* Lock hint chip — small, sits just above the mic */}
             <motion.div
@@ -345,7 +345,7 @@ export default function HoldToRecordMic({ voice, className }: Props) {
             exit={{ opacity: 0, y: 16, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 380, damping: 30 }}
             className="absolute inset-x-0 bottom-0 z-40"
-            style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}
+            style={{ paddingBottom: "max(var(--zivo-safe-bottom,0px), 0.5rem)" }}
           >
             <div className="mx-2 mb-1 px-3 py-2.5 rounded-2xl bg-card/90 backdrop-blur-2xl border border-border/40 shadow-xl flex items-center gap-2">
               <button type="button"

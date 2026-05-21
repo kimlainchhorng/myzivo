@@ -256,7 +256,7 @@ export default function ChannelPage() {
       </div>
 
       {!isSubscribed && !canPost && !showInlineJoin && (
-        <div className="fixed bottom-16 left-0 right-0 z-30 px-4 pb-3">
+        <div className="fixed bottom-[calc(var(--zivo-safe-bottom,0px)+4rem)] left-0 right-0 z-30 px-4 pb-3">
           <div className="mx-auto max-w-2xl rounded-2xl border border-primary/20 bg-background/95 backdrop-blur p-3 flex items-center justify-between gap-3 shadow-lg">
             <div className="min-w-0">
               <p className="text-[12px] font-semibold truncate">Join @{channel.handle}</p>

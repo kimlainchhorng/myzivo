@@ -10,7 +10,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       position="top-center"
       visibleToasts={3}
       gap={8}
-      offset="calc(env(safe-area-inset-top) + 14px)"
+      offset="calc(var(--zivo-safe-top,0px) + 14px)"
       style={
         {
           zIndex: 99999,

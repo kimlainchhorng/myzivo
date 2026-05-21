@@ -711,7 +711,7 @@ export default function StoryViewer({
         </div>
 
         {/* Progress bars — ZIVO Aurora gradient */}
-        <div className="absolute top-[env(safe-area-inset-top,12px)] left-0 right-0 flex gap-1 px-3 pt-2 z-20">
+        <div className="absolute top-[var(--zivo-safe-top,12px)] left-0 right-0 flex gap-1 px-3 pt-2 z-20">
           {viewingGroup.stories.map((_, i) => (
             <div key={i} className="flex-1 h-[3px] bg-white/15 rounded-full overflow-hidden backdrop-blur-sm">
               <motion.div
@@ -730,7 +730,7 @@ export default function StoryViewer({
         </div>
 
         {/* Header — single ZIVO glass capsule */}
-        <div data-testid="story-header" className="absolute top-[calc(env(safe-area-inset-top,12px)+20px)] left-0 right-0 flex items-center justify-between px-3 z-20 gap-2">
+        <div data-testid="story-header" className="absolute top-[calc(var(--zivo-safe-top,12px)+20px)] left-0 right-0 flex items-center justify-between px-3 z-20 gap-2">
           <div className="flex items-center gap-2.5 rounded-full bg-black/35 backdrop-blur-xl border border-white/10 ring-1 ring-[hsl(160_84%_55%)/0.25] pl-1 pr-3.5 py-1 shadow-[0_4px_20px_-6px_rgba(0,0,0,0.5)] min-w-0 flex-1 max-w-[68%]">
             <div className="w-9 h-9 rounded-full ring-2 ring-[hsl(160_84%_55%)/0.7] overflow-hidden shrink-0">
               {viewingGroup.avatarUrl ? (
@@ -859,7 +859,7 @@ export default function StoryViewer({
         </AnimatePresence>
 
         {/* Bottom: caption + reactions + reply */}
-        <div className="absolute bottom-0 left-0 right-0 z-20 pb-[env(safe-area-inset-bottom,16px)]">
+        <div className="absolute bottom-0 left-0 right-0 z-20 pb-[var(--zivo-safe-bottom,16px)]">
           {currentStory.caption && (
             <div className="px-5 pb-3">
               <p className="text-white text-sm font-medium drop-shadow-lg leading-relaxed">
@@ -1303,7 +1303,7 @@ export default function StoryViewer({
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}
                 transition={{ type: "spring", damping: 28, stiffness: 320 }}
-                className="w-full bg-card rounded-t-2xl p-2 pb-[env(safe-area-inset-bottom,16px)]"
+                className="w-full bg-card rounded-t-2xl p-2 pb-[var(--zivo-safe-bottom,16px)]"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="mx-auto h-1 w-10 rounded-full bg-muted-foreground/30 my-2" />
@@ -1377,7 +1377,7 @@ export default function StoryViewer({
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}
                 transition={{ type: "spring", damping: 28, stiffness: 320 }}
-                className="w-full bg-card rounded-t-2xl p-4 pb-[env(safe-area-inset-bottom,16px)]"
+                className="w-full bg-card rounded-t-2xl p-4 pb-[var(--zivo-safe-bottom,16px)]"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="mx-auto h-1 w-10 rounded-full bg-muted-foreground/30 mb-3" />

@@ -1,13 +1,12 @@
 /**
  * create-user-wallet-topup
  * ------------------------
- * Authenticated user → Stripe Checkout Session for wallet topup.
- * Body: { amount_cents: number, currency?: string, success_url?: string, cancel_url?: string }
- * Returns: { url, session_id }
+ * Authenticated user → Stripe PaymentIntent for in-app wallet topup.
+ * Body: { amount_cents: number, currency?: string, ui_mode?: "embedded" }
+ * Returns: { client_secret, payment_intent_id }
  *
- * Settlement happens on the redirect-back via verify-user-wallet-topup,
- * which calls the `credit_user_wallet_topup` RPC (idempotent on
- * stripe session id).
+ * Legacy checkout-session mode is still supported if a caller omits
+ * ui_mode="embedded".
  */
 import { createClient } from "../_shared/deps.ts";
 import { withSecurity } from "../_shared/withSecurity.ts";
@@ -48,6 +47,7 @@ Deno.serve(withSecurity("create-user-wallet-topup", async (req) => {
     const body = await req.json().catch(() => ({}));
     const amountCents = Math.round(Number(body?.amount_cents ?? 0));
     const currency = String(body?.currency ?? "USD").toUpperCase();
+    const uiMode = String(body?.ui_mode ?? "");
     const successUrl = String(body?.success_url ?? `${new URL(req.url).origin}/wallet?topup=success`);
     const cancelUrl = String(body?.cancel_url ?? `${new URL(req.url).origin}/wallet?topup=cancel`);
 
@@ -59,6 +59,42 @@ Deno.serve(withSecurity("create-user-wallet-topup", async (req) => {
     }
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2025-08-27.basil" });
+
+    if (uiMode === "embedded") {
+      let customerId: string | undefined;
+      if (u.user.email) {
+        const customers = await stripe.customers.list({ email: u.user.email, limit: 1 });
+        if (customers.data.length > 0) {
+          customerId = customers.data[0].id;
+        } else {
+          const customer = await stripe.customers.create({
+            email: u.user.email,
+            metadata: { supabase_user_id: u.user.id },
+          });
+          customerId = customer.id;
+        }
+      }
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amountCents,
+        currency: currency.toLowerCase(),
+        customer: customerId,
+        automatic_payment_methods: { enabled: true },
+        metadata: {
+          type: "user_wallet_topup",
+          user_id: u.user.id,
+          amount_cents: String(amountCents),
+          currency,
+        },
+      });
+
+      return new Response(JSON.stringify({
+        client_secret: paymentIntent.client_secret,
+        payment_intent_id: paymentIntent.id,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",

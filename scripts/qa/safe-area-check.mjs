@@ -44,10 +44,17 @@ const DEVICES = [
 // ── Shared safe-area tokens (mirrored from src/index.css `:root`) ────────
 // Keep in sync with --zivo-safe-top-* CSS custom properties.
 const SAFE_TOKENS = {
-  "--zivo-safe-top-overlay": "max(env(safe-area-inset-top, 0px), 60px)",
+  "--zivo-safe-top-overlay":
+    "max(calc(env(safe-area-inset-top, 0px) + 1.25rem), 80px)",
   "--zivo-safe-top-sheet": "max(env(safe-area-inset-top, 0px), 44px)",
   "--zivo-safe-top-sticky":
-    "max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 48px)",
+    "max(calc(env(safe-area-inset-top, 0px) + 0.125rem), 44px)",
+};
+
+const SHIPPED_SAFE_TOKENS = {
+  "--zivo-safe-top-overlay":
+    "max(calc(var(--zivo-safe-top, 0px) + 1.25rem), 80px)",
+  "--zivo-safe-top-sheet": "max(var(--zivo-safe-top, 0px), 44px)",
 };
 
 // ── Targets: files + named selectors with the inline style snippet ───────
@@ -71,28 +78,29 @@ const TARGETS = [
       {
         name: "Feed sticky header",
         property: "paddingTop",
-        shipped: "var(--zivo-safe-top-sticky)",
-        expression: SAFE_TOKENS["--zivo-safe-top-sticky"],
+        shipped: "zivo-pt-safe-overlay",
+        expression: SAFE_TOKENS["--zivo-safe-top-overlay"],
+        brokenIslandFloor: 80,
       },
       {
         name: "Search overlay header",
         property: "paddingTop",
-        shipped: "var(--zivo-safe-top-sticky)",
+        shipped: "zivo-pt-safe-sticky",
         expression: SAFE_TOKENS["--zivo-safe-top-sticky"],
       },
       {
         name: "Post-detail viewer header",
         property: "paddingTop",
-        shipped: "var(--zivo-safe-top-overlay)",
+        shipped: "zivo-pt-safe-overlay",
         expression: SAFE_TOKENS["--zivo-safe-top-overlay"],
-        brokenIslandFloor: 60,
+        brokenIslandFloor: 80,
       },
       {
         name: "ReelSlide close button (top)",
         property: "top",
-        shipped: "var(--zivo-safe-top-overlay)",
+        shipped: "zivo-reel-close-offset",
         expression: SAFE_TOKENS["--zivo-safe-top-overlay"],
-        brokenIslandFloor: 60,
+        brokenIslandFloor: 80,
       },
     ],
   },
@@ -102,15 +110,15 @@ const TARGETS = [
       {
         name: "Discover header paddingTop",
         property: "paddingTop",
-        shipped: "var(--zivo-safe-top-sticky)",
+        shipped: "feed-discover-header",
         expression: SAFE_TOKENS["--zivo-safe-top-sticky"],
       },
       {
         name: "Floating actions top",
         property: "top",
-        shipped: "var(--zivo-safe-top-overlay)",
-        expression: SAFE_TOKENS["--zivo-safe-top-overlay"],
-        brokenIslandFloor: 60,
+        shipped: "top-[calc(var(--zivo-safe-top-overlay,80px)+0.25rem)]",
+        expression: `calc(${SAFE_TOKENS["--zivo-safe-top-overlay"]} + 0.25rem)`,
+        brokenIslandFloor: 80,
       },
     ],
   },
@@ -132,14 +140,14 @@ const TARGETS = [
       {
         name: "--zivo-safe-top-overlay token",
         property: "var",
-        shipped: SAFE_TOKENS["--zivo-safe-top-overlay"],
+        shipped: SHIPPED_SAFE_TOKENS["--zivo-safe-top-overlay"],
         expression: SAFE_TOKENS["--zivo-safe-top-overlay"],
-        brokenIslandFloor: 60,
+        brokenIslandFloor: 80,
       },
       {
         name: "--zivo-safe-top-sheet token",
         property: "var",
-        shipped: SAFE_TOKENS["--zivo-safe-top-sheet"],
+        shipped: SHIPPED_SAFE_TOKENS["--zivo-safe-top-sheet"],
         expression: SAFE_TOKENS["--zivo-safe-top-sheet"],
       },
     ],

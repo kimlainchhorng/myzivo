@@ -296,7 +296,7 @@ export default function PromotePage() {
       </div>
 
       {/* Sticky CTA */}
-      <div className="fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur-lg border-t border-border/60 pb-[env(safe-area-inset-bottom)]">
+      <div className="fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur-lg border-t border-border/60 pb-[var(--zivo-safe-bottom,0px)]">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
           <div className="flex-1 min-w-0">
             <p className="text-[11px] text-muted-foreground">Total</p>

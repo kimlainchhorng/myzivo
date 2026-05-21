@@ -74,7 +74,7 @@ const AppLayout = ({
         style={
           !hideHeader
             ? { paddingTop: "calc(56px + var(--zivo-safe-top-sticky))" }
-            : { paddingTop: "var(--zivo-safe-top, 0px)" }
+            : { paddingTop: "var(--zivo-safe-top,0px)" }
         }
       >
         {children}

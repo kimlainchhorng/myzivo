@@ -26,6 +26,18 @@ interface NotificationItemProps {
   onClick: () => void;
 }
 
+const formatMoneyInText = (value: string) =>
+  value.replace(/\$([0-9]+(?:\.[0-9]+)?)/g, (_match, raw: string) => {
+    const amount = Number(raw);
+    if (!Number.isFinite(amount)) return `$${raw}`;
+    return amount.toLocaleString(undefined, {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  });
+
 const NotificationItem = ({ notification, onMarkAsRead, onClick }: NotificationItemProps) => {
   const isDelay = notification.template?.toLowerCase().includes('delay') || 
                   notification.title?.toLowerCase().includes('delay');
@@ -132,7 +144,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onClick }: NotificationI
   const config = getCategoryConfig();
   const Icon = config.icon;
   const rawTitle = notification.title?.trim() || "";
-  const rawBody = notification.body?.trim() || "";
+  const rawBody = formatMoneyInText(notification.body?.trim() || "");
   const looksLikePersonOnly = /^[\p{L}\s'.-]{2,40}$/u.test(rawTitle) && !/\b(commented|liked|driver|order|request|accepted|follow|mention|delay|promo|support)\b/i.test(rawTitle);
   const title = !rawTitle || (config.label === 'Order' && looksLikePersonOnly)
     ? `${config.label} activity`
@@ -142,19 +154,26 @@ const NotificationItem = ({ notification, onMarkAsRead, onClick }: NotificationI
     : rawBody;
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       className={cn(
-        "group w-full rounded-xl border bg-card px-3 py-2.5 text-left transition-colors hover:bg-muted/30",
+        "group w-full rounded-2xl border bg-card px-3.5 py-3 text-left shadow-sm transition-colors hover:bg-muted/30",
         notification.is_read
           ? "border-border/50"
-          : "border-primary/15 bg-primary/[0.02] shadow-[inset_2px_0_0_hsl(var(--primary)/0.35)]"
+          : "border-primary/15 bg-primary/[0.025] shadow-[inset_3px_0_0_hsl(var(--primary)/0.45),0_8px_24px_hsl(var(--primary)/0.06)]"
       )}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
     >
       <div className="flex items-start gap-2.5">
         <div className={cn(
-          "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br",
+          "mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ring-1 ring-border/45",
           config.iconBg
         )}>
           <Icon className={cn("h-[18px] w-[18px]", config.iconColor)} />
@@ -164,7 +183,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onClick }: NotificationI
           <div className="mb-1 flex min-w-0 items-center gap-2">
             <Badge
               variant="secondary"
-              className={cn("h-5 rounded-full border px-2 text-[10px] font-semibold", config.badgeClass)}
+              className={cn("h-5 rounded-full border px-2 text-[10px] font-bold", config.badgeClass)}
             >
               {config.label}
             </Badge>
@@ -183,6 +202,18 @@ const NotificationItem = ({ notification, onMarkAsRead, onClick }: NotificationI
           <p className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-muted-foreground">
             {body}
           </p>
+          {!notification.is_read && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMarkAsRead();
+              }}
+              className="mt-2 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold text-primary active:scale-95"
+            >
+              Mark read
+            </button>
+          )}
         </div>
 
         <div className="mt-3 flex h-5 w-5 shrink-0 items-center justify-center">
@@ -194,7 +225,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onClick }: NotificationI
           )}
         </div>
       </div>
-    </button>
+    </div>
   );
 };
 

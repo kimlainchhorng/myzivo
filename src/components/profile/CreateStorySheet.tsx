@@ -414,7 +414,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
           exit={{ y: "100%" }}
           transition={{ type: "spring", damping: 30, stiffness: 340 }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-md max-h-[92vh] overflow-hidden rounded-t-[28px] sm:rounded-3xl border border-border/60 bg-card text-card-foreground shadow-[0_-12px_60px_-12px_hsl(var(--foreground)/0.35)] flex flex-col pb-[env(safe-area-inset-bottom)]"
+          className="w-full max-w-md max-h-[92vh] overflow-hidden rounded-t-[28px] sm:rounded-3xl border border-border/60 bg-card text-card-foreground shadow-[0_-12px_60px_-12px_hsl(var(--foreground)/0.35)] flex flex-col pb-[var(--zivo-safe-bottom,0px)]"
         >
           {/* Drag handle (mobile only) */}
           <div className="sm:hidden flex justify-center pt-2.5 pb-1">
@@ -625,7 +625,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
 
           {/* Footer action */}
           {step !== "choose" && (
-            <div className="border-t border-border/40 p-3 pb-[max(env(safe-area-inset-bottom),12px)] space-y-2">
+            <div className="border-t border-border/40 p-3 pb-[max(var(--zivo-safe-bottom,0px),12px)] space-y-2">
               {/* Error banner */}
               {uploadError && (
                 <div className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3">
@@ -756,7 +756,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
                   })}
                 </div>
                 {audioTrack && (
-                  <div className="border-t border-border/40 p-3 pb-[max(env(safe-area-inset-bottom),12px)]">
+                  <div className="border-t border-border/40 p-3 pb-[max(var(--zivo-safe-bottom,0px),12px)]">
                     <button type="button"
                       onClick={() => {
                         previewAudioRef.current?.pause();

@@ -919,7 +919,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
   const TABS_HEIGHT = 52;
   const HEADER_TABS_HEIGHT = HEADER_HEIGHT + TABS_HEIGHT;
   const BOTTOM_NAV_HEIGHT = 64;
-  const SAFE_BOTTOM = "env(safe-area-inset-bottom, 0px)";
+  const SAFE_BOTTOM = "var(--zivo-safe-bottom,0px)";
 
   // Route data
   const [routeData, setRouteData] = useState<RouteData | null>(null);
@@ -3558,7 +3558,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
         >
           <div
             className="w-full px-4 pb-2 shrink-0"
-            style={{ paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 20px)" }}
+            style={{ paddingTop: "max(calc(var(--zivo-safe-top,0px) + 0.75rem), 20px)" }}
           >
             <button type="button"
               onClick={() => setViewStep("ride-options")}

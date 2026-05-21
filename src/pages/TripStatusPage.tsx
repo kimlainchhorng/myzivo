@@ -366,8 +366,8 @@ export default function TripStatusPage() {
     <div className="min-h-screen bg-background flex flex-col overscroll-none">
       {/* Safe-area aware header */}
       <div
-        className="flex items-center gap-3 px-4 pb-3 pt-[calc(env(safe-area-inset-top,0px)+12px)] bg-background/95 backdrop-blur-sm border-b border-border/30 sticky top-0 z-20"
-        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 12px)" }}
+        className="flex items-center gap-3 px-4 pb-3 pt-[calc(var(--zivo-safe-top,0px)+12px)] bg-background/95 backdrop-blur-sm border-b border-border/30 sticky top-0 z-20"
+        style={{ paddingTop: "calc(var(--zivo-safe-top,0px) + 12px)" }}
       >
         <button type="button"
           onClick={() => navigate(-1)}

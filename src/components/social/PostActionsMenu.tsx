@@ -78,7 +78,7 @@ export default function PostActionsMenu({
             exit={{ y: 400, opacity: 0 }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
             onClick={(e) => e.stopPropagation()}
-            style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
+            style={{ paddingBottom: "max(1.5rem, var(--zivo-safe-bottom,0px))" }}
           >
             {/* Drag handle (mobile only) */}
             <div className="mx-auto mb-2 mt-1 h-1 w-10 rounded-full bg-muted-foreground/30 sm:hidden" />

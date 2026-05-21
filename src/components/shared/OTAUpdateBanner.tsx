@@ -17,15 +17,25 @@ import type { ReactElement } from "react";
 interface Props {
   pending: boolean;
   pendingVersion: string | null;
+  message?: string | null;
+  mandatory?: boolean;
   applyNow: () => Promise<void>;
   dismiss: () => void;
   dismissed: boolean;
 }
 
-export default function OTAUpdateBanner({ pending, pendingVersion, applyNow, dismiss, dismissed }: Props): ReactElement | null {
+export default function OTAUpdateBanner({
+  pending,
+  pendingVersion,
+  message,
+  mandatory = false,
+  applyNow,
+  dismiss,
+  dismissed,
+}: Props): ReactElement | null {
   const [applying, setApplying] = useState(false);
 
-  if (!pending || dismissed) return null;
+  if (!pending || (dismissed && !mandatory)) return null;
 
   const handleApply = async () => {
     if (applying) return;
@@ -49,7 +59,7 @@ export default function OTAUpdateBanner({ pending, pendingVersion, applyNow, dis
         exit={{ y: -16, opacity: 0 }}
         transition={{ type: "spring", damping: 28, stiffness: 320 }}
         className="fixed left-2 right-2 z-[1700] mx-auto max-w-md pointer-events-none"
-        style={{ top: "max(env(safe-area-inset-top, 0px), 8px)" }}
+        style={{ top: "max(var(--zivo-safe-top,0px), 8px)" }}
         role="status"
         aria-live="polite"
       >
@@ -59,10 +69,10 @@ export default function OTAUpdateBanner({ pending, pendingVersion, applyNow, dis
           </span>
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-bold text-foreground leading-tight">
-              Update ready
+              {mandatory ? "Required update ready" : "Update ready"}
             </p>
             <p className="text-[11px] text-muted-foreground leading-tight truncate">
-              {pendingVersion ? `v${pendingVersion} downloaded — reload to apply now` : "A newer version is downloaded"}
+              {message || (pendingVersion ? `v${pendingVersion} downloaded - reload to apply now` : "A newer version is downloaded")}
             </p>
           </div>
           <button
@@ -74,14 +84,16 @@ export default function OTAUpdateBanner({ pending, pendingVersion, applyNow, dis
             <RotateCw className={`h-3.5 w-3.5 ${applying ? "animate-spin" : ""}`} />
             {applying ? "Reloading…" : "Reload"}
           </button>
-          <button
-            type="button"
-            onClick={dismiss}
-            aria-label="Dismiss update banner"
-            className="shrink-0 h-8 w-8 rounded-full text-muted-foreground hover:bg-muted/40 flex items-center justify-center"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          {!mandatory && (
+            <button
+              type="button"
+              onClick={dismiss}
+              aria-label="Dismiss update banner"
+              className="shrink-0 h-8 w-8 rounded-full text-muted-foreground hover:bg-muted/40 flex items-center justify-center"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </motion.div>
     </AnimatePresence>

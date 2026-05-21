@@ -155,7 +155,7 @@ export default function CreateSheet({ open, onOpenChange, authRedirectPath }: Pr
         side="left"
         className="w-[91%] max-w-[440px] p-0 flex flex-col gap-0 overflow-hidden bg-background"
       >
-        <div className="border-b border-border/40 bg-background/95 px-4 pb-3 backdrop-blur-xl" style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 16px)" }}>
+        <div className="border-b border-border/40 bg-background/95 px-4 pb-3 backdrop-blur-xl" style={{ paddingTop: "max(var(--zivo-safe-top,0px), 16px)" }}>
           <div className="flex items-center justify-between">
             <div>
               <div className="mb-1 flex w-fit items-center gap-1.5 rounded-full bg-muted/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
@@ -183,7 +183,7 @@ export default function CreateSheet({ open, onOpenChange, authRedirectPath }: Pr
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto pb-[max(env(safe-area-inset-bottom),16px)]">
+        <div className="flex-1 overflow-y-auto pb-[max(var(--zivo-safe-bottom,0px),16px)]">
           <div className="sticky top-0 z-10 border-b border-border/30 bg-background/92 px-3 py-3 backdrop-blur-xl">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

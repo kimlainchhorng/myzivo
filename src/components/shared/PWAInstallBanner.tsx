@@ -87,7 +87,7 @@ export function PWAInstallBanner() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="fixed bottom-20 left-3 right-3 z-50 safe-area-bottom"
+          className="fixed bottom-[calc(var(--zivo-safe-bottom,0px)+5rem)] left-3 right-3 z-50"
         >
           <div className="relative overflow-hidden rounded-2xl bg-card border border-border/50 shadow-xl p-4">
             {/* Glow accent */}

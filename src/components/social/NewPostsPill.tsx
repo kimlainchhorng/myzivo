@@ -24,7 +24,7 @@ export default function NewPostsPill({ count, onClick }: Props) {
           exit={{ y: -40, opacity: 0, scale: 0.85 }}
           transition={{ type: "spring", damping: 18, stiffness: 360 }}
           className="absolute left-1/2 z-50 -translate-x-1/2 flex items-center gap-1.5 rounded-full bg-emerald-500 px-4 sm:px-5 py-2.5 sm:py-2 text-sm sm:text-[13px] md:text-sm font-semibold text-white shadow-lg shadow-emerald-500/40 hover:bg-emerald-600 active:scale-95 transition-all min-h-[44px] sm:min-h-0"
-          style={{ top: "calc(env(safe-area-inset-top, 0px) + 80px)" }}
+          style={{ top: "calc(var(--zivo-safe-top,0px) + 80px)" }}
           aria-label={`Show ${count} new posts`}
         >
           <ArrowUp className="h-4 w-4" />

@@ -109,3 +109,5 @@ project_id = "slirphzzwcogdbkeicff"
     verify_jwt = false
   [functions.lodging-ical-export]
     verify_jwt = false
+  [functions.create-p2p-transfer]
+    verify_jwt = false

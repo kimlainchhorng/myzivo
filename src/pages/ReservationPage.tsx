@@ -162,7 +162,7 @@ export default function ReservationPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-black/20" />
         <button type="button"
           onClick={() => navigate(-1)}
-          style={{ top: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}
+          style={{ top: 'calc(var(--zivo-safe-top,0px) + 0.75rem)' }}
           className="absolute left-3 w-10 h-10 rounded-full bg-black/40 backdrop-blur flex items-center justify-center text-white"
           aria-label="Back"
         >
@@ -307,7 +307,7 @@ export default function ReservationPage() {
         <motion.div
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="fixed bottom-0 left-0 right-0 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] pt-3 bg-gradient-to-t from-background via-background/95 to-background/0"
+          className="fixed bottom-0 left-0 right-0 px-4 pb-[calc(var(--zivo-safe-bottom,0px)+12px)] pt-3 bg-gradient-to-t from-background via-background/95 to-background/0"
         >
           <Button
             disabled={!isValid || submitting}

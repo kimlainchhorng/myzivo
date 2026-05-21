@@ -67,7 +67,7 @@ export default function AppLockGate() {
   if (!isEnabled || !locked) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-background/95 backdrop-blur-xl flex flex-col items-center justify-center px-6 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+    <div className="fixed inset-0 z-[9999] bg-background/95 backdrop-blur-xl flex flex-col items-center justify-center px-6 pt-[var(--zivo-safe-top-sticky)] pb-[var(--zivo-safe-bottom,0px)]">
       <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
         <Lock className="w-7 h-7 text-primary" />
       </div>

@@ -1627,7 +1627,7 @@ export default function HotelsLandingPage() {
           type="button"
           onClick={() => setConciergeOpen(true)}
           aria-label="Find a hotel with AI"
-          className="fixed z-30 bottom-[max(env(safe-area-inset-bottom),16px)] right-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white text-sm font-bold px-4 py-3 shadow-xl shadow-violet-500/30 active:scale-95 transition md:right-6 md:bottom-6"
+          className="fixed z-30 bottom-[max(var(--zivo-safe-bottom,0px),16px)] right-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white text-sm font-bold px-4 py-3 shadow-xl shadow-violet-500/30 active:scale-95 transition md:right-6 md:bottom-6"
         >
           <Sparkles className="w-4 h-4" />
           Find with AI

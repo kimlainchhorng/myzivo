@@ -584,7 +584,7 @@ export function ChannelPostCard({ post, canManage = false, canComment = true, pr
               e.stopPropagation();
               setLightboxIdx(null);
             }}
-            className="absolute right-4 top-4 rounded-full bg-card/80 p-2 text-foreground hover:bg-card"
+            className="absolute right-4 top-[var(--zivo-safe-top-overlay)] rounded-full bg-card/80 p-2 text-foreground hover:bg-card"
             aria-label="Close"
           >
             <X className="h-5 w-5" />

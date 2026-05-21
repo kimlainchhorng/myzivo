@@ -73,7 +73,7 @@ export default function BotPublicProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-[env(safe-area-inset-bottom)]">
+    <div className="min-h-screen bg-background pb-[var(--zivo-safe-bottom,0px)]">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
         <div className="flex items-center gap-2 h-14 px-2 max-w-2xl mx-auto">
           <button type="button" onClick={() => navigate(-1)} aria-label="Back" className="p-2 -ml-2 rounded-full hover:bg-muted">

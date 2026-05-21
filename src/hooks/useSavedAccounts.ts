@@ -12,10 +12,11 @@ export interface SavedAccount {
   // ── Trusted-device tokens (Facebook/Instagram-style one-tap login) ──
   // After a successful password login we capture the live Supabase session so
   // the user can tap their avatar next time and resume in one tap. The
-  // refresh_token is the long-lived credential — Supabase rotates it on every
-  // refresh, so we update this each time setSession succeeds.
-  // If absent / invalid / expired, the picker silently falls back to the
-  // password-entry mode for that account.
+  // refresh_token is the long-lived credential. Supabase rotates it on every
+  // refresh, so we update this each time refreshSession succeeds.
+  // If absent / invalid / expired, the picker asks for the password. Email
+  // sign-in stays an explicit fallback button instead of being sent
+  // automatically from an account tap.
   refreshToken?: string | null;
   accessToken?: string | null;
   // Unix epoch seconds when the access_token expires. Used as a hint only —

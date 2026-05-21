@@ -60,7 +60,7 @@ export default function PollCreatorSheet({ open, onClose, onSendPoll }: PollCrea
             exit={{ y: "100%" }}
             transition={{ type: "tween", duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="fixed bottom-0 left-0 right-0 z-[1501] bg-background rounded-t-3xl shadow-2xl p-5"
-            style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1.25rem)" }}
+            style={{ paddingBottom: "max(var(--zivo-safe-bottom,0px), 1.25rem)" }}
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">

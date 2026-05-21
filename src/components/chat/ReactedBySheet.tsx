@@ -115,7 +115,7 @@ export default function ReactedBySheet({ open, messageId, onClose }: Props) {
             exit={{ y: 80, opacity: 0 }}
             transition={{ type: "spring", damping: 26, stiffness: 280 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full sm:max-w-md bg-background rounded-t-2xl sm:rounded-2xl pb-[max(1rem,env(safe-area-inset-bottom))] max-h-[80dvh] flex flex-col overflow-hidden"
+            className="w-full sm:max-w-md bg-background rounded-t-2xl sm:rounded-2xl pb-[max(1rem,var(--zivo-safe-bottom,0px))] max-h-[80dvh] flex flex-col overflow-hidden"
           >
             <div className="flex items-center justify-between p-4 border-b border-border/30">
               <h3 className="text-base font-bold text-foreground">Reactions</h3>

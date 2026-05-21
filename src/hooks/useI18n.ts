@@ -9,6 +9,8 @@ function setGlobalLang(code: string) {
   _lang = code;
   localStorage.setItem("zivo_lang", code);
   document.documentElement.setAttribute("lang", code);
+  window.dispatchEvent(new CustomEvent("zivo-lang-change", { detail: code }));
+  window.dispatchEvent(new CustomEvent("zivo:lang-change", { detail: code }));
   _listeners.forEach((l) => l());
 }
 

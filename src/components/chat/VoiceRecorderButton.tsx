@@ -67,7 +67,7 @@ export default function VoiceRecorderButton({ onRecorded, className }: Props) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-card border border-border rounded-2xl px-4 py-3 shadow-xl flex items-center gap-3"
+            className="fixed bottom-[calc(var(--zivo-safe-bottom,0px)+6rem)] left-1/2 -translate-x-1/2 z-50 bg-card border border-border rounded-2xl px-4 py-3 shadow-xl flex items-center gap-3"
           >
             <span className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
             <span className="text-sm font-mono">{fmt(elapsedMs)}</span>

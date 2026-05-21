@@ -348,7 +348,7 @@ export default function NotificationCenterPage() {
       <SEOHead title="Notifications – ZIVO" description="Your activity, alerts, and updates." />
       {/* Header */}
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-xl border-b border-border/40"
-        style={{ paddingTop: "var(--zivo-safe-top-sticky, env(safe-area-inset-top, 0px))" }}>
+        style={{ paddingTop: "var(--zivo-safe-top-sticky, var(--zivo-safe-top,0px))" }}>
         <div className="flex items-center justify-between px-4 py-2.5">
           <div className="flex items-center gap-2">
             <Button aria-label="Back" variant="ghost" size="icon" className="rounded-full" onClick={() => navigate(-1)}>

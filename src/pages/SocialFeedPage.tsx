@@ -273,10 +273,15 @@ export default function SocialFeedPage() {
           <button
             type="button"
             onClick={() => (user ? navigate("/notifications") : goAuth())}
-            className="p-2 rounded-full hover:bg-muted active:scale-95 transition-all"
+            className="relative p-2 rounded-full hover:bg-muted active:scale-95 transition-all"
             aria-label={notificationUnread > 0 ? `Notifications, ${notificationUnread} unread` : "Notifications"}
           >
             <Bell className="w-5 h-5" />
+            {notificationUnread > 0 && (
+              <span className="absolute -top-2 -right-2 z-10 inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-black leading-none text-white shadow-md shadow-red-500/30 ring-2 ring-background">
+                {notificationUnread > 99 ? "99+" : notificationUnread}
+              </span>
+            )}
           </button>
 
           <button

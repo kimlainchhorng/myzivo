@@ -490,7 +490,7 @@ export default function BusinessPageWizard() {
       {/* Header */}
       <header
         className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur pt-safe"
-        style={{ paddingTop: "calc(env(safe-area-inset-top) + 12px)" }}
+        style={{ paddingTop: "calc(var(--zivo-safe-top,0px) + 12px)" }}
       >
         <button type="button"
           onClick={onHeaderBack}
@@ -829,7 +829,7 @@ export default function BusinessPageWizard() {
       {/* Sticky action bar */}
       <div
         className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/95 px-4 py-3 backdrop-blur"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
+        style={{ paddingBottom: "calc(var(--zivo-safe-bottom,0px) + 12px)" }}
       >
         <div className="mx-auto flex w-full max-w-xl items-center gap-3">
           {step > 1 && (

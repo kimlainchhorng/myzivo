@@ -206,7 +206,7 @@ export default function SubscribeInAppSheet({ open, onClose, creatorId, creatorN
             initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md bg-background rounded-t-3xl pb-[calc(2rem+env(safe-area-inset-bottom,0px))] max-h-[90dvh] overflow-y-auto"
+            className="w-full max-w-md bg-background rounded-t-3xl pb-[calc(2rem+var(--zivo-safe-bottom,0px))] max-h-[90dvh] overflow-y-auto"
           >
             <div className="flex justify-center py-3 sticky top-0 bg-background z-10">
               <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />

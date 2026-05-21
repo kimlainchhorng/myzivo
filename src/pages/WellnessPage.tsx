@@ -126,7 +126,7 @@ export default function WellnessPage() {
 
       {/* Header */}
       <header className="sticky top-0 z-30 bg-background/85 backdrop-blur-xl border-b border-border/40 flex items-center gap-2 px-3 pb-2 pt-safe"
-        style={{ paddingTop: "var(--zivo-safe-top-sticky, env(safe-area-inset-top, 0px))" }}>
+        style={{ paddingTop: "var(--zivo-safe-top-sticky, var(--zivo-safe-top,0px))" }}>
         <button type="button"
           onClick={() => (active === "hub" ? navigate("/more") : navigate("/wellness"))}
           aria-label="Go back"

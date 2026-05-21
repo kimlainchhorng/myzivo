@@ -502,7 +502,7 @@ const GroundTransportBooking = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
             className="fixed left-1/2 -translate-x-1/2 z-50"
-            style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}
+            style={{ bottom: "calc(var(--zivo-safe-bottom,0px) + 24px)" }}
           >
             <Card className="bg-emerald-500 text-primary-foreground border-0 shadow-2xl">
               <CardContent className="p-4 flex items-center gap-3">

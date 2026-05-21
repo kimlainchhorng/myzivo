@@ -83,8 +83,8 @@ export default function GroupCallScreen({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       style={{
-        paddingTop: "max(env(safe-area-inset-top, 0px), 1rem)",
-        paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1rem)",
+        paddingTop: "max(var(--zivo-safe-top,0px), 1rem)",
+        paddingBottom: "max(var(--zivo-safe-bottom,0px), 1rem)",
         background: callType === "video"
           ? "#000"
           : "linear-gradient(165deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.4) 50%, hsl(var(--primary) / 0.08) 100%)",

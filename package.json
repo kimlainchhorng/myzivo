@@ -32,6 +32,8 @@
     "security:api-readiness:report": "node scripts/security/api-readiness-check.mjs --write-report",
     "security:scan": "npm run security:audit && npm run security:check-secrets",
     "deploy:update": "node scripts/deploy-update.mjs",
+    "deploy:update:next": "node scripts/deploy-update.mjs --next-launch",
+    "deploy:update:immediate": "node scripts/deploy-update.mjs --immediate --mandatory",
     "import:hotels": "bun scripts/import-hotel-data.ts",
     "import:hotels:dry": "bun scripts/import-hotel-data.ts --dry-run",
     "scrape:snowbell": "bun scripts/scrape-booking-single.ts",

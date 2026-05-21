@@ -80,6 +80,68 @@ function sanitizeStoreImageUrl(url?: unknown, fallback = ""): string {
   return value;
 }
 
+function uniqueImageUrls(values: unknown[]): string[] {
+  const seen = new Set<string>();
+  const urls: string[] = [];
+
+  const add = (value: unknown) => {
+    const url = sanitizeStoreImageUrl(value);
+    if (!url || seen.has(url)) return;
+    seen.add(url);
+    urls.push(url);
+  };
+
+  values.forEach((value) => {
+    if (Array.isArray(value)) {
+      value.forEach(add);
+    } else {
+      add(value);
+    }
+  });
+
+  return urls;
+}
+
+function addStoreAssetPathFallbacks(urls: string[], storeId?: string): string[] {
+  if (!storeId) return uniqueImageUrls(urls);
+
+  const variants: string[] = [];
+  urls.forEach((url) => {
+    variants.push(url);
+
+    const encodedStoreId = encodeURIComponent(storeId);
+    const newPathNeedle = `/store-assets/${encodedStoreId}/products/`;
+    const legacyPathNeedle = `/store-assets/products/${encodedStoreId}/`;
+
+    if (url.includes(newPathNeedle)) {
+      const fileName = url.slice(url.lastIndexOf("/") + 1);
+      variants.push(url.replace(newPathNeedle, legacyPathNeedle));
+      variants.push(url.replace(`/products/${fileName}`, `/${fileName}`));
+    }
+
+    if (url.includes(legacyPathNeedle)) {
+      variants.push(url.replace(legacyPathNeedle, newPathNeedle));
+    }
+  });
+
+  return uniqueImageUrls(variants);
+}
+
+function productImageCandidates(product: StoreProductItem, store: { id?: string; gallery_images?: string[] | null; banner_url?: string | null; logo_url?: string | null } | null | undefined, index: number): string[] {
+  const productUrls = addStoreAssetPathFallbacks(
+    uniqueImageUrls([product.image_urls, product.image_url]),
+    product.store_id || store?.id,
+  );
+  const gallery = uniqueImageUrls([store?.gallery_images]);
+  const storeFallbacks = uniqueImageUrls([
+    gallery.length ? gallery[index % gallery.length] : "",
+    store?.banner_url,
+    store?.logo_url,
+  ]);
+
+  return uniqueImageUrls([productUrls, storeFallbacks]);
+}
+
 const container = {
   hidden: {},
   show: { transition: { staggerChildren: 0.04 } },
@@ -101,6 +163,58 @@ function BokehDot({ delay, size, x, y, color }: { delay: number; size: number; x
       transition={{ duration: 6 + delay * 2, repeat: Infinity, ease: "easeInOut", delay }}
       className="absolute rounded-full blur-sm pointer-events-none"
       style={{ width: size, height: size, left: x, top: y, background: color }}
+    />
+  );
+}
+
+function StoreItemImage({
+  src,
+  srcs,
+  label,
+  imgClassName,
+  fallbackClassName,
+  iconClassName = "h-5 w-5",
+}: {
+  src?: string | null;
+  srcs?: Array<string | null | undefined>;
+  label: string;
+  imgClassName: string;
+  fallbackClassName?: string;
+  iconClassName?: string;
+}) {
+  const sources = useMemo(() => uniqueImageUrls([srcs || [], src]), [src, srcs]);
+  const sourceKey = sources.join("\n");
+  const [sourceIndex, setSourceIndex] = useState(0);
+
+  useEffect(() => {
+    setSourceIndex(0);
+  }, [sourceKey]);
+
+  const currentSrc = sources[sourceIndex];
+
+  if (!currentSrc) {
+    return (
+      <div
+        role="img"
+        aria-label={`${label} photo unavailable`}
+        className={cn("h-full w-full flex items-center justify-center bg-muted/10", fallbackClassName)}
+      >
+        <Package className={cn("text-muted-foreground/25", iconClassName)} />
+      </div>
+    );
+  }
+
+  return (
+    <img
+      key={currentSrc}
+      src={currentSrc}
+      alt=""
+      aria-label={label}
+      className={imgClassName}
+      loading="lazy"
+      decoding="async"
+      referrerPolicy="no-referrer"
+      onError={() => setSourceIndex((index) => index + 1)}
     />
   );
 }
@@ -326,7 +440,11 @@ export default function StoreProfilePage() {
   const toggleLike = (id: string) => {
     setLikedProducts(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
@@ -415,7 +533,7 @@ export default function StoreProfilePage() {
             <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-background via-background/45 to-transparent pointer-events-none z-[1]" />
 
             {/* Nav buttons */}
-            <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 z-10" style={{ paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 4.75rem), 76px)" }}>
+            <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 z-10" style={{ paddingTop: "max(calc(var(--zivo-safe-top,0px) + 4.75rem), 76px)" }}>
               <motion.button
                 whileTap={{ scale: 0.85 }}
                 onClick={() => window.history.length > 1 ? navigate(-1) : navigate("/grocery")}
@@ -1084,15 +1202,14 @@ export default function StoreProfilePage() {
                         >
                           <div className="flex gap-3 p-3">
                             {/* Service image */}
-                            {service.image_url ? (
-                              <div className="h-16 w-16 rounded-lg overflow-hidden bg-muted/10 shrink-0">
-                                <img src={service.image_url} alt={service.name} className="h-full w-full object-cover" loading="lazy" />
-                              </div>
-                            ) : (
-                              <div className="h-16 w-16 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                                <Package className="h-6 w-6 text-primary/30" />
-                              </div>
-                            )}
+                            <div className="h-16 w-16 rounded-lg overflow-hidden bg-muted/10 shrink-0">
+                              <StoreItemImage
+                                src={service.image_url}
+                                label={localizedName(service.name, currentLanguage)}
+                                imgClassName="h-full w-full object-cover"
+                                iconClassName="h-6 w-6"
+                              />
+                            </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-semibold text-foreground leading-tight">{localizedName(service.name, currentLanguage)}</p>
                               {service.description && (
@@ -1206,6 +1323,7 @@ export default function StoreProfilePage() {
                       const discountKhr = hasDiscount ? p.discount_price_khr : null;
                       const discountUsd = hasDiscount ? parseFloat((discountKhr / ((store as any)?.khr_rate || 4050)).toFixed(2)) : null;
                       const discountPct = hasDiscount && p.discount_type === "percentage" ? p.discount_value : null;
+                      const imageSources = productImageCandidates(product, store, i);
                       return (
                 <motion.div
                   key={product.id}
@@ -1222,18 +1340,11 @@ export default function StoreProfilePage() {
                 >
                   {/* Image */}
                   <div className="relative aspect-square overflow-hidden bg-muted/10 rounded-t-2xl">
-                    {product.image_url ? (
-                      <img
-                        src={product.image_url}
-                        alt={localizedName(product.name, currentLanguage)}
-                        className="h-full w-full object-contain p-1.5"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center">
-                        <Package className="h-5 w-5 text-muted-foreground/20" />
-                      </div>
-                    )}
+                    <StoreItemImage
+                      srcs={imageSources}
+                      label={localizedName(product.name, currentLanguage)}
+                      imgClassName="h-full w-full object-contain p-1.5"
+                    />
 
                     {/* Badge - top right */}
                     {(product as any).badge && (() => {
@@ -1427,7 +1538,7 @@ export default function StoreProfilePage() {
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 80, opacity: 0, scale: 0.9 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="fixed bottom-24 left-3 right-3 z-50"
+            className="fixed bottom-[calc(var(--zivo-safe-bottom,0px)+6rem)] left-3 right-3 z-50"
           >
             <button type="button"
               onClick={() => setShowCart(true)}

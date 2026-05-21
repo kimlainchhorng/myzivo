@@ -164,7 +164,7 @@ export default function SwipeableSheet({
   const labelText = !labelledBy ? ariaLabel : undefined;
 
   // Snap-point max-height: never exceed viewport minus top safe-area + 24px buffer
-  const maxHeightStyle = `min(${maxHeightVh}dvh, calc(100dvh - env(safe-area-inset-top, 0px) - 24px))`;
+  const maxHeightStyle = `min(${maxHeightVh}dvh, calc(100dvh - var(--zivo-safe-top,0px) - 24px))`;
 
   // When using `fixed` positioning, portal to <body> so we escape any
   // transformed ancestor (e.g. PullToRefresh) that would otherwise re-anchor
@@ -219,7 +219,7 @@ export default function SwipeableSheet({
               paddingTop: safeAreaTop
                 ? "var(--zivo-safe-top-sheet)"
                 : undefined,
-              paddingBottom: "env(safe-area-inset-bottom, 0px)",
+              paddingBottom: "var(--zivo-safe-bottom,0px)",
             }}
             data-padding-top={safeAreaTop ? "var(--zivo-safe-top-sheet)" : ""}
             data-max-height={maxHeightStyle}

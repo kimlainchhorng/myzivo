@@ -39,7 +39,7 @@ export default function PinnedMessagesPanel({ open, onClose, messages, onJumpToM
             exit={{ opacity: 0, y: 100 }}
             transition={{ type: "spring", damping: 25 }}
             className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-2xl border-t border-border/50 max-h-[60vh] overflow-y-auto"
-            style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1rem)" }}
+            style={{ paddingBottom: "max(var(--zivo-safe-bottom,0px), 1rem)" }}
           >
             <div className="flex justify-center pt-2 pb-1">
               <div className="w-8 h-1 rounded-full bg-muted-foreground/20" />

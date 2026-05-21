@@ -41,7 +41,7 @@ export default function MobilePassengerCabinSheet({
       <SheetContent
         side="bottom"
         className="rounded-t-3xl px-0 bg-transparent border-0 shadow-none"
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 16px)" }}
+        style={{ paddingBottom: "var(--zivo-safe-bottom,16px)" }}
       >
         {/* 3D Floating Card */}
         <div

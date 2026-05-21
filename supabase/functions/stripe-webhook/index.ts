@@ -990,6 +990,41 @@ serve(async (req) => {
           });
         }
 
+        // ZIVO wallet in-app top-up. The client also verifies immediately after
+        // confirmPayment; this webhook is the safety net if the app closes.
+        if (paymentIntent.metadata?.type === "user_wallet_topup") {
+          const walletUserId = paymentIntent.metadata.user_id;
+          const amountCents = Number(
+            paymentIntent.metadata.amount_cents ??
+            paymentIntent.amount_received ??
+            paymentIntent.amount ??
+            0,
+          );
+          const currency = String(paymentIntent.metadata.currency ?? paymentIntent.currency ?? "USD").toUpperCase();
+
+          if (!walletUserId || !Number.isFinite(amountCents) || amountCents <= 0) {
+            console.warn("[Webhook] user_wallet_topup missing user/amount", { pi: paymentIntent.id });
+          } else {
+            const { error: walletTopupErr } = await supabase.rpc("credit_user_wallet_topup", {
+              p_user_id: walletUserId,
+              p_amount_cents: amountCents,
+              p_currency: currency,
+              p_stripe_reference: paymentIntent.id,
+              p_description: `Stripe topup ${paymentIntent.id}`,
+            });
+
+            if (walletTopupErr) {
+              console.error("[Webhook] user_wallet_topup credit failed", walletTopupErr);
+            } else {
+              console.log("[Webhook] user_wallet_topup credited", {
+                user: walletUserId,
+                amount_cents: amountCents,
+                pi: paymentIntent.id,
+              });
+            }
+          }
+        }
+
         // Creator tip via in-app PaymentIntent (create-tip-payment-intent).
         // Without this branch the tip stays at status='pending' and the creator's
         // wallet never receives the funds — only the checkout-session flow was

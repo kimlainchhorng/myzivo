@@ -76,6 +76,7 @@ import Plus from "lucide-react/dist/esm/icons/plus";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import type * as React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState, memo } from "react";
+import { createPortal } from "react-dom";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getPostShareUrl } from "@/lib/getPublicOrigin";
@@ -184,6 +185,14 @@ interface FeedPost {
   store_is_verified?: boolean;
   location?: string | null;
 }
+
+type FeedPostSource = NonNullable<FeedPost["source"]>;
+
+type CommentTarget = {
+  postId: string;
+  source: FeedPostSource;
+  initialCount: number;
+};
 
 const getFeedPostRawId = (postOrId: Pick<FeedPost, "id"> | string): string => {
   const id = typeof postOrId === "string" ? postOrId : postOrId.id;
@@ -309,20 +318,11 @@ function InfiniteScrollSentinel({
 }
 
 function MusicTicker({ name, avatarUrl, isPlaying, onClick }: { name: string; avatarUrl?: string | null; isPlaying?: boolean; onClick?: () => void }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const textRef = useRef<HTMLDivElement>(null);
-  const [shouldMarquee, setShouldMarquee] = useState(false);
-
-  useEffect(() => {
-    if (!containerRef.current || !textRef.current) return;
-    setShouldMarquee(textRef.current.scrollWidth > containerRef.current.clientWidth + 4);
-  }, [name]);
-
   return (
     <button
       type="button"
       onClick={(e) => { e.stopPropagation(); onClick?.(); }}
-      className="inline-flex min-h-[28px] max-w-[80%] min-w-0 items-center gap-2 overflow-hidden active:opacity-70"
+      className="inline-flex min-h-[28px] max-w-full min-w-0 items-center gap-2 overflow-hidden active:opacity-70"
     >
       <div
         className={cn(
@@ -338,15 +338,9 @@ function MusicTicker({ name, avatarUrl, isPlaying, onClick }: { name: string; av
           </svg>
         )}
       </div>
-      <div ref={containerRef} className="overflow-hidden flex-1 min-w-0">
-        <div
-          ref={textRef}
-          className={cn(
-            "whitespace-nowrap text-white text-xs font-medium drop-shadow",
-            shouldMarquee && "animate-[marquee_12s_linear_infinite]",
-          )}
-        >
-          {shouldMarquee ? <>{name} &nbsp;&nbsp; • &nbsp;&nbsp; {name}</> : name}
+      <div className="overflow-hidden flex-1 min-w-0">
+        <div className="truncate whitespace-nowrap text-white text-xs font-medium drop-shadow">
+          {name}
         </div>
       </div>
     </button>
@@ -394,7 +388,7 @@ function ReelCard({
   userId: string | null;
   userLikedPostIds: Set<string>;
   onToggleLike: (postId: string, currentlyLiked: boolean) => void;
-  onOpenComments: (postId: string) => void;
+  onOpenComments: (target: CommentTarget) => void;
   onOpenShare: (postId: string) => void;
   onOpenSound: (soundName: string) => void;
   onOpenActions?: () => void;
@@ -534,7 +528,6 @@ function ReelCard({
   }, [cardIsOnline, isActive]);
   const [authorIsLive, setAuthorIsLive] = useState(initialAuthorIsLive);
   const [liveAlertDismissed, setLiveAlertDismissed] = useState(false);
-  const [topComment, setTopComment] = useState<{ author_name: string; author_avatar: string | null; content: string; likes_count: number } | null>(null);
   const [isHoldingFastForward, setIsHoldingFastForward] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(() => {
     // Persist user's chosen speed across reels/sessions. Bound to the four
@@ -556,6 +549,10 @@ function ReelCard({
   const progressBarRef = useRef<HTMLDivElement>(null);
   const wasPlayingBeforeScrub = useRef(false);
   const lastTapRef = useRef(0);
+  const singleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const doubleTapHeartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const doubleTapLikeLockRef = useRef(false);
+  const [doubleTapPoint, setDoubleTapPoint] = useState<{ x: number; y: number } | null>(null);
   const savingBookmarkRef = useRef(false);
 
   const formatVideoTime = (seconds: number): string => {
@@ -782,49 +779,6 @@ function ReelCard({
 
   // Live status is seeded from parent's batch query — no per-card DB call needed.
 
-  // Top comment preview — fetch the most-liked comment for this reel
-  // when it becomes active OR is queued up next (shouldPreload). Pre-fetching
-  // means the ribbon appears instantly on swipe instead of after the brief
-  // query. Author profile is joined from the public_profiles view.
-  useEffect(() => {
-    if (!post.id) { setTopComment(null); return; }
-    if (!isActive && !shouldPreload) return; // off-screen — don't fetch
-    let alive = true;
-    const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
-    const source: "user" | "store" = post.source === "user" ? "user" : "store";
-    (async () => {
-      try {
-        const { data: cmts } = await (supabase as any)
-          .from("post_comments")
-          .select("user_id, content, likes_count")
-          .eq("post_id", rawId)
-          .eq("post_source", source)
-          .is("parent_id", null)
-          .order("likes_count", { ascending: false })
-          .order("created_at", { ascending: false })
-          .limit(1);
-        if (!alive || !cmts || cmts.length === 0) { setTopComment(null); return; }
-        const top = cmts[0];
-        // Fetch profile in parallel with any other work rather than sequentially
-        const [{ data: profile }] = await Promise.all([
-          (supabase as any)
-            .from("public_profiles")
-            .select("full_name, avatar_url")
-            .eq("id", top.user_id)
-            .maybeSingle(),
-        ]);
-        if (!alive) return;
-        setTopComment({
-          author_name: profile?.full_name || "User",
-          author_avatar: profile?.avatar_url || null,
-          content: String(top.content || "").slice(0, 80),
-          likes_count: top.likes_count || 0,
-        });
-      } catch { if (alive) setTopComment(null); }
-    })();
-    return () => { alive = false; };
-  }, [isActive, shouldPreload, post.id, post.source]);
-
   // Realtime engagement bumps for the active reel. When other viewers like
   // or comment on the post you're watching, the right-column counters
   // animate up without requiring a refetch. Only subscribes for the active
@@ -973,21 +927,43 @@ function ReelCard({
     return "w-10 h-10";
   };
 
-  const handleVideoClick = () => {
+  const handleVideoClick = (event?: React.MouseEvent<HTMLElement>) => {
     const now = Date.now();
     if (now - lastTapRef.current < 280) {
       lastTapRef.current = 0;
-      if (!liked) {
+      if (singleTapTimerRef.current) {
+        clearTimeout(singleTapTimerRef.current);
+        singleTapTimerRef.current = null;
+      }
+      if (event) {
+        const rect = event.currentTarget.getBoundingClientRect();
+        setDoubleTapPoint({
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top,
+        });
+      } else {
+        setDoubleTapPoint(null);
+      }
+      if (!liked && !doubleTapLikeLockRef.current) {
+        doubleTapLikeLockRef.current = true;
         haptic("medium");
         onToggleLike(post.id, false);
         spawnFloatingHearts();
+        window.setTimeout(() => {
+          doubleTapLikeLockRef.current = false;
+        }, 800);
       }
       setShowDoubleTapHeart(true);
-      window.setTimeout(() => setShowDoubleTapHeart(false), 700);
+      if (doubleTapHeartTimerRef.current) clearTimeout(doubleTapHeartTimerRef.current);
+      doubleTapHeartTimerRef.current = window.setTimeout(() => setShowDoubleTapHeart(false), 520);
       return;
     }
     lastTapRef.current = now;
-    togglePlay();
+    if (singleTapTimerRef.current) clearTimeout(singleTapTimerRef.current);
+    singleTapTimerRef.current = window.setTimeout(() => {
+      singleTapTimerRef.current = null;
+      togglePlay();
+    }, 300);
   };
 
   // Reset per-post playback state when source changes
@@ -1017,6 +993,13 @@ function ReelCard({
       if (blobSrc) URL.revokeObjectURL(blobSrc);
     };
   }, [blobSrc]);
+
+  useEffect(() => {
+    return () => {
+      if (singleTapTimerRef.current) clearTimeout(singleTapTimerRef.current);
+      if (doubleTapHeartTimerRef.current) clearTimeout(doubleTapHeartTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!isVideoPost || blobSrc || triedBlobFallback || !sourceUrl) return;
@@ -1169,7 +1152,11 @@ function ReelCard({
   }, [isActive, isVideoPost, currentSrc, hasLoadedFrame, isRepairing, isBlobLoading]);
 
   return (
-    <div className="relative w-full h-[100dvh] lg:h-full bg-black overflow-hidden snap-start flex-shrink-0">
+    <div
+      className="zivo-reel-no-callout relative w-full h-[100dvh] lg:h-full bg-black overflow-hidden snap-start flex-shrink-0"
+      onContextMenu={(e) => e.preventDefault()}
+      translate="no"
+    >
 
       {/* Live creator alert banner */}
       <AnimatePresence>
@@ -1181,7 +1168,7 @@ function ReelCard({
             exit={{ y: -60, opacity: 0 }}
             transition={{ type: "spring", damping: 22, stiffness: 280 }}
             className="absolute left-3 right-3 z-50 flex items-center gap-2.5 bg-black/80 backdrop-blur-md border border-white/10 rounded-2xl px-3 py-2.5 shadow-xl"
-            style={{ top: "calc(env(safe-area-inset-top, 0px) + 56px)" }}
+            style={{ top: "calc(var(--zivo-safe-top,0px) + 56px)" }}
           >
             <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shrink-0" />
             <p className="flex-1 text-white text-[13px] font-semibold truncate">
@@ -1211,7 +1198,7 @@ function ReelCard({
           key={currentSrc}
           src={renderSrc || undefined}
           poster={posterUrl ?? undefined}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="zivo-reel-no-callout absolute inset-0 w-full h-full object-cover"
           playsInline
           loop
           muted={globalMuted}
@@ -1300,7 +1287,7 @@ function ReelCard({
         <img
           src={firstUrl}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover"
+          className="zivo-reel-no-callout absolute inset-0 w-full h-full object-cover"
           loading={isActive ? "eager" : "lazy"}
           onLoad={() => {
             if (mediaPerfLogged.current || firstMediaLogged.value) return;
@@ -1349,7 +1336,7 @@ function ReelCard({
               suppressNextClickRef.current = false;
               return;
             }
-            handleVideoClick();
+            handleVideoClick(e);
           }}
           onPointerDown={() => {
             if (fastForwardTimerRef.current) clearTimeout(fastForwardTimerRef.current);
@@ -1396,7 +1383,8 @@ function ReelCard({
               setIsHoldingFastForward(false);
             }
           }}
-          className="absolute inset-0 z-10"
+          onContextMenu={(e) => e.preventDefault()}
+          className="zivo-reel-no-callout absolute inset-0 z-10 touch-manipulation"
           aria-label={isPlaying ? "Pause" : "Play"}
         />
       )}
@@ -1409,7 +1397,7 @@ function ReelCard({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.85 }}
             transition={{ duration: 0.18 }}
-            className="absolute left-1/2 top-[calc(env(safe-area-inset-top,0px)+84px)] -translate-x-1/2 z-30 px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-md flex items-center gap-1.5 pointer-events-none"
+            className="absolute left-1/2 top-[calc(var(--zivo-safe-top,0px)+84px)] -translate-x-1/2 z-30 px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-md flex items-center gap-1.5 pointer-events-none"
           >
             <span className="text-white text-sm font-bold tabular-nums">2×</span>
             <span className="text-white text-xs">▶▶</span>
@@ -1422,12 +1410,16 @@ function ReelCard({
         {showDoubleTapHeart && (
           <motion.div
             initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1.2, opacity: 1 }}
-            exit={{ scale: 1.6, opacity: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
+            animate={{ scale: [0, 1.08, 0.96], opacity: [0, 1, 0.92] }}
+            exit={{ scale: 1.28, opacity: 0 }}
+            transition={{ duration: 0.42, ease: "easeOut" }}
+            className="absolute z-30 pointer-events-none"
+            style={doubleTapPoint
+              ? { left: doubleTapPoint.x, top: doubleTapPoint.y, transform: "translate(-50%, -50%)" }
+              : { left: "50%", top: "50%", transform: "translate(-50%, -50%)" }
+            }
           >
-            <Heart className="w-32 h-32 text-white fill-destructive drop-shadow-2xl" />
+            <Heart className="w-20 h-20 text-white fill-red-500 drop-shadow-2xl" />
           </motion.div>
         )}
       </AnimatePresence>
@@ -1525,7 +1517,7 @@ function ReelCard({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.2 }}
-            className="absolute left-4 right-16 bottom-[calc(env(safe-area-inset-bottom,0px)+160px)] z-25 pointer-events-none"
+            className="absolute left-4 right-16 bottom-[calc(var(--zivo-safe-bottom,0px)+160px)] z-25 pointer-events-none"
           >
             <div className="bg-black/80 backdrop-blur-sm rounded-lg px-3 py-2">
               <p className="text-white text-[13px] sm:text-sm font-medium leading-snug text-center">
@@ -1537,7 +1529,7 @@ function ReelCard({
       </AnimatePresence>
 
       {/* Bottom-left: store info + caption */}
-      <div className="absolute bottom-0 left-0 right-[92px] z-30 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+112px)]">
+      <div className="absolute bottom-0 left-0 right-[92px] z-30 px-4 pb-[calc(var(--zivo-safe-bottom,0px)+112px)]">
         {/* Owner-only insights pill — small "Your reel · X views" affordance
             that takes the creator to their post analytics on tap. */}
         {userId && post.author_id && userId === post.author_id && (
@@ -1751,14 +1743,18 @@ function ReelCard({
           );
         })()}
 
-        {/* Reaction summary + top comment preview */}
+        {/* Reaction summary + comment preview */}
         <div className="mb-2 flex items-start justify-between gap-3">
           <Suspense fallback={null}>
             <CommentPreview
               postId={rawPostId}
               source={post.source ?? "store"}
-              totalCount={post.comments_count ?? 0}
-              onOpen={() => onOpenComments(post.id)}
+              totalCount={liveCommentsCount}
+              onOpen={() => onOpenComments({
+                postId: post.id,
+                source: getFeedPostSource(post),
+                initialCount: liveCommentsCount,
+              })}
             />
           </Suspense>
           <Suspense fallback={null}>
@@ -1794,54 +1790,6 @@ function ReelCard({
           </Suspense>
         )}
 
-        {/* Top comment preview — surfaces the most-liked comment so users
-            get social proof of engagement without opening the comment sheet.
-            Tap routes to the full comments. */}
-        {topComment && (
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onOpenComments(post.id); }}
-            className="flex items-start gap-2 mb-2 max-w-full text-left active:opacity-70"
-          >
-            <div className="w-6 h-6 rounded-full overflow-hidden bg-white/15 border border-white/20 shrink-0">
-              {topComment.author_avatar ? (
-                <img src={topComment.author_avatar} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-bold">
-                  {topComment.author_name[0]?.toUpperCase()}
-                </div>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white/90 text-[12px] leading-snug drop-shadow line-clamp-2">
-                <span className="font-bold mr-1">{topComment.author_name}</span>
-                {topComment.content}
-              </p>
-            </div>
-            {topComment.likes_count > 0 && (
-              <div className="flex items-center gap-0.5 shrink-0 text-white/70 text-[11px] font-semibold drop-shadow">
-                <Heart className="w-3 h-3 fill-white/70" />
-                <span>{topComment.likes_count > 999 ? `${(topComment.likes_count / 1000).toFixed(1)}k` : topComment.likes_count}</span>
-              </div>
-            )}
-          </button>
-        )}
-
-        {/* "View N comments" inline link — Instagram/TikTok pattern.
-            Opens the existing comment sheet without forcing a trip to the
-            right column. */}
-        {(post.comments_count || 0) > 0 && (
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onOpenComments(post.id); }}
-            className="block text-white/80 text-xs font-medium drop-shadow mb-2 active:opacity-70"
-          >
-            View {post.comments_count === 1
-              ? "1 comment"
-              : `all ${post.comments_count! > 999 ? `${(post.comments_count! / 1000).toFixed(1)}k` : post.comments_count} comments`}
-          </button>
-        )}
-
         {/* Music ticker */}
         <MusicTicker
           name={post.audio_name || `Original Sound - ${post.source === "user" ? post.author_name || "ZIVO" : post.store_name || "ZIVO"}`}
@@ -1859,7 +1807,7 @@ function ReelCard({
             (it's display-only) so the column fits a 568-px-tall viewport
             without clipping the avatar off the top.
           - tablet/desktop: all items, still grouped tightly */}
-      <div className="absolute right-5 sm:right-3 lg:right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+128px)] z-30 flex flex-col items-center justify-end gap-1.5 sm:gap-2 lg:gap-2.5">
+      <div className="absolute right-5 sm:right-3 lg:right-4 bottom-[calc(var(--zivo-safe-bottom,0px)+128px)] z-30 flex flex-col items-center justify-end gap-1.5 sm:gap-2 lg:gap-2.5">
         {/* Like / Reaction (long-press for emoji picker) */}
         <div className="relative">
           {onSetReaction && (
@@ -1936,7 +1884,14 @@ function ReelCard({
         {/* Comment */}
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); onOpenComments(post.id); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenComments({
+              postId: post.id,
+              source: getFeedPostSource(post),
+              initialCount: liveCommentsCount,
+            });
+          }}
           className="flex flex-col items-center gap-0.5 min-w-[44px] min-h-[44px]"
           aria-label="Comment"
           title="Comments"
@@ -2162,8 +2117,10 @@ function ReelCard({
       {isVideoPost && !hasPlaybackError && (
         <div
           ref={progressBarRef}
-          className="absolute inset-x-0 bottom-0 z-25 h-6 flex items-end touch-none select-none"
+          className="zivo-reel-no-callout absolute left-3 right-3 bottom-[calc(var(--zivo-safe-bottom,0px)+76px)] z-40 flex flex-col gap-1.5 touch-none select-none"
           onPointerDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             if (!progressBarRef.current || !videoRef.current) return;
             (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
             const rect = progressBarRef.current.getBoundingClientRect();
@@ -2177,6 +2134,8 @@ function ReelCard({
             }
           }}
           onPointerMove={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             if (!isScrubbing || !progressBarRef.current || !videoRef.current) return;
             const rect = progressBarRef.current.getBoundingClientRect();
             const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
@@ -2186,45 +2145,54 @@ function ReelCard({
             }
           }}
           onPointerUp={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             (e.currentTarget as HTMLDivElement).releasePointerCapture(e.pointerId);
             setIsScrubbing(false);
             if (wasPlayingBeforeScrub.current) {
               void videoRef.current?.play().catch(() => {});
             }
           }}
-          onPointerCancel={() => {
+          onPointerCancel={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             setIsScrubbing(false);
             if (wasPlayingBeforeScrub.current) {
               void videoRef.current?.play().catch(() => {});
             }
           }}
         >
+          <div className="flex items-center justify-between px-0.5 text-[11px] font-semibold tabular-nums text-white/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.75)]">
+            <span>{formatVideoTime(videoProgress * videoDuration)}</span>
+            <span className="text-white/65">{formatVideoTime(videoDuration)}</span>
+          </div>
           <div
             className={cn(
-              "relative w-full bg-white/15 transition-[height] duration-150",
-              isScrubbing ? "h-1" : "h-0.5",
+              "relative w-full rounded-full bg-white/25 shadow-[0_1px_8px_rgba(0,0,0,0.35)] transition-[height] duration-150",
+              isScrubbing ? "h-2" : "h-1.5",
             )}
           >
             {/* Buffered range — sits beneath the playhead fill so the user
                 can see how much is ready ahead of where they're watching. */}
             <motion.div
-              className="absolute inset-y-0 left-0 bg-white/30"
+              className="absolute inset-y-0 left-0 rounded-full bg-white/35"
               animate={{ width: `${bufferedProgress * 100}%` }}
               transition={{ duration: 0.2, ease: "easeOut" }}
             />
             {/* Played fill */}
             <motion.div
-              className="absolute inset-y-0 left-0 bg-white/90"
+              className="absolute inset-y-0 left-0 rounded-full bg-white"
               animate={{ width: `${videoProgress * 100}%` }}
               transition={{ duration: 0.08, ease: "linear" }}
             />
-            {isScrubbing && (
-              <motion.div
-                className="absolute -top-1.5 w-4 h-4 -ml-2 rounded-full bg-white shadow-lg"
-                animate={{ left: `${videoProgress * 100}%` }}
-                transition={{ duration: 0.08, ease: "linear" }}
-              />
-            )}
+            <motion.div
+              className={cn(
+                "absolute rounded-full bg-white shadow-[0_2px_10px_rgba(0,0,0,0.4)] transition-[width,height,top] duration-150",
+                isScrubbing ? "-top-1.5 h-5 w-5 -ml-2.5" : "-top-1 h-3.5 w-3.5 -ml-1.5",
+              )}
+              animate={{ left: `${videoProgress * 100}%` }}
+              transition={{ duration: 0.08, ease: "linear" }}
+            />
           </div>
         </div>
       )}
@@ -2238,7 +2206,7 @@ function ReelCard({
             initial={{ scale: 0, opacity: 1, y: 0 }}
             animate={{ scale: 1.1, opacity: 0, y: -40 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="absolute right-6 bottom-[calc(env(safe-area-inset-bottom,0px)+270px)] z-40 pointer-events-none"
+            className="absolute right-6 bottom-[calc(var(--zivo-safe-bottom,0px)+270px)] z-40 pointer-events-none"
           >
             <Heart className="w-12 h-12 text-destructive fill-destructive drop-shadow-lg" />
           </motion.div>
@@ -2261,7 +2229,7 @@ function ReelCard({
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 320 }}
-              className="fixed inset-x-0 bottom-0 z-[81] bg-background rounded-t-2xl pb-[env(safe-area-inset-bottom,16px)]"
+              className="fixed inset-x-0 bottom-0 z-[81] bg-background rounded-t-2xl pb-[var(--zivo-safe-bottom,16px)]"
             >
               <div className="flex justify-center pt-2 pb-1">
                 <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
@@ -2471,7 +2439,7 @@ function ReelCard({
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 320 }}
-              className="fixed inset-x-0 bottom-0 z-[81] bg-background rounded-t-2xl pb-[env(safe-area-inset-bottom,16px)]"
+              className="fixed inset-x-0 bottom-0 z-[81] bg-background rounded-t-2xl pb-[var(--zivo-safe-bottom,16px)]"
             >
               <div className="flex justify-center pt-2 pb-1">
                 <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
@@ -2510,7 +2478,7 @@ function ReelCard({
           onClick={(e) => { e.stopPropagation(); setShowSpeedPicker(true); }}
           aria-label="Change playback speed"
           title="Change playback speed"
-          className="absolute right-3 top-[calc(env(safe-area-inset-top,0px)+80px)] z-30 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 active:scale-95 transition-transform"
+          className="absolute right-3 top-[calc(var(--zivo-safe-top-overlay,80px)+0.25rem)] z-30 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 active:scale-95 transition-transform"
         >
           <span className="text-white text-[11px] font-bold tabular-nums">{playbackSpeed}×</span>
         </button>
@@ -2545,10 +2513,14 @@ const MemoReelCard = memo(ReelCard, (prev, next) => {
 
 function CommentSheet({
   postId,
+  source,
+  initialCount = 0,
   userId,
   onClose,
 }: {
   postId: string;
+  source?: FeedPostSource;
+  initialCount?: number;
   userId: string | null;
   onClose: () => void;
 }) {
@@ -2571,11 +2543,13 @@ function CommentSheet({
   const [isPostAuthor, setIsPostAuthor] = useState(false);
   const queryClient = useQueryClient();
 
-  // Route comments to the right table based on the post id prefix.
-  // User posts are passed with a "u-" prefix; everything else is a store post.
-  const isUserPost  = postId.startsWith("u-");
-  const rawPostId   = isUserPost ? postId.slice(2) : postId;
-  const targetTable = isUserPost ? "user_post_comments" : "store_post_comments";
+  // Route comments to the same table used by the reel preview. Store posts can
+  // arrive with ids that look just like user-post ids, so preserve the source.
+  const isUserPost  = source ? source === "user" : postId.startsWith("u-");
+  const rawPostId   = getFeedPostRawId(postId);
+  const postSource = isUserPost ? "user" : "store";
+  const targetTable = isUserPost ? "post_comments" : "store_post_comments";
+  const commentLikeTargetTable = isUserPost ? "user_post_comments" : "store_post_comments";
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Check if user has a verified account (phone_verified)
@@ -2600,10 +2574,15 @@ function CommentSheet({
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ["post-comments", targetTable, rawPostId, userId, commentLimit],
     queryFn: async () => {
-      const { data: rawComments, error } = await (supabase as any)
+      const selectColumns = isUserPost
+        ? "id, post_id, user_id, content, created_at, parent_id, is_pinned, likes_count"
+        : "id, post_id, user_id, content, created_at";
+      let commentsQuery = (supabase as any)
         .from(targetTable)
-        .select("id, post_id, user_id, content, comment, created_at, parent_id, is_pinned, likes_count")
-        .eq("post_id", rawPostId)
+        .select(selectColumns)
+        .eq("post_id", rawPostId);
+      if (isUserPost) commentsQuery = commentsQuery.eq("post_source", postSource);
+      const { data: rawComments, error } = await commentsQuery
         .order("created_at", { ascending: true })
         .limit(commentLimit);
       if (error) throw error;
@@ -2616,10 +2595,10 @@ function CommentSheet({
       const [{ data: profiles }, { data: likeRows }, { data: userLikeRows }] = await Promise.all([
         supabase.from("public_profiles").select("id, full_name, avatar_url").in("id", userIds as string[]),
         commentIds.length > 0
-          ? (supabase as any).from("comment_likes").select("comment_id").eq("target_table", targetTable).in("comment_id", commentIds)
+          ? (supabase as any).from("comment_likes").select("comment_id").eq("target_table", commentLikeTargetTable).in("comment_id", commentIds)
           : Promise.resolve({ data: [] }),
         userId && commentIds.length > 0
-          ? (supabase as any).from("comment_likes").select("comment_id").eq("user_id", userId).eq("target_table", targetTable).in("comment_id", commentIds)
+          ? (supabase as any).from("comment_likes").select("comment_id").eq("user_id", userId).eq("target_table", commentLikeTargetTable).in("comment_id", commentIds)
           : Promise.resolve({ data: [] }),
       ]);
 
@@ -2634,12 +2613,16 @@ function CommentSheet({
       return rawComments.map((c: any) => ({
         ...c,
         content: c.content ?? c.comment ?? c.text ?? c.body ?? "",
+        parent_id: c.parent_id ?? null,
+        is_pinned: !!c.is_pinned,
+        likes_count: c.likes_count ?? 0,
         profiles: profileMap.get(c.user_id) || null,
         like_count: likeCounts.get(c.id) ?? 0,
         liked_by_user: likedByUser.has(c.id),
       }));
     },
   });
+  const displayCommentCount = Math.max(initialCount, comments.length);
 
   // Resolve "am I the post author?" so we can show Pin/Unpin on every comment
   useEffect(() => {
@@ -2676,10 +2659,14 @@ function CommentSheet({
     if (!userId || pinningCommentIds.has(commentId)) return;
     setPinningCommentIds((prev) => new Set(prev).add(commentId));
     try {
-      const { error } = await (supabase as any).rpc("toggle_comment_pin", {
-        _comment_id:   commentId,
-        _target_table: targetTable,
-      });
+      const { error } = isUserPost
+        ? await (supabase as any).rpc("toggle_unified_comment_pin", {
+            _comment_id: commentId,
+          })
+        : await (supabase as any).rpc("toggle_comment_pin", {
+            _comment_id:   commentId,
+            _target_table: commentLikeTargetTable,
+          });
       if (error) {
         toast.error(/only the post author/i.test(error.message ?? "")
           ? "Only the post author can pin comments"
@@ -2703,14 +2690,13 @@ function CommentSheet({
     }
     if (!confirmContentSafe(commentText, "comment")) return;
     setSubmitting(true);
-    // user_post_comments uses `comment`; store_post_comments uses `content`.
     const insertPayload: Record<string, unknown> = {
       post_id: rawPostId,
       user_id: userId,
+      content: commentText.trim(),
     };
-    if (isUserPost) insertPayload.comment = commentText.trim();
-    else            insertPayload.content = commentText.trim();
-    if (replyTo) insertPayload.parent_id = replyTo.id;
+    if (isUserPost) insertPayload.post_source = postSource;
+    if (replyTo && isUserPost) insertPayload.parent_id = replyTo.id;
     const { error } = await (supabase as any).from(targetTable).insert(insertPayload);
     if (error) {
       console.error("[CommentSheet] insert failed", error);
@@ -2743,9 +2729,7 @@ function CommentSheet({
     if (!confirmContentSafe(nextContent, "comment")) return;
     setSavingCommentIds((prev) => new Set(prev).add(commentId));
     try {
-      const updatePayload: Record<string, unknown> = isUserPost
-        ? { comment: nextContent.trim() }
-        : { content: nextContent.trim() };
+      const updatePayload: Record<string, unknown> = { content: nextContent.trim() };
       const { error } = await (supabase as any)
         .from(targetTable)
         .update(updatePayload)
@@ -2796,7 +2780,7 @@ function CommentSheet({
     inputRef.current?.focus();
   }, []);
 
-  return (
+  const sheet = (
     <div
       className="fixed inset-0 z-[1500] flex flex-col justify-end"
       onClick={onClose}
@@ -2806,7 +2790,7 @@ function CommentSheet({
 
       {/* Sheet */}
       <div
-        className="relative bg-background rounded-t-3xl max-h-[72vh] flex flex-col animate-in slide-in-from-bottom duration-300 [padding-top:var(--zivo-safe-top-sheet)] [padding-bottom:env(safe-area-inset-bottom,0px)]"
+        className="relative bg-background rounded-t-3xl max-h-[72vh] flex flex-col animate-in slide-in-from-bottom duration-300 [padding-top:var(--zivo-safe-top-sheet)] [padding-bottom:var(--zivo-safe-bottom,0px)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-center pt-2 pb-1" aria-hidden="true">
@@ -2814,7 +2798,7 @@ function CommentSheet({
         </div>
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-1 pb-3 border-b border-border">
-          <span className="font-semibold text-foreground">Comments ({comments.length})</span>
+          <span className="font-semibold text-foreground">Comments ({displayCommentCount})</span>
           <button
             type="button"
             onClick={onClose}
@@ -2977,7 +2961,7 @@ function CommentSheet({
                     <Suspense fallback={null}>
                       <CommentHeartButton
                         commentId={c.id}
-                        targetTable={targetTable}
+                        targetTable={commentLikeTargetTable}
                         userId={userId}
                         variant="light"
                         initialCount={c.like_count ?? 0}
@@ -2991,7 +2975,7 @@ function CommentSheet({
                         onEditStart={() => { setEditingId(c.id); setEditingText(c.content || ""); }}
                         onDelete={() => handleDeleteComment(c.id)}
                         deleting={deletingCommentIds.has(c.id)}
-                        canPin={isPostAuthor && !isReply}
+                        canPin={isPostAuthor && isUserPost && !isReply}
                         isPinned={!!c.is_pinned}
                         onTogglePin={() => handleTogglePin(c.id)}
                         pinning={pinningCommentIds.has(c.id)}
@@ -3046,7 +3030,7 @@ function CommentSheet({
         </div>
 
         {/* Input */}
-        <div className="px-4 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] border-t border-border">
+        <div className="px-4 pt-3 pb-[calc(var(--zivo-safe-bottom,0px)+12px)] border-t border-border">
           {!userId ? (
             <p className="text-center text-sm text-muted-foreground py-1">Sign in to comment</p>
           ) : !isVerified ? (
@@ -3126,6 +3110,7 @@ function CommentSheet({
       </div>
     </div>
   );
+  return typeof document !== "undefined" ? createPortal(sheet, document.body) : sheet;
 }
 
 
@@ -3843,7 +3828,7 @@ function ReelReportDialog({
         exit={{ y: 80 }}
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-md bg-background rounded-t-2xl border-t border-border/30"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}
+        style={{ paddingBottom: "calc(var(--zivo-safe-bottom,0px) + 16px)" }}
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <span className="font-semibold text-foreground">Report post</span>
@@ -3898,6 +3883,36 @@ export default function FeedPage() {
   // On `/reels` we render the TikTok-style hero — hide the desktop side rails
   // so the video can fill the viewport. `/feed` keeps the 3-column layout.
   const isReelsRoute = location.pathname.startsWith("/reels");
+  useEffect(() => {
+    if (!isReelsRoute || typeof document === "undefined") return;
+    document.body.classList.add("zivo-reels-active");
+
+    const isEditableTarget = (target: EventTarget | null) => (
+      target instanceof HTMLElement &&
+      Boolean(target.closest("input, textarea, [contenteditable='true']"))
+    );
+
+    const blockNativeSelection = (event: Event) => {
+      if (isEditableTarget(event.target)) return;
+      event.preventDefault();
+    };
+
+    const clearSelection = () => {
+      const selection = window.getSelection?.();
+      if (selection && !selection.isCollapsed) selection.removeAllRanges();
+    };
+
+    document.addEventListener("selectstart", blockNativeSelection);
+    document.addEventListener("contextmenu", blockNativeSelection);
+    document.addEventListener("selectionchange", clearSelection);
+
+    return () => {
+      document.body.classList.remove("zivo-reels-active");
+      document.removeEventListener("selectstart", blockNativeSelection);
+      document.removeEventListener("contextmenu", blockNativeSelection);
+      document.removeEventListener("selectionchange", clearSelection);
+    };
+  }, [isReelsRoute]);
   const requestedReelId = useMemo(() => {
     const params = new URLSearchParams(location.search);
     const linkedId = routePostId || params.get("post");
@@ -3942,7 +3957,7 @@ export default function FeedPage() {
   // creator profile". Per-card state isn't needed because the user can only
   // swipe one card at a time.
   const swipeStartRef = useRef<{ x: number; y: number; t: number; pointerId: number } | null>(null);
-  const [commentPostId, setCommentPostId] = useState<string | null>(null);
+  const [commentTarget, setCommentTarget] = useState<CommentTarget | null>(null);
   const [sharePostId, setSharePostId] = useState<string | null>(null);
   const [soundOverlayName, setSoundOverlayName] = useState<string | null>(null);
   const [showSearch, setShowSearch] = useState(false);
@@ -4782,7 +4797,13 @@ export default function FeedPage() {
       // auto-open the comment sheet on the matched reel after the scroll.
       // Slight delay so the snap-scroll lands first.
       if (params.get("comments") === "1" && matchedPost) {
-        window.setTimeout(() => setCommentPostId(matchedPost.id), 250);
+        window.setTimeout(() => {
+          setCommentTarget({
+            postId: matchedPost.id,
+            source: getFeedPostSource(matchedPost),
+            initialCount: matchedPost.comments_count || 0,
+          });
+        }, 250);
       }
     });
   }, [visiblePosts, location.search, routePostId]);
@@ -5012,7 +5033,7 @@ export default function FeedPage() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -32, opacity: 0 }}
             transition={{ type: "spring", damping: 22, stiffness: 300 }}
-            className="absolute inset-x-0 top-[max(env(safe-area-inset-top),8px)] z-[70] mx-auto pointer-events-none"
+            className="absolute inset-x-0 top-safe-overlay z-[70] mx-auto pointer-events-none"
             role="status"
             aria-live="polite"
           >
@@ -5387,7 +5408,7 @@ export default function FeedPage() {
                     userId={userId}
                     userLikedPostIds={userLikedPostIds}
                     onToggleLike={handleToggleLike}
-                    onOpenComments={(id) => setCommentPostId(id)}
+                    onOpenComments={setCommentTarget}
                     onOpenShare={(id) => setSharePostId(id)}
                     onOpenSound={(name) => setSoundOverlayName(name)}
                     onOpenActions={() => {
@@ -5528,11 +5549,13 @@ export default function FeedPage() {
       </div>
 
       {/* Comment sheet */}
-      {commentPostId && (
+      {commentTarget && (
         <CommentSheet
-          postId={commentPostId}
+          postId={commentTarget.postId}
+          source={commentTarget.source}
+          initialCount={commentTarget.initialCount}
           userId={userId}
-          onClose={() => setCommentPostId(null)}
+          onClose={() => setCommentTarget(null)}
         />
       )}
 
@@ -5766,7 +5789,7 @@ export default function FeedPage() {
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.35 }}
             className="absolute left-1/2 -translate-x-1/2 z-[55] pointer-events-none flex flex-col items-center gap-2"
-            style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 140px)" }}
+            style={{ bottom: "calc(var(--zivo-safe-bottom,0px) + 140px)" }}
           >
             <motion.div
               animate={{ y: [0, -8, 0] }}

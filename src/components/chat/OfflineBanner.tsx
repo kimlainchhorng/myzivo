@@ -42,7 +42,7 @@ export default function OfflineBanner() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -10, scale: 0.95 }}
           transition={{ type: "spring", stiffness: 320, damping: 28 }}
-          className="fixed top-[max(0.5rem,env(safe-area-inset-top))] inset-x-0 z-[100] mx-auto flex w-fit max-w-[92vw] items-center gap-2 rounded-full px-3.5 py-1.5 text-[12px] font-semibold backdrop-blur-xl bg-zinc-950/80 ring-1 ring-white/10 shadow-[0_8px_24px_-6px_rgba(0,0,0,0.45)]"
+          className="fixed top-[max(0.5rem,var(--zivo-safe-top,0px))] inset-x-0 z-[100] mx-auto flex w-fit max-w-[92vw] items-center gap-2 rounded-full px-3.5 py-1.5 text-[12px] font-semibold backdrop-blur-xl bg-zinc-950/80 ring-1 ring-white/10 shadow-[0_8px_24px_-6px_rgba(0,0,0,0.45)]"
         >
           {online ? (
             <>

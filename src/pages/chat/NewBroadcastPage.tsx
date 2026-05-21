@@ -146,7 +146,7 @@ export default function NewBroadcastPage() {
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-border/40 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)]">
+      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-border/40 p-3 pb-[calc(var(--zivo-safe-bottom,0px)+12px)]">
         <button type="button"
           onClick={create}
           disabled={creating}

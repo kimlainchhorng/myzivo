@@ -312,7 +312,7 @@ export default function StoryForwardSheet({
 
             {/* Compose + send */}
             {selected.size > 0 && (
-              <div className="border-t border-border/40 p-3 pb-[calc(env(safe-area-inset-bottom,12px)+12px)] space-y-2">
+              <div className="border-t border-border/40 p-3 pb-[calc(var(--zivo-safe-bottom,12px)+12px)] space-y-2">
                 <input
                   value={note}
                   onChange={(e) => setNote(e.target.value)}

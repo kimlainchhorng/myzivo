@@ -138,7 +138,7 @@ export default function AddContactSheet({
           <span className="h-1.5 w-14 rounded-full bg-muted-foreground/25" />
         </div>
 
-        <div className="max-h-[calc(100dvh-3rem)] overflow-y-auto overscroll-contain px-5 pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] pt-2">
+        <div className="max-h-[calc(100dvh-3rem)] overflow-y-auto overscroll-contain px-5 pb-[calc(6.5rem+var(--zivo-safe-bottom,0px))] pt-2">
           <SheetHeader className="pr-12 text-left">
             <SheetTitle className="flex items-center gap-2 text-[22px] leading-tight">
               {zivoOFMode ? (

@@ -347,7 +347,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
         {/* Header — gradient brand strip */}
         <div
           className="relative flex items-center justify-between px-3 border-b border-border shrink-0 bg-gradient-to-br from-primary/8 via-card to-card"
-          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 10px)', paddingBottom: '10px' }}
+          style={{ paddingTop: 'calc(var(--zivo-safe-top,0px) + 10px)', paddingBottom: '10px' }}
         >
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
             {storeLogoUrl ? (
@@ -481,7 +481,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
         {/* Footer actions */}
         <div
           className="border-t border-border p-1 space-y-0.5 shrink-0"
-          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 4px)' }}
+          style={{ paddingBottom: 'calc(var(--zivo-safe-bottom,0px) + 4px)' }}
         >
           <button type="button"
             onClick={() => { onTabChange?.("settings"); closeSidebar(); }}

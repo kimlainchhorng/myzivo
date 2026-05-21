@@ -254,7 +254,7 @@ export default function SecretChatPage() {
 
       {/* Composer */}
       {showJumpToBottom && (
-        <div className="pointer-events-none fixed right-4 bottom-24 z-20">
+        <div className="pointer-events-none fixed right-4 bottom-[calc(var(--zivo-safe-bottom,0px)+6rem)] z-20">
           <button
             type="button"
             onClick={() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })}
@@ -275,7 +275,7 @@ export default function SecretChatPage() {
         className="flex shrink-0 items-end gap-2 border-t border-border/40 bg-background/85 px-3 backdrop-blur-xl"
         style={{
           paddingTop: 10,
-          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 10px)",
+          paddingBottom: "calc(var(--zivo-safe-bottom,0px) + 10px)",
         }}
       >
         <input

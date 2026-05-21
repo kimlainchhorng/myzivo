@@ -34,6 +34,7 @@ export interface StoreProductItem {
   description: string | null;
   price: number;
   image_url: string | null;
+  image_urls: unknown[] | null;
   category: string | null;
   brand: string | null;
   sku: string | null;

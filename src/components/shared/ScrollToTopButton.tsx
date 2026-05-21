@@ -23,7 +23,7 @@ export function ScrollToTopButton() {
     <button type="button"
       onClick={scrollToTop}
       aria-label="Scroll to top"
-      style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 6rem)" }}
+      style={{ bottom: "calc(var(--zivo-safe-bottom,0px) + 6rem)" }}
       className={cn(
         "fixed right-4 z-50 w-11 h-11 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 flex items-center justify-center transition-all duration-300 touch-manipulation active:scale-90 hover:scale-110",
         visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"

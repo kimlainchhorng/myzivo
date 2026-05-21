@@ -248,7 +248,7 @@ export default function PostShareSheet() {
 
   return (
     <Sheet open={!!target} onOpenChange={(o) => { if (!o) close(); }}>
-      <SheetContent side="bottom" className="rounded-t-3xl px-4 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+      <SheetContent side="bottom" className="rounded-t-3xl px-4 pt-3 pb-[max(1.25rem,var(--zivo-safe-bottom,0px))]">
         <SheetHeader className="text-left">
           <SheetTitle className="text-[17px] font-extrabold tracking-tight">Share post</SheetTitle>
           <SheetDescription className="sr-only">

@@ -205,7 +205,7 @@ export default function StoreDetailsDrawer({
           exit={{ y: 360 }}
           transition={{ type: "spring", damping: 28, stiffness: 320 }}
           className="absolute left-0 right-0 bottom-0 bg-card rounded-t-3xl border-t border-border/40 p-4 shadow-2xl max-h-[88vh] overflow-y-auto"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 28px)" }}
+          style={{ paddingBottom: "calc(var(--zivo-safe-bottom,0px) + 28px)" }}
           onClick={(e) => e.stopPropagation()}
           role="dialog"
           aria-label={`${store.name} details`}

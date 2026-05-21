@@ -267,7 +267,7 @@ export default function FeedStoryRing() {
 
       {/* Own-ring action sheet: View or Add */}
       <Sheet open={showOwnSheet} onOpenChange={setShowOwnSheet}>
-        <SheetContent side="bottom" className="rounded-t-2xl pb-[env(safe-area-inset-bottom,16px)]">
+        <SheetContent side="bottom" className="rounded-t-2xl pb-[var(--zivo-safe-bottom,16px)]">
           <SheetHeader>
             <SheetTitle className="text-left">Your story</SheetTitle>
           </SheetHeader>

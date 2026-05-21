@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,8 +8,8 @@ import { checkRateLimit, formatLockout } from "@/lib/security/rateLimiter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { ArrowLeft, Mail, Loader2, CheckCircle, ArrowRight, Sparkles } from "lucide-react";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { ArrowLeft, Mail, Loader2, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import SEOHead from "@/components/SEOHead";
@@ -21,15 +21,29 @@ const forgotPasswordSchema = z.object({
 type ForgotPasswordForm = z.infer<typeof forgotPasswordSchema>;
 
 const ForgotPassword = () => {
+  const [params] = useSearchParams();
+  const initialEmail = params.get("email") || "";
+  const redirect = params.get("redirect") || "/";
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [sentEmail, setSentEmail] = useState("");
+  const loginHref = `/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`;
 
   const form = useForm<ForgotPasswordForm>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
-      email: "",
+      email: initialEmail,
     },
   });
+  const provider = useMemo(() => {
+    const domain = (emailSent ? sentEmail : initialEmail).split("@")[1]?.toLowerCase() || "";
+    if (domain === "gmail.com" || domain === "googlemail.com") return { name: "Gmail", url: "https://mail.google.com/mail/u/0/#inbox" };
+    if (domain.includes("outlook") || domain.includes("hotmail") || domain.includes("live.com")) return { name: "Outlook", url: "https://outlook.live.com/mail/" };
+    if (domain === "yahoo.com" || domain === "ymail.com") return { name: "Yahoo Mail", url: "https://mail.yahoo.com/" };
+    if (domain === "icloud.com" || domain === "me.com" || domain === "mac.com") return { name: "iCloud Mail", url: "https://www.icloud.com/mail" };
+    if (domain === "proton.me" || domain === "protonmail.com") return { name: "Proton Mail", url: "https://mail.proton.me/" };
+    return null;
+  }, [emailSent, initialEmail, sentEmail]);
 
   const onSubmit = async (data: ForgotPasswordForm) => {
     setIsLoading(true);
@@ -44,11 +58,12 @@ const ForgotPassword = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `https://www.zivollc.com/reset-password`,
+        redirectTo: `${window.location.origin}/reset-password${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`,
       });
 
       if (error) throw error;
 
+      setSentEmail(data.email);
       setEmailSent(true);
       toast.success("Password reset email sent!");
     } catch (error: any) {
@@ -93,6 +108,16 @@ const ForgotPassword = () => {
                 Didn't receive the email? Check your spam folder or try again.
               </p>
               <div className="flex flex-col gap-3">
+                {provider && (
+                  <Button
+                    asChild
+                    className="w-full h-12 rounded-xl touch-manipulation active:scale-[0.98]"
+                  >
+                    <a href={provider.url} target="_blank" rel="noopener noreferrer">
+                      Open {provider.name}
+                    </a>
+                  </Button>
+                )}
                 <Button 
                   variant="outline" 
                   onClick={() => setEmailSent(false)}
@@ -105,7 +130,7 @@ const ForgotPassword = () => {
                   asChild
                   className="w-full h-12 hover:bg-white/5 transition-all rounded-xl"
                 >
-                  <Link to="/login" className="flex items-center justify-center gap-2">
+                  <Link to={loginHref} className="flex items-center justify-center gap-2">
                     <ArrowLeft className="w-4 h-4" />
                     Back to login
                   </Link>
@@ -183,7 +208,7 @@ const ForgotPassword = () => {
               </div>
 
               <Link
-                to={`/signup`}
+                to={`/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}
                 className="block text-center text-sm font-semibold text-rose-500 hover:text-rose-600"
               >
                 Create new account
@@ -195,7 +220,7 @@ const ForgotPassword = () => {
         {/* Footer card */}
         <div className="mt-3 bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-6 py-4 text-center shadow-sm">
           <Link
-            to="/login"
+            to={loginHref}
             className="inline-flex items-center justify-center gap-1 text-sm font-semibold text-zinc-700 dark:text-zinc-200 hover:text-rose-500 dark:hover:text-rose-400"
           >
             <ArrowLeft className="w-4 h-4" /> Back to login

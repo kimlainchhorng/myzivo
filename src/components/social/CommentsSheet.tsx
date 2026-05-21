@@ -110,10 +110,10 @@ export default function CommentsSheet({
       onClose={onClose}
       title={headerTitle}
       ariaLabel="Comments"
-      maxHeightVh={70}
+      maxHeightVh={72}
       zIndex={1500}
       safeAreaTop
-      className={cn(dark && "bg-black/95 text-white")}
+      className={cn("h-[72dvh]", dark && "bg-black/95 text-white")}
       headerClassName={cn("border-b", border)}
     >
       {/* Wrap in a column so the comments list scrolls and the input bar
@@ -208,7 +208,7 @@ export default function CommentsSheet({
 
           <div
             className={cn("flex items-center gap-2 px-4 py-3 border-t", border)}
-            style={{ paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 0.75rem), 0.75rem)" }}
+            style={{ paddingBottom: "max(calc(var(--zivo-safe-bottom,0px) + 0.75rem), 0.75rem)" }}
           >
             <input
               ref={inputRef}

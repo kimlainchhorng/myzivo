@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import SEOHead from '@/components/SEOHead';
 import { useNavigate } from 'react-router-dom';
-import { CheckCheck, Bell, Package, Gift, Headphones, Clock, ArrowLeft, UserPlus, Check, X, Heart, MessageCircle as MessageCircleIcon, Share2, AtSign, Flame, Settings2 } from 'lucide-react';
+import { CheckCheck, Bell, Package, Gift, Headphones, Clock, ArrowLeft, UserPlus, Check, X, Heart, MessageCircle as MessageCircleIcon, Share2, AtSign, Flame, Settings2, Trash2, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -141,6 +141,68 @@ const SocialNotifItem = ({ notif, index, onClick }: { notif: SocialNotification;
   );
 };
 
+const SwipeableNotificationRow = ({
+  notification,
+  index,
+  onClick,
+  onMarkAsRead,
+  onDelete,
+}: {
+  notification: any;
+  index: number;
+  onClick: () => void;
+  onMarkAsRead: () => void;
+  onDelete: () => void;
+}) => {
+  const [dragging, setDragging] = useState(false);
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -120, scale: 0.96 }}
+      transition={{ delay: index * 0.025, duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+      className="relative overflow-hidden rounded-2xl"
+    >
+      <div className="absolute inset-0 flex items-stretch justify-between rounded-2xl">
+        <div className="flex w-28 items-center justify-start gap-2 bg-emerald-500 px-4 text-white">
+          <CheckCheck className="h-4 w-4" />
+          <span className="text-xs font-bold">Read</span>
+        </div>
+        <div className="flex w-28 items-center justify-end gap-2 bg-destructive px-4 text-destructive-foreground">
+          <span className="text-xs font-bold">Delete</span>
+          <Trash2 className="h-4 w-4" />
+        </div>
+      </div>
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: -112, right: 96 }}
+        dragElastic={0.04}
+        onDragStart={() => setDragging(true)}
+        onDragEnd={(_event, info) => {
+          if (info.offset.x < -82 || info.velocity.x < -520) {
+            onDelete();
+          } else if (info.offset.x > 76 || info.velocity.x > 520) {
+            onMarkAsRead();
+          }
+          window.setTimeout(() => setDragging(false), 40);
+        }}
+        whileTap={{ scale: 0.992 }}
+        className="relative"
+      >
+        <NotificationItem
+          notification={notification}
+          onMarkAsRead={onMarkAsRead}
+          onClick={() => {
+            if (!dragging) onClick();
+          }}
+        />
+      </motion.div>
+    </motion.div>
+  );
+};
+
 const NotificationsPage = () => {
   const navigate = useNavigate();
   const { t } = useI18n();
@@ -157,6 +219,7 @@ const NotificationsPage = () => {
     markAsRead, 
     markAllAsRead,
     fetchNotifications,
+    deleteNotifications,
   } = useNotifications(100);
 
   const {
@@ -254,6 +317,26 @@ const NotificationsPage = () => {
   const handlePullRefresh = useCallback(async () => {
     await Promise.all([fetchNotifications(), fetchFriendRequests()]);
   }, [fetchNotifications, fetchFriendRequests]);
+
+  const handleDeleteNotification = useCallback((id: string) => {
+    void deleteNotifications([id]);
+    toast.success('Notification deleted');
+  }, [deleteNotifications]);
+
+  const handleClearRead = useCallback(() => {
+    const readIds = notifications.filter(n => n.is_read).map(n => n.id);
+    if (readIds.length === 0) {
+      toast('No read notifications to clear');
+      return;
+    }
+    void deleteNotifications(readIds);
+    toast.success(`Cleared ${readIds.length} read notification${readIds.length === 1 ? '' : 's'}`);
+  }, [deleteNotifications, notifications]);
+
+  const handleMarkAllRead = useCallback(() => {
+    markAllAsRead();
+    markAllSocialRead();
+  }, [markAllAsRead, markAllSocialRead]);
 
   // Templates produced by the in-DB social triggers
   // (see 20260430010000_social_notifications_and_comment_hearts.sql).
@@ -405,14 +488,14 @@ const NotificationsPage = () => {
                   onClick={() => navigate("/account/notifications")}
                   aria-label="Notification settings"
                 >
-                  <Settings2 className="h-4 w-4" />
+                  <SlidersHorizontal className="h-4 w-4" />
                 </Button>
                 {categoryCounts.all > 0 && (
                   <Button
                     variant="ghost"
                     size="sm"
                     className="h-9 rounded-xl px-2.5 text-xs font-bold text-primary hover:bg-primary/8 sm:px-3"
-                    onClick={() => { markAllAsRead(); markAllSocialRead(); }}
+                    onClick={handleMarkAllRead}
                   >
                     <CheckCheck className="h-4 w-4 sm:mr-1" />
                     <span className="hidden sm:inline">{t('notif.read_all')}</span>
@@ -430,7 +513,7 @@ const NotificationsPage = () => {
             style={{ perspective: '1000px' }}
           >
             <GlassCard3D className="sticky top-[66px] z-30 lg:top-[66px]">
-              <div className="grid grid-cols-7 gap-1 p-1.5">
+              <div className="flex gap-1.5 overflow-x-auto p-1.5 no-scrollbar">
                 {tabs.map(tab => {
                   const isActive = activeTab === tab.value;
                   return (
@@ -440,14 +523,14 @@ const NotificationsPage = () => {
                       whileTap={{ scale: 0.92 }}
                       onClick={() => setActiveTab(tab.value)}
                       className={cn(
-                        "relative flex min-w-0 flex-col items-center gap-1 rounded-lg px-1 py-1.5 text-[10px] font-bold transition-colors touch-manipulation",
+                        "relative flex min-w-[4.9rem] items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-[11px] font-bold transition-colors touch-manipulation",
                         isActive 
                           ? "bg-primary/10 text-primary ring-1 ring-primary/20" 
                           : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                       )}
                     >
                       <tab.icon className="w-4 h-4" />
-                      <span className="hidden truncate sm:block">{tab.label}</span>
+                      <span className="truncate">{tab.label}</span>
                       {categoryCounts[tab.value] > 0 && (
                         <motion.div
                           initial={{ scale: 0 }}
@@ -474,6 +557,52 @@ const NotificationsPage = () => {
               </div>
             </GlassCard3D>
           </motion.div>
+
+          {notifications.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+              className="grid grid-cols-3 gap-2"
+            >
+              <button
+                type="button"
+                onClick={handleMarkAllRead}
+                className="rounded-2xl border border-border/55 bg-card px-3 py-2.5 text-left shadow-sm active:scale-[0.98]"
+              >
+                <CheckCheck className="mb-1 h-4 w-4 text-primary" />
+                <p className="text-[11px] font-bold leading-tight">Mark all</p>
+                <p className="text-[9px] text-muted-foreground">Read</p>
+              </button>
+              <button
+                type="button"
+                onClick={handleClearRead}
+                className="rounded-2xl border border-border/55 bg-card px-3 py-2.5 text-left shadow-sm active:scale-[0.98]"
+              >
+                <Trash2 className="mb-1 h-4 w-4 text-destructive" />
+                <p className="text-[11px] font-bold leading-tight">Clear read</p>
+                <p className="text-[9px] text-muted-foreground">Delete old</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/account/notifications")}
+                className="rounded-2xl border border-border/55 bg-card px-3 py-2.5 text-left shadow-sm active:scale-[0.98]"
+              >
+                <Settings2 className="mb-1 h-4 w-4 text-muted-foreground" />
+                <p className="text-[11px] font-bold leading-tight">Rules</p>
+                <p className="text-[9px] text-muted-foreground">Controls</p>
+              </button>
+            </motion.div>
+          )}
+
+          {filteredNotifications.length > 0 && (
+            <div className="flex items-center justify-between px-1">
+              <p className="text-[11px] font-semibold text-muted-foreground">
+                Swipe right to mark read · swipe left to delete
+              </p>
+              <span className="text-[11px] font-bold text-foreground">{filteredNotifications.length}</span>
+            </div>
+          )}
 
           {/* ── Friend Requests Section (shown on 'all' and 'social' tabs) ── */}
           {(activeTab === 'all' || activeTab === 'social') && friendRequests.length > 0 && (
@@ -563,21 +692,18 @@ const NotificationsPage = () => {
                 </motion.div>
               ) : filteredNotifications.length > 0 ? (
                 <div className="space-y-2.5">
-                  {filteredNotifications.map((notification, i) => (
-                    <motion.div
-                      key={notification.id}
-                      initial={{ opacity: 0, y: 20, rotateX: 6 }}
-                      animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                      transition={{ delay: i * 0.04, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                      style={{ perspective: '800px' }}
-                    >
-                      <NotificationItem
+                  <AnimatePresence mode="popLayout">
+                    {filteredNotifications.map((notification, i) => (
+                      <SwipeableNotificationRow
+                        key={notification.id}
                         notification={notification}
-                        onMarkAsRead={() => markAsRead([notification.id])}
+                        index={i}
+                        onMarkAsRead={() => void markAsRead([notification.id])}
+                        onDelete={() => handleDeleteNotification(notification.id)}
                         onClick={() => handleNotificationClick(notification)}
                       />
-                    </motion.div>
-                  ))}
+                    ))}
+                  </AnimatePresence>
                 </div>
               ) : null}
             </>

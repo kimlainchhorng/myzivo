@@ -9,19 +9,14 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import X from "lucide-react/dist/esm/icons/x";
-import AtSign from "lucide-react/dist/esm/icons/at-sign";
-import BriefcaseBusiness from "lucide-react/dist/esm/icons/briefcase-business";
-import Camera from "lucide-react/dist/esm/icons/camera";
-import CirclePlay from "lucide-react/dist/esm/icons/circle-play";
-import Music2 from "lucide-react/dist/esm/icons/music-2";
-import Hash from "lucide-react/dist/esm/icons/hash";
-import Send from "lucide-react/dist/esm/icons/send";
 import Heart from "lucide-react/dist/esm/icons/heart";
 import LinkIcon from "lucide-react/dist/esm/icons/link";
-import Disc from "lucide-react/dist/esm/icons/disc";
-import Headphones from "lucide-react/dist/esm/icons/headphones";
-import Music from "lucide-react/dist/esm/icons/music";
 import UserRound from "lucide-react/dist/esm/icons/user-round";
+import FacebookLogo from "@/lib/icons/facebook";
+import InstagramLogo from "@/lib/icons/instagram";
+import LinkedinLogo from "@/lib/icons/linkedin";
+import XLogo from "@/lib/icons/twitter";
+import YoutubeLogo from "@/lib/icons/youtube";
 import { useAuth } from "@/contexts/AuthContext";
 import { getProfileShareUrl, getPublicOrigin } from "@/lib/getPublicOrigin";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +39,64 @@ type Platform =
   | "soundcloud"
   | "ytmusic";
 
+type BrandIconProps = { className?: string };
+
+function TikTokLogo({ className }: BrandIconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M16.6 2c.4 2.4 1.8 4 4.1 4.2v3.4c-1.6.1-3.1-.4-4.4-1.3v6.4c0 4.2-2.5 7.1-6.4 7.1-3.5 0-6.3-2.4-6.3-5.8 0-3.6 2.9-6.1 6.8-5.8v3.5c-1.7-.3-3 .6-3 2.1 0 1.4 1.1 2.3 2.5 2.3 1.7 0 2.7-1 2.7-3.4V2h4Z" />
+    </svg>
+  );
+}
+
+function SnapchatLogo({ className }: BrandIconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M12 2.2c-3 0-5.2 2.2-5.2 5.3 0 .6.1 1.2.2 1.7-.4.2-.9.3-1.4.3-.8 0-1.2.9-.6 1.5.7.7 1.5 1.1 2.3 1.3-.3 1.1-1.1 2-2.3 2.5-.7.3-.7 1.3 0 1.7.7.4 1.5.6 2.3.6.2.5.4 1.1.6 1.6.2.5.7.7 1.2.6.8-.2 1.5-.3 2.1 0 .5.2 1 .7 1.8.7s1.3-.5 1.8-.7c.6-.3 1.3-.2 2.1 0 .5.1 1-.1 1.2-.6.2-.5.4-1.1.6-1.6.8 0 1.6-.2 2.3-.6.7-.4.7-1.4 0-1.7-1.2-.5-2-1.4-2.3-2.5.8-.2 1.6-.6 2.3-1.3.6-.6.2-1.5-.6-1.5-.5 0-1-.1-1.4-.3.1-.5.2-1.1.2-1.7 0-3.1-2.2-5.3-5.2-5.3Z" />
+    </svg>
+  );
+}
+
+function TelegramLogo({ className }: BrandIconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M21.7 3.4 18.5 20c-.2 1.1-.9 1.4-1.8.9l-5-3.7-2.4 2.3c-.3.3-.5.5-1 .5l.4-5.1L18 6.5c.4-.4-.1-.6-.6-.2L5.9 13.5 1 12c-1.1-.3-1.1-1.1.2-1.6L20.4 3c.9-.3 1.6.2 1.3.4Z" />
+    </svg>
+  );
+}
+
+function SpotifyLogo({ className }: BrandIconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm4.6 14.4c-.2.3-.6.4-.9.2-2.5-1.5-5.6-1.8-9.3-1-.4.1-.7-.1-.8-.5-.1-.4.1-.7.5-.8 4-.9 7.5-.5 10.3 1.1.3.3.4.7.2 1Zm1.2-2.7c-.3.4-.7.5-1.1.3-2.8-1.7-7.2-2.2-10.5-1.2-.4.1-.9-.1-1-.6-.1-.4.1-.9.6-1 3.8-1.1 8.7-.6 12 1.4.4.2.5.7.2 1.1Zm.1-2.8C14.5 8.9 8.8 8.7 5.6 9.7c-.5.2-1-.1-1.2-.6-.2-.5.1-1 .6-1.2 3.7-1.1 10-.9 13.9 1.4.5.3.6.9.3 1.3-.3.5-.8.6-1.3.3Z" />
+    </svg>
+  );
+}
+
+function AppleMusicLogo({ className }: BrandIconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M18.8 3.1c.4.3.7.8.7 1.4v10.8c0 2.1-1.4 3.4-3.4 3.4-1.6 0-2.8-.9-2.8-2.2s1.1-2.3 2.8-2.3c.5 0 1 .1 1.4.3V8.2l-8.6 1.7v7.5c0 2.1-1.4 3.4-3.4 3.4-1.6 0-2.8-.9-2.8-2.2s1.1-2.3 2.8-2.3c.5 0 .9.1 1.4.3V7c0-.8.5-1.5 1.3-1.7l8.8-1.8c.6-.1 1.2 0 1.8.4Z" />
+    </svg>
+  );
+}
+
+function SoundCloudLogo({ className }: BrandIconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M9.7 8.5c.3 0 .5.2.5.5v8.4c0 .3-.2.5-.5.5s-.5-.2-.5-.5V9c0-.3.2-.5.5-.5Zm-2 .9c.3 0 .5.2.5.5v7.5c0 .3-.2.5-.5.5s-.5-.2-.5-.5V9.9c0-.3.2-.5.5-.5Zm-2 .9c.3 0 .5.2.5.5v6.6c0 .3-.2.5-.5.5s-.5-.2-.5-.5v-6.6c0-.3.2-.5.5-.5Zm-2 .9c.3 0 .5.2.5.5v5.7c0 .3-.2.5-.5.5s-.5-.2-.5-.5v-5.7c0-.3.2-.5.5-.5Zm8-4c2.9 0 5.3 2.1 5.8 4.9.3-.1.7-.2 1.1-.2 2.1 0 3.8 1.7 3.8 3.8s-1.7 3.8-3.8 3.8h-6.9c-.3 0-.5-.2-.5-.5V7.7c0-.3.2-.5.5-.5Z" />
+    </svg>
+  );
+}
+
+function YouTubeMusicLogo({ className }: BrandIconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 3.2a6.8 6.8 0 1 1 0 13.6 6.8 6.8 0 0 1 0-13.6Zm-2.2 3.7v6.2l5.3-3.1-5.3-3.1Z" />
+    </svg>
+  );
+}
+
 const PLATFORMS: {
   id: Platform;
   label: string;
@@ -53,19 +106,19 @@ const PLATFORMS: {
   prefix: string;
   placeholder: string;
 }[] = [
-  { id: "facebook",  label: "Facebook",  icon: LinkIcon,  color: "bg-[#1877F2]",                                    prefix: "https://facebook.com/",   placeholder: "yourname" },
+  { id: "facebook",  label: "Facebook",  icon: FacebookLogo, color: "bg-[#1877F2]",                                  prefix: "https://facebook.com/",   placeholder: "yourname" },
   { id: "onlyfans",  label: "OnlyFans",  icon: Heart,     brandImage: onlyfansLogo, color: "bg-white",                prefix: "https://onlyfans.com/",   placeholder: "yourname" },
-  { id: "instagram", label: "Instagram", icon: Camera,    color: "bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF]", prefix: "https://instagram.com/", placeholder: "yourname" },
-  { id: "x",         label: "X",         icon: AtSign,    color: "bg-black",                                        prefix: "https://x.com/",          placeholder: "yourname" },
-  { id: "tiktok",    label: "TikTok",    icon: Music2,    color: "bg-black",                                        prefix: "https://tiktok.com/@",    placeholder: "yourname" },
-  { id: "youtube",   label: "YouTube",   icon: CirclePlay, color: "bg-[#FF0000]",                                   prefix: "https://youtube.com/@",   placeholder: "yourchannel" },
-  { id: "snapchat",  label: "Snapchat",  icon: Hash,      color: "bg-[#FFFC00] text-black",                         prefix: "https://snapchat.com/add/", placeholder: "yourname" },
-  { id: "telegram",  label: "Telegram",  icon: Send,      color: "bg-[#229ED9]",                                    prefix: "https://t.me/",           placeholder: "yourname" },
-  { id: "linkedin",  label: "LinkedIn",  icon: BriefcaseBusiness, color: "bg-[#0A66C2]",                            prefix: "https://linkedin.com/in/", placeholder: "yourname" },
-  { id: "spotify",    label: "Spotify",     icon: Disc,        color: "bg-[#1DB954]", prefix: "https://open.spotify.com/user/",  placeholder: "your-spotify-id or paste track URL" },
-  { id: "applemusic", label: "Apple Music", icon: Headphones,  color: "bg-[#FA243C]", prefix: "https://music.apple.com/profile/", placeholder: "your-apple-id or paste song URL" },
-  { id: "soundcloud", label: "SoundCloud",  icon: Music,       color: "bg-[#FF5500]", prefix: "https://soundcloud.com/",          placeholder: "yourname or paste track URL" },
-  { id: "ytmusic",    label: "YT Music",    icon: Music2,      color: "bg-[#FF0000]", prefix: "https://music.youtube.com/channel/", placeholder: "channel id or paste song URL" },
+  { id: "instagram", label: "Instagram", icon: InstagramLogo, color: "bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF]", prefix: "https://instagram.com/", placeholder: "yourname" },
+  { id: "x",         label: "X",         icon: XLogo,        color: "bg-black",                                      prefix: "https://x.com/",          placeholder: "yourname" },
+  { id: "tiktok",    label: "TikTok",    icon: TikTokLogo,   color: "bg-black",                                      prefix: "https://tiktok.com/@",    placeholder: "yourname" },
+  { id: "youtube",   label: "YouTube",   icon: YoutubeLogo,  color: "bg-[#FF0000]",                                  prefix: "https://youtube.com/@",   placeholder: "yourchannel" },
+  { id: "snapchat",  label: "Snapchat",  icon: SnapchatLogo, color: "bg-[#FFFC00] text-black",                       prefix: "https://snapchat.com/add/", placeholder: "yourname" },
+  { id: "telegram",  label: "Telegram",  icon: TelegramLogo, color: "bg-[#229ED9]",                                  prefix: "https://t.me/",           placeholder: "yourname" },
+  { id: "linkedin",  label: "LinkedIn",  icon: LinkedinLogo, color: "bg-[#0A66C2]",                                  prefix: "https://linkedin.com/in/", placeholder: "yourname" },
+  { id: "spotify",    label: "Spotify",     icon: SpotifyLogo,      color: "bg-[#1DB954]", prefix: "https://open.spotify.com/user/",  placeholder: "your-spotify-id or paste track URL" },
+  { id: "applemusic", label: "Apple Music", icon: AppleMusicLogo,   color: "bg-[#FA243C]", prefix: "https://music.apple.com/profile/", placeholder: "your-apple-id or paste song URL" },
+  { id: "soundcloud", label: "SoundCloud",  icon: SoundCloudLogo,   color: "bg-[#FF5500]", prefix: "https://soundcloud.com/",          placeholder: "yourname or paste track URL" },
+  { id: "ytmusic",    label: "YT Music",    icon: YouTubeMusicLogo, color: "bg-[#FF0000]", prefix: "https://music.youtube.com/channel/", placeholder: "channel id or paste song URL" },
 ];
 
 export interface SocialCardPayload {
@@ -216,7 +269,7 @@ export default function ChatSocialShareSheet({ open, onClose, onShareLink, onSha
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
             className="fixed left-0 right-0 bottom-0 z-[1501] bg-background rounded-t-3xl shadow-2xl border-t border-border/30 max-h-[85vh] overflow-hidden flex flex-col"
-            style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}
+            style={{ paddingBottom: "max(var(--zivo-safe-bottom,0px), 0.5rem)" }}
           >
             <div className="flex items-center justify-between px-4 pt-3 pb-2">
               <div className="w-10 h-1.5 rounded-full bg-muted mx-auto" />

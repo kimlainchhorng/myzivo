@@ -410,7 +410,7 @@ const FlightCheckout = () => {
 
       {/* Mobile sticky CTA - only show before payment form */}
       {!showPaymentForm && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur-xl border-t border-border/50 safe-bottom">
+        <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur-xl border-t border-border/50 safe-area-bottom">
           <div className="px-4 py-3 flex items-center gap-3">
             <div className="flex-1 min-w-0">
               <p className="text-[10px] text-muted-foreground leading-tight">Total</p>

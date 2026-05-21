@@ -726,18 +726,18 @@ const AppHome = () => {
           photos. Without this strip, scrolled content slides BEHIND the Dynamic
           Island / status bar and the clock, battery, and signal icons collide
           with whatever cards happen to be at the top of the viewport. A fixed
-          blurred bar covering exactly env(safe-area-inset-top) keeps that area
+          blurred bar covering exactly var(--zivo-safe-top,0px) keeps that area
           legible without forcing the rest of the page to lose the edge-to-edge
           feel. */}
       <div
         aria-hidden
-        className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl pointer-events-none [height:env(safe-area-inset-top,0px)]"
+        className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl pointer-events-none [height:var(--zivo-safe-top,0px)]"
       />
 
       {/* 3D Ambient orbs — contained within scrollable area only */}
 
       {/* Scrollable content */}
-      <div className="scroll-momentum relative z-10 [padding-bottom:calc(56px+env(safe-area-inset-bottom,0px)+24px)]">
+      <div className="scroll-momentum relative z-10 [padding-bottom:calc(56px+var(--zivo-safe-bottom,0px)+24px)]">
         {shouldShowHomeRecovery ? (
           <LoadFailureCard
             className="px-4 pt-safe pb-6"

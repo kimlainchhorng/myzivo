@@ -65,7 +65,7 @@ function PublicPostOverlay({
       data-testid="public-post-overlay-body"
       className="fixed inset-0 z-[9999] bg-background/95 backdrop-blur-sm flex flex-col overflow-y-auto"
       style={{
-        paddingTop: "max(env(safe-area-inset-top, 0px), var(--zivo-safe-top-overlay, 60px))",
+        paddingTop: "max(var(--zivo-safe-top,0px), var(--zivo-safe-top-overlay, 60px))",
       }}
     >
       <SwipeGrabHandle
@@ -942,7 +942,7 @@ export default function PublicProfilePage() {
   const profileAvatar = resolvedProfile?.avatar_url || undefined;
 
   return (
-    <PullToRefresh onRefresh={handlePullRefresh} className="zivo-shell-mobile bg-background pb-[calc(4.25rem+env(safe-area-inset-bottom,0px))]">
+    <PullToRefresh onRefresh={handlePullRefresh} className="zivo-shell-mobile bg-background pb-[calc(4.25rem+var(--zivo-safe-bottom,0px))]">
       <SEOHead
         title={`${profileName} – ${brand}`}
         description={profileBio}

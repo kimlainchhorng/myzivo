@@ -527,7 +527,7 @@ export function GroceryProductDetail({
             {/* ── Sticky Bottom CTA ── */}
             <div
               className="shrink-0 border-t border-border/20 bg-card/95 backdrop-blur-xl"
-              style={{ paddingBottom: "max(env(safe-area-inset-bottom, 12px), 12px)" }}
+              style={{ paddingBottom: "max(var(--zivo-safe-bottom,12px), 12px)" }}
             >
               {!product.inStock ? (
                 <div className="px-5 py-4">

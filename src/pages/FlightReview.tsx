@@ -879,10 +879,11 @@ const FlightReview = () => {
       {/* Sticky mobile CTA — 3D glassmorphic */}
       <div className="fixed bottom-0 left-0 right-0 z-30 sm:hidden">
         <div
-          className="backdrop-blur-2xl border-t border-[hsl(var(--flights))]/10 px-4 py-3.5 safe-area-bottom"
+          className="backdrop-blur-2xl border-t border-[hsl(var(--flights))]/10 px-4 py-3.5"
           style={{
             background: "hsl(var(--card)/0.85)",
             boxShadow: "0 -8px 24px -4px hsl(var(--flights)/0.08), inset 0 1px 0 hsl(var(--background)/0.5)",
+            paddingBottom: "calc(var(--zivo-safe-bottom,0px) + 0.875rem)",
           }}
         >
           <div className="flex items-center justify-between gap-3">

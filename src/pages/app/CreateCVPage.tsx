@@ -28,6 +28,44 @@ function downloadBlob(blob: Blob, filename: string) {
   // Revoke later so the browser has time to start the download
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
+
+async function blobToBase64(blob: Blob) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error);
+    reader.onload = () => {
+      const result = String(reader.result || "");
+      resolve(result.split(",", 2)[1] || "");
+    };
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function exportBlob(blob: Blob, filename: string, dialogTitle: string) {
+  try {
+    const { Capacitor } = await import("@capacitor/core");
+    if (Capacitor.isNativePlatform()) {
+      const { Filesystem, Directory } = await import("@capacitor/filesystem");
+      const { Share } = await import("@capacitor/share");
+      const written = await Filesystem.writeFile({
+        path: filename,
+        data: await blobToBase64(blob),
+        directory: Directory.Cache,
+      });
+      await Share.share({
+        title: filename,
+        files: [written.uri],
+        dialogTitle,
+      });
+      return;
+    }
+  } catch (error: any) {
+    const message = String(error?.message || "").toLowerCase();
+    if (message.includes("cancel") || message.includes("dismiss")) return;
+    console.warn("Native export unavailable, falling back to web download", error);
+  }
+  downloadBlob(blob, filename);
+}
 import {
   ArrowLeft, Plus, Trash2, User, Briefcase, GraduationCap,
   Wrench, Globe, Award, Save, FileText, Link2, Linkedin,
@@ -60,6 +98,7 @@ const CV_TEMPLATES = [
   { id: "tech", name: "Tech", desc: "Mono dev style", color: "#22c55e", gradient: "from-green-500 to-emerald-700" },
 ] as const;
 type TemplateId = typeof CV_TEMPLATES[number]["id"];
+type ExportFormat = "pdf" | "word" | "excel";
 
 /* ── Types ────────────────────────────────────────── */
 interface WorkExperience {
@@ -1211,13 +1250,18 @@ const CreateCVPage = () => {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    personal: true, experience: true, education: true, skills: true,
-    languages: true, certifications: false, references: false, hobbies: false, coverLetter: false,
+    personal: true, experience: false, education: false, skills: false,
+    languages: false, certifications: false, references: false, hobbies: false, coverLetter: false,
   });
+  const [showDesignPanel, setShowDesignPanel] = useState(false);
+  const [showInlinePreview, setShowInlinePreview] = useState(false);
+  const [activeWorkflow, setActiveWorkflow] = useState("personal");
+  const [exportFormat, setExportFormat] = useState<ExportFormat>("pdf");
   const [completionPct, setCompletionPct] = useState(0);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialLoadDone = useRef(false);
   const exportRef = useRef<HTMLDivElement>(null);
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   /* ── Load existing CV ────────────────────────────── */
   const applyCvData = useCallback((data: any) => {
@@ -1384,7 +1428,7 @@ const CreateCVPage = () => {
   useEffect(() => {
     if (!initialLoadDone.current) return;
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => { doSave(true); }, 1500);
+    autoSaveTimer.current = setTimeout(() => { doSave(true); }, 3000);
     return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
   }, [fullName, dateOfBirth, jobTitle, email, phone, location, nationality, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies, doSave]);
 
@@ -1416,6 +1460,44 @@ const CreateCVPage = () => {
   const inputCls = "w-full px-3 py-2.5 rounded-xl border border-border/40 bg-card text-[13px] placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all shadow-sm";
   const lblCls = "text-[10px] font-semibold text-muted-foreground/80 mb-0.5 block uppercase tracking-wider";
   const cardCls = "relative rounded-xl border border-border/30 bg-card/80 p-3 space-y-2.5 shadow-sm";
+
+  const workflowSteps = [
+    { key: "personal", label: "Profile", icon: User },
+    { key: "experience", label: "Work", icon: Briefcase },
+    { key: "education", label: "School", icon: GraduationCap },
+    { key: "skills", label: "Skills", icon: Wrench },
+    { key: "languages", label: "Languages", icon: Globe },
+    { key: "design", label: "Preview", icon: Palette },
+  ];
+
+  const missingItems = [
+    !fullName.trim() && { key: "personal", label: "Add your name" },
+    !jobTitle.trim() && { key: "personal", label: "Add a headline" },
+    !email.trim() && { key: "personal", label: "Add email" },
+    !phone.trim() && { key: "personal", label: "Add phone" },
+    !summary.trim() && { key: "personal", label: "Write summary" },
+    !experiences.some(e => e.position.trim() || e.company.trim()) && { key: "experience", label: "Add work experience" },
+    !educations.some(e => e.school.trim() || e.degree.trim()) && { key: "education", label: "Add education" },
+    skills.filter(s => s.name.trim()).length < 3 && { key: "skills", label: "Add 3 skills" },
+    !languages.some(l => l.name.trim()) && { key: "languages", label: "Add language" },
+  ].filter(Boolean) as Array<{ key: string; label: string }>;
+
+  const openWorkflowStep = useCallback((key: string) => {
+    if (key === "design") {
+      setShowDesignPanel(true);
+      setShowInlinePreview(true);
+      setActiveWorkflow(key);
+      setTimeout(() => sectionRefs.current.design?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+      return;
+    }
+    setExpandedSections(prev => ({ ...prev, [key]: true }));
+    setActiveWorkflow(key);
+    setTimeout(() => sectionRefs.current[key]?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+  }, []);
+
+  const openNextMissingStep = useCallback(() => {
+    openWorkflowStep(missingItems[0]?.key || "design");
+  }, [missingItems, openWorkflowStep]);
 
   if (loading) {
     return (
@@ -1454,7 +1536,7 @@ const CreateCVPage = () => {
       pdf.text(line, margin, y);
       y += 5.5;
     }
-    downloadBlob(pdf.output("blob"), `cover-letter-${(fullName || "cover-letter").replace(/\s+/g, "-").toLowerCase()}.pdf`);
+    await exportBlob(pdf.output("blob"), `cover-letter-${(fullName || "cover-letter").replace(/\s+/g, "-").toLowerCase()}.pdf`, "Export cover letter");
   };
 
   const handleShare = () => {
@@ -1549,8 +1631,8 @@ const CreateCVPage = () => {
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)/g, "") || "cv";
 
-      downloadBlob(pdf.output("blob"), `${fileBaseName}-a4.pdf`);
-      toast.success("PDF downloaded");
+      await exportBlob(pdf.output("blob"), `${fileBaseName}-a4.pdf`, "Export CV PDF");
+      toast.success("PDF ready");
     } catch (error) {
       console.error(error);
       toast.error("Failed to download PDF");
@@ -1622,8 +1704,8 @@ const CreateCVPage = () => {
 
       const doc = new Document({ sections: [{ children }] });
       const blob = await Packer.toBlob(doc);
-      downloadBlob(blob, `${fileBaseName()}.docx`);
-      toast.success("Word document downloaded");
+      await exportBlob(blob, `${fileBaseName()}.docx`, "Export CV Word document");
+      toast.success("Word document ready");
     } catch (err) {
       console.error(err);
       toast.error("Failed to download Word file");
@@ -1632,7 +1714,7 @@ const CreateCVPage = () => {
     }
   };
 
-  const handleDownloadExcel = () => {
+  const handleDownloadExcel = async () => {
     try {
       setDownloading(true);
       const esc = (v: string) => `"${String(v ?? "").replace(/"/g, '""')}"`;
@@ -1672,8 +1754,8 @@ const CreateCVPage = () => {
 
       const csv = "\uFEFF" + rows.map(r => r.map(esc).join(",")).join("\n");
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      downloadBlob(blob, `${fileBaseName()}.csv`);
-      toast.success("Excel (CSV) downloaded");
+      await exportBlob(blob, `${fileBaseName()}.csv`, "Export CV spreadsheet");
+      toast.success("Excel file ready");
     } catch (err) {
       console.error(err);
       toast.error("Failed to download Excel");
@@ -1682,30 +1764,52 @@ const CreateCVPage = () => {
     }
   };
 
+  const ensureExportReady = () => {
+    if (!fullName.trim()) {
+      toast.error("Add your name before exporting");
+      openWorkflowStep("personal");
+      return false;
+    }
+    if (completionPct < 20) {
+      toast.error("Add a little more CV info first");
+      openNextMissingStep();
+      return false;
+    }
+    return true;
+  };
+
+  const handleExportSelected = async () => {
+    if (!ensureExportReady()) return;
+    if (exportFormat === "pdf") await handleDownloadPDF();
+    if (exportFormat === "word") await handleDownloadWord();
+    if (exportFormat === "excel") await handleDownloadExcel();
+  };
+
   return (
     <AppLayout title="Create CV" hideHeader>
-      <div className="flex flex-col px-4 pt-3 pb-28">
+      <div className="flex flex-col px-4 pt-3 pb-32 bg-gradient-to-b from-background via-muted/10 to-background min-h-full">
         {/* Header */}
-        <div className="flex items-center gap-2.5 mb-4">
-          <button type="button" onClick={() => navigate(-1)} aria-label="Go back" className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center touch-manipulation active:scale-90 transition-transform">
+        <div className="sticky top-0 z-20 -mx-4 px-4 pt-2 pb-3 mb-3 bg-background/92 backdrop-blur-xl border-b border-border/10">
+          <div className="flex items-center gap-2.5">
+            <button type="button" onClick={() => navigate(-1)} aria-label="Go back" className="w-9 h-9 rounded-full bg-muted/70 flex items-center justify-center touch-manipulation active:scale-90 transition-transform">
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-base leading-tight">Create CV</h1>
+            <h1 className="font-bold text-lg leading-tight">CV Studio</h1>
             <div className="flex items-center gap-1.5">
               {autoSaveStatus === "saving" && (
-                <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
+                <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
                   <Loader2 className="w-2 h-2 animate-spin" /> Saving…
                 </span>
               )}
               {autoSaveStatus === "saved" && (
-                <span className="flex items-center gap-0.5 text-[9px] text-emerald-500">
+                <span className="flex items-center gap-1 text-[10px] text-emerald-500">
                   <Check className="w-2 h-2" /> Saved
                 </span>
               )}
               {autoSaveStatus === "idle" && (
-                <span className="text-[9px] text-muted-foreground/50">
-                  {lastSaved ? `Saved ${lastSaved.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Resume builder"}
+                <span className="text-[10px] text-muted-foreground/70">
+                  {lastSaved ? `Saved ${lastSaved.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Build a job-ready resume"}
                 </span>
               )}
             </div>
@@ -1719,53 +1823,27 @@ const CreateCVPage = () => {
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             {saving ? "Saving…" : "Save"}
           </button>
+          </div>
         </div>
 
-        {/* Completion bar */}
-        <div className="flex items-center gap-2 mb-3 px-1">
-          <div className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${completionPct}%` }}
-              className={cn("h-full rounded-full", completionPct >= 80 ? "bg-emerald-500" : completionPct >= 40 ? "bg-amber-500" : "bg-muted-foreground/40")}
-            />
+        {/* Guided progress */}
+        <div className="mb-4 rounded-2xl border border-border/30 bg-card/90 p-4 shadow-sm">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/70">Resume workflow</p>
+              <h2 className="mt-1 text-xl font-black leading-tight">
+                {completionPct >= 90 ? "Ready to export" : missingItems[0]?.label || "Choose your final design"}
+              </h2>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                {completionPct >= 90 ? "Preview the CV, then export PDF, Word, or CSV." : "Follow the steps below. Each section opens only when you need it."}
+              </p>
+            </div>
+            <div className="shrink-0 rounded-2xl bg-primary/10 px-3 py-2 text-center">
+              <span className="block text-lg font-black text-primary">{completionPct}%</span>
+              <span className="block text-[9px] font-bold uppercase tracking-wide text-primary/70">Done</span>
+            </div>
           </div>
-          <span className="text-[9px] text-muted-foreground font-medium shrink-0">{completionPct}% complete</span>
-        </div>
-
-        {/* Legacy auto-save area (keep for spacing) */}
-        <div className="hidden">
-          {autoSaveStatus === "idle" && lastSaved && (
-            <span className="text-[9px] text-muted-foreground/50">
-              Last saved {lastSaved.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-            </span>
-          )}
-        </div>
-
-        {/* CV Switcher */}
-        {(cvList.length > 1 || cvList.length === 0) && (
-          <div className="mb-3 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
-            <button type="button" onClick={createNewCv}
-              className="shrink-0 flex items-center gap-1 h-7 px-3 rounded-full border border-dashed border-primary/50 text-[11px] font-semibold text-primary touch-manipulation active:scale-95 transition-all">
-              <Plus className="w-3 h-3" />New
-            </button>
-            {cvList.map(cv => (
-              <button type="button" key={cv.id} onClick={() => switchCv(cv.id)}
-                className={cn("shrink-0 h-7 px-3 rounded-full border text-[11px] font-semibold touch-manipulation active:scale-95 transition-all truncate max-w-[120px]",
-                  cv.id === cvId ? "border-primary bg-primary/10 text-primary" : "border-border/40 text-foreground/70 bg-card")}>
-                {cv.full_name || "Untitled CV"}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Completion bar */}
-        <div className="mb-4 bg-card rounded-xl p-3 border border-border/20 shadow-sm">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-semibold text-muted-foreground">Profile completeness</span>
-            <span className="text-[11px] font-bold text-primary">{completionPct}%</span>
-          </div>
-          <div className="h-2 rounded-full bg-muted/40 overflow-hidden">
+          <div className="mt-3 h-2 rounded-full bg-muted/60 overflow-hidden">
             <motion.div
               className={cn(
                 "h-full rounded-full transition-colors",
@@ -1776,11 +1854,77 @@ const CreateCVPage = () => {
               transition={{ duration: 0.5 }}
             />
           </div>
-          <p className="text-[9px] text-muted-foreground/60 mt-1">
-            {completionPct < 40 ? "Add more details for a stronger CV" : completionPct < 70 ? "Good progress! Keep going" : completionPct < 100 ? "Almost complete!" : "Your CV is complete! 🎉"}
-          </p>
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
+            {workflowSteps.map(step => {
+              const Icon = step.icon;
+              const active = activeWorkflow === step.key;
+              const ready = step.key === "design"
+                ? completionPct >= 60
+                : !missingItems.some(item => item.key === step.key);
+              return (
+                <button
+                  type="button"
+                  key={step.key}
+                  onClick={() => openWorkflowStep(step.key)}
+                  className={cn(
+                    "shrink-0 h-10 rounded-full border px-3 text-[11px] font-bold flex items-center gap-1.5 touch-manipulation active:scale-95 transition-all",
+                    active ? "border-primary bg-primary text-primary-foreground shadow-sm" : "border-border/40 bg-background text-foreground/75"
+                  )}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {step.label}
+                  {ready && <Check className={cn("w-3 h-3", active ? "text-primary-foreground" : "text-emerald-500")} />}
+                </button>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            onClick={openNextMissingStep}
+            className="mt-3 h-10 w-full rounded-xl bg-foreground text-background text-sm font-black touch-manipulation active:scale-[0.98] transition-transform"
+          >
+            {missingItems[0] ? `Continue: ${missingItems[0].label}` : "Open preview and design"}
+          </button>
         </div>
 
+        {/* CV Switcher */}
+        <div className="mb-4 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
+          <button type="button" onClick={createNewCv}
+            className="shrink-0 flex items-center gap-1 h-8 px-3 rounded-full border border-dashed border-primary/50 text-[11px] font-semibold text-primary bg-primary/5 touch-manipulation active:scale-95 transition-all">
+            <Plus className="w-3 h-3" />New CV
+          </button>
+          {cvList.map(cv => (
+            <button type="button" key={cv.id} onClick={() => switchCv(cv.id)}
+              className={cn("shrink-0 h-8 px-3 rounded-full border text-[11px] font-semibold touch-manipulation active:scale-95 transition-all truncate max-w-[150px]",
+                cv.id === cvId ? "border-primary bg-primary text-primary-foreground shadow-sm" : "border-border/40 text-foreground/70 bg-card")}>
+              {cv.full_name || "Untitled CV"}
+            </button>
+          ))}
+        </div>
+
+        {/* Design controls */}
+        <div ref={el => { sectionRefs.current.design = el; }} className="mb-4 rounded-2xl border border-border/30 bg-card/80 p-3 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <Palette className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-black">Design & preview</p>
+              <p className="text-[11px] text-muted-foreground truncate">{CV_TEMPLATES.find(t => t.id === selectedTemplate)?.name || "Classic"} template</p>
+            </div>
+            <button type="button" onClick={() => setShowPreview(true)}
+              className="h-9 px-3 rounded-xl border border-border/40 bg-background text-[11px] font-bold touch-manipulation active:scale-95 transition-transform">
+              Preview
+            </button>
+            <button type="button" onClick={() => setShowDesignPanel(v => !v)}
+              className="h-9 px-3 rounded-xl bg-primary text-primary-foreground text-[11px] font-bold touch-manipulation active:scale-95 transition-transform">
+              {showDesignPanel ? "Hide" : "Edit"}
+            </button>
+          </div>
+        </div>
+
+        {showDesignPanel && (
+          <>
         {/* Template Selector */}
         <div className="mb-4 sm:mb-6">
           <div className="flex items-center justify-between mb-2 sm:mb-3">
@@ -1943,7 +2087,17 @@ const CreateCVPage = () => {
           </div>
         </div>
 
+        <button
+          type="button"
+          onClick={() => setShowInlinePreview(v => !v)}
+          className="mb-4 h-10 w-full rounded-xl border border-border/40 bg-card text-[12px] font-bold text-foreground flex items-center justify-center gap-2 touch-manipulation active:scale-[0.98] transition-transform"
+        >
+          <Eye className="w-3.5 h-3.5 text-primary" />
+          {showInlinePreview ? "Hide live preview" : "Show live preview"}
+        </button>
+
         {/* Live Preview (inline) — instantly reflects template + style */}
+        {showInlinePreview && (
         <div className="mb-4 rounded-2xl border border-border/30 bg-card/60 overflow-hidden">
           <div className="flex items-center justify-between px-3 py-2 border-b border-border/20 bg-muted/30">
             <div className="flex items-center gap-1.5">
@@ -1964,11 +2118,15 @@ const CreateCVPage = () => {
             </div>
           </div>
         </div>
+        )}
+          </>
+        )}
 
         {/* Progress Tips */}
         <ProgressTips data={previewData} />
 
         {/* ── PERSONAL INFO ── */}
+        <div ref={el => { sectionRefs.current.personal = el; }}>
         <SectionHeader icon={User} title="Personal Information" sectionKey="personal" expanded={expandedSections.personal} onToggle={toggle} />
         <AnimatePresence>
           {expandedSections.personal && (
@@ -2054,11 +2212,17 @@ const CreateCVPage = () => {
                   <textarea className={cn(inputCls, "min-h-[70px] resize-none")} placeholder="Experienced professional with expertise in..." value={summary} onChange={e => setSummary(e.target.value)} />
                 </div>
               </div>
+              <button type="button" onClick={() => openWorkflowStep("experience")}
+                className="mt-3 h-10 w-full rounded-xl bg-foreground text-background text-[12px] font-bold touch-manipulation active:scale-[0.98] transition-transform">
+                Next: Work Experience
+              </button>
             </CollapseWrap>
           )}
         </AnimatePresence>
+        </div>
 
         {/* ── EXPERIENCE ── */}
+        <div ref={el => { sectionRefs.current.experience = el; }}>
         <SectionHeader icon={Briefcase} title="Work Experience" sectionKey="experience" expanded={expandedSections.experience} onToggle={toggle} count={experiences.filter(e => e.position).length} />
         <AnimatePresence>
           {expandedSections.experience && (
@@ -2085,11 +2249,17 @@ const CreateCVPage = () => {
                 ))}
                 <AddBtn label="Add Experience" onClick={() => setExperiences(p => [...p, { id: uid(), company: "", position: "", startDate: "", endDate: "", current: false, description: "" }])} />
               </div>
+              <button type="button" onClick={() => openWorkflowStep("education")}
+                className="mt-3 h-10 w-full rounded-xl bg-foreground text-background text-[12px] font-bold touch-manipulation active:scale-[0.98] transition-transform">
+                Next: Education
+              </button>
             </CollapseWrap>
           )}
         </AnimatePresence>
+        </div>
 
         {/* ── EDUCATION ── */}
+        <div ref={el => { sectionRefs.current.education = el; }}>
         <SectionHeader icon={GraduationCap} title="Education" sectionKey="education" expanded={expandedSections.education} onToggle={toggle} count={educations.filter(e => e.school).length} />
         <AnimatePresence>
           {expandedSections.education && (
@@ -2113,11 +2283,17 @@ const CreateCVPage = () => {
                 ))}
                 <AddBtn label="Add Education" onClick={() => setEducations(p => [...p, { id: uid(), school: "", degree: "", field: "", startDate: "", endDate: "", gpa: "" }])} />
               </div>
+              <button type="button" onClick={() => openWorkflowStep("skills")}
+                className="mt-3 h-10 w-full rounded-xl bg-foreground text-background text-[12px] font-bold touch-manipulation active:scale-[0.98] transition-transform">
+                Next: Skills
+              </button>
             </CollapseWrap>
           )}
         </AnimatePresence>
+        </div>
 
         {/* ── SKILLS ── */}
+        <div ref={el => { sectionRefs.current.skills = el; }}>
         <SectionHeader icon={Wrench} title="Skills" sectionKey="skills" expanded={expandedSections.skills} onToggle={toggle} count={skills.filter(s => s.name).length} />
         <AnimatePresence>
           {expandedSections.skills && (
@@ -2179,11 +2355,17 @@ const CreateCVPage = () => {
                 })}
                 <AddBtn label="Add Skill" onClick={() => setSkills(p => [...p, { id: uid(), name: "", level: "Intermediate" }])} />
               </div>
+              <button type="button" onClick={() => openWorkflowStep("languages")}
+                className="mt-3 h-10 w-full rounded-xl bg-foreground text-background text-[12px] font-bold touch-manipulation active:scale-[0.98] transition-transform">
+                Next: Languages
+              </button>
             </CollapseWrap>
           )}
         </AnimatePresence>
+        </div>
 
         {/* ── LANGUAGES ── */}
+        <div ref={el => { sectionRefs.current.languages = el; }}>
         <SectionHeader icon={Globe} title="Languages" sectionKey="languages" expanded={expandedSections.languages} onToggle={toggle} count={languages.filter(l => l.name).length} />
         <AnimatePresence>
           {expandedSections.languages && (
@@ -2202,9 +2384,14 @@ const CreateCVPage = () => {
                 ))}
                 <AddBtn label="Add Language" onClick={() => setLanguages(p => [...p, { id: uid(), name: "", proficiency: "Conversational" }])} />
               </div>
+              <button type="button" onClick={() => openWorkflowStep("design")}
+                className="mt-3 h-10 w-full rounded-xl bg-foreground text-background text-[12px] font-bold touch-manipulation active:scale-[0.98] transition-transform">
+                Next: Design & Preview
+              </button>
             </CollapseWrap>
           )}
         </AnimatePresence>
+        </div>
 
         {/* ── CERTIFICATIONS ── */}
         <SectionHeader icon={Award} title="Certifications" sectionKey="certifications" expanded={expandedSections.certifications} onToggle={toggle} count={certifications.filter(c => c.name).length} />
@@ -2312,23 +2499,58 @@ const CreateCVPage = () => {
             </button>
           </div>
           {/* Export row */}
-          <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-0.5">Export & Share</p>
-          <div className="grid grid-cols-3 gap-2">
-            <button type="button" onClick={() => void handleDownloadPDF()} disabled={downloading}
-              className="h-11 rounded-xl border border-border/40 bg-card text-foreground text-[11px] font-semibold flex flex-col items-center justify-center gap-0.5 touch-manipulation active:scale-[0.97] transition-all disabled:opacity-60">
-              {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5 text-rose-500" />}
-              PDF
+          <div className="rounded-2xl border border-border/30 bg-card/90 p-3 shadow-sm space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/70">Export & share</p>
+                <p className="text-sm font-black">Choose file type</p>
+              </div>
+              <button type="button" onClick={() => setShowPreview(true)}
+                className="h-9 px-3 rounded-xl border border-border/40 bg-background text-[11px] font-bold flex items-center gap-1.5 touch-manipulation active:scale-95 transition-transform">
+                <Eye className="w-3.5 h-3.5" /> Check
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                { id: "pdf", label: "PDF", detail: "Best look", icon: Download, color: "text-rose-500" },
+                { id: "word", label: "Word", detail: "Editable", icon: FileText, color: "text-blue-600" },
+                { id: "excel", label: "Excel", detail: "Data", icon: FileSpreadsheet, color: "text-emerald-600" },
+              ] as const).map(option => {
+                const Icon = option.icon;
+                const active = exportFormat === option.id;
+                return (
+                  <button
+                    type="button"
+                    key={option.id}
+                    onClick={() => setExportFormat(option.id)}
+                    disabled={downloading}
+                    className={cn(
+                      "h-[70px] rounded-xl border text-left px-2.5 py-2 touch-manipulation active:scale-[0.97] transition-all disabled:opacity-60",
+                      active ? "border-primary bg-primary text-primary-foreground shadow-sm" : "border-border/40 bg-background text-foreground"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <Icon className={cn("w-4 h-4", active ? "text-primary-foreground" : option.color)} />
+                      {active && <Check className="w-3.5 h-3.5" />}
+                    </div>
+                    <span className="mt-2 block text-[12px] font-black">{option.label}</span>
+                    <span className={cn("block text-[9px] font-semibold", active ? "text-primary-foreground/75" : "text-muted-foreground")}>{option.detail}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleExportSelected()}
+              disabled={downloading}
+              className="h-12 w-full rounded-xl bg-foreground text-background font-black text-sm flex items-center justify-center gap-2 touch-manipulation active:scale-[0.98] transition-transform disabled:opacity-60"
+            >
+              {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              {downloading ? "Preparing export..." : `Export ${exportFormat === "excel" ? "Excel" : exportFormat.toUpperCase()}`}
             </button>
-            <button type="button" onClick={() => void handleDownloadWord()} disabled={downloading}
-              className="h-11 rounded-xl border border-border/40 bg-card text-foreground text-[11px] font-semibold flex flex-col items-center justify-center gap-0.5 touch-manipulation active:scale-[0.97] transition-all disabled:opacity-60">
-              <img src="https://cdn.simpleicons.org/microsoftword/2B579A" alt="" className="w-3.5 h-3.5" loading="lazy" />
-              Word
-            </button>
-            <button type="button" onClick={handleDownloadExcel} disabled={downloading}
-              className="h-11 rounded-xl border border-border/40 bg-card text-foreground text-[11px] font-semibold flex flex-col items-center justify-center gap-0.5 touch-manipulation active:scale-[0.97] transition-all disabled:opacity-60">
-              <img src="https://cdn.simpleicons.org/microsoftexcel/217346" alt="" className="w-3.5 h-3.5" loading="lazy" />
-              Excel
-            </button>
+            <p className="text-[10px] leading-relaxed text-muted-foreground">
+              On iPhone, ZIVO opens the native share sheet so you can save to Files, send in chat, or share anywhere.
+            </p>
           </div>
           <button type="button" onClick={handleShare}
             className="w-full h-10 rounded-xl border border-border/40 bg-card text-foreground text-[12px] font-semibold flex items-center justify-center gap-2 touch-manipulation active:scale-[0.97] transition-all">

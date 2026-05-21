@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Phone, PhoneOff, Video, MessageCircle } from "lucide-react";
+import { BellRing, Lock, MessageCircle, Phone, PhoneOff, Video } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
@@ -70,7 +70,12 @@ export default function IncomingCallListener() {
   const lastIncomingCallIdRef = useRef<string | null>(null);
   const originalTitleRef = useRef<string>(typeof document !== "undefined" ? document.title : "Zivo");
   const titleFlashTimerRef = useRef<number | null>(null);
+  const browserCallNotificationRef = useRef<Notification | null>(null);
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | "unsupported">(() => {
+    if (typeof Notification === "undefined") return "unsupported";
+    return Notification.permission;
+  });
 
   const mapIncomingCall = useCallback(async (call: { id: string; caller_id: string; call_type: "voice" | "video" }) => {
     const { data } = await dbFrom("profiles")
@@ -145,6 +150,98 @@ export default function IncomingCallListener() {
   }, []);
 
   useEffect(() => {
+    if (typeof Notification === "undefined") {
+      setNotificationPermission("unsupported");
+      return;
+    }
+
+    setNotificationPermission(Notification.permission);
+  }, []);
+
+  const closeBrowserCallNotification = useCallback(() => {
+    browserCallNotificationRef.current?.close();
+    browserCallNotificationRef.current = null;
+  }, []);
+
+  const showBrowserCallNotification = useCallback((call: IncomingCall) => {
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+
+    closeBrowserCallNotification();
+
+    try {
+      const notification = new Notification(`${call.caller_name}`, {
+        body: `${call.call_type === "video" ? "Video" : "Voice"} calling you on ZIVO`,
+        icon: call.caller_avatar || "/pwa-icons/icon-192x192.png",
+        badge: "/pwa-icons/icon-192x192.png",
+        tag: `incoming-call-${call.id}`,
+        renotify: true,
+        silent: false,
+        requireInteraction: true,
+        vibrate: [260, 120, 260, 640, 260],
+        data: {
+          type: "incoming_call",
+          call_id: call.id,
+          caller_id: call.caller_id,
+          sender_id: call.caller_id,
+          call_type: call.call_type,
+        },
+      } as NotificationOptions);
+
+      notification.onclick = () => {
+        window.focus();
+        notification.close();
+        window.dispatchEvent(new CustomEvent("incoming-call-push", {
+          detail: {
+            call_id: call.id,
+            caller_id: call.caller_id,
+            call_type: call.call_type,
+            caller_name: call.caller_name,
+            caller_avatar: call.caller_avatar || undefined,
+          },
+        }));
+      };
+
+      browserCallNotificationRef.current = notification;
+      window.setTimeout(() => {
+        if (browserCallNotificationRef.current === notification) {
+          closeBrowserCallNotification();
+        }
+      }, 45_000);
+    } catch {
+      // Browser notification APIs may be unavailable inside some embedded views.
+    }
+  }, [closeBrowserCallNotification]);
+
+  const handleEnableCallAlerts = useCallback(async () => {
+    try {
+      await primeCallAudio();
+    } catch {
+      // Audio unlock is best effort; permission is the important part here.
+    }
+
+    if (typeof Notification === "undefined") {
+      setNotificationPermission("unsupported");
+      toast.info("System call alerts are not available in this browser");
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    setNotificationPermission(permission);
+
+    if (permission === "granted") {
+      window.dispatchEvent(new Event("zivo-register-push"));
+      if (incoming) showBrowserCallNotification(incoming);
+      toast.success("Call alerts are on", {
+        description: "ZIVO can ring on screen and from the lock screen when the app is installed.",
+      });
+    } else {
+      toast.info("Call alerts are still off", {
+        description: "Enable notifications in browser settings to receive lock-screen calls.",
+      });
+    }
+  }, [incoming, showBrowserCallNotification]);
+
+  useEffect(() => {
     try {
       const raw = sessionStorage.getItem("pendingIncomingCallPush");
       if (!raw) return;
@@ -170,6 +267,16 @@ export default function IncomingCallListener() {
       sessionStorage.removeItem("pendingIncomingCallPush");
     }
   }, []);
+
+  useEffect(() => {
+    if (!user?.id || typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    const linkedCallId = params.get("incomingCall") || params.get("call_id");
+    if (!linkedCallId) return;
+
+    void hydratePendingIncomingCall(linkedCallId);
+  }, [hydratePendingIncomingCall, user?.id]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -299,8 +406,12 @@ export default function IncomingCallListener() {
   useEffect(() => {
     if (!incoming) return;
     const stopRing = playIncomingRingtone();
-    return () => { stopRing(); };
-  }, [incoming]);
+    showBrowserCallNotification(incoming);
+    return () => {
+      stopRing();
+      closeBrowserCallNotification();
+    };
+  }, [closeBrowserCallNotification, incoming, showBrowserCallNotification]);
 
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -334,7 +445,7 @@ export default function IncomingCallListener() {
       }
       document.title = originalTitleRef.current;
     };
-  }, [incoming]);
+  }, [closeBrowserCallNotification, incoming]);
 
   useEffect(() => {
     if (!incoming || Capacitor.isNativePlatform() || typeof navigator === "undefined" || !("vibrate" in navigator)) return;
@@ -348,7 +459,7 @@ export default function IncomingCallListener() {
       window.clearInterval(intervalId);
       navigator.vibrate?.(0);
     };
-  }, [incoming]);
+  }, [closeBrowserCallNotification, incoming]);
 
   useEffect(() => {
     if (!incoming || !Capacitor.isNativePlatform()) return;
@@ -370,12 +481,13 @@ export default function IncomingCallListener() {
           .update({ status: "missed", ended_at: new Date().toISOString() })
           .eq("id", incoming.id)
           .eq("status", "ringing");
+        closeBrowserCallNotification();
         setIncoming(null);
       })();
     }, 45000);
 
     return () => window.clearTimeout(timeout);
-  }, [incoming]);
+  }, [closeBrowserCallNotification, incoming]);
 
   useEffect(() => {
     if (!incoming) return;
@@ -390,13 +502,14 @@ export default function IncomingCallListener() {
       }, (payload: RealtimePayload<CallStatusRow>) => {
         const data = payload.new;
         if (data.status === "ended" || data.status === "declined") {
+          closeBrowserCallNotification();
           setIncoming(null);
         }
       })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [incoming]);
+  }, [closeBrowserCallNotification, incoming]);
 
   const handleAccept = useCallback(async () => {
     if (!incoming || isAccepting) return;
@@ -447,6 +560,7 @@ export default function IncomingCallListener() {
     if (confirmedStatus === "answered") {
       lastIncomingCallIdRef.current = incoming.id;
       setAnsweredCall(incoming);
+      closeBrowserCallNotification();
       setIncoming(null);
       setIsAccepting(false);
       return;
@@ -454,6 +568,7 @@ export default function IncomingCallListener() {
 
     if (confirmedStatus === "declined" || confirmedStatus === "missed" || confirmedStatus === "ended") {
       setIncoming(null);
+      closeBrowserCallNotification();
       setIsAccepting(false);
       return;
     }
@@ -462,14 +577,25 @@ export default function IncomingCallListener() {
       description: "Please answer again. Network may be unstable.",
     });
     setIsAccepting(false);
-  }, [incoming, isAccepting, user?.id]);
+  }, [closeBrowserCallNotification, incoming, isAccepting, user?.id]);
 
   const handleDecline = useCallback(async () => {
     if (!incoming) return;
     await dbFrom("call_signals")
       .update({ status: "declined", ended_at: new Date().toISOString() })
       .eq("id", incoming.id);
+    closeBrowserCallNotification();
     setIncoming(null);
+  }, [closeBrowserCallNotification, incoming]);
+
+  const handleMessageCaller = useCallback(() => {
+    if (!incoming) return;
+    try {
+      sessionStorage.setItem("pendingChatWith", incoming.caller_id);
+    } catch {
+      // Ignore storage errors; the URL still opens the chat.
+    }
+    window.location.href = `/chat?with=${encodeURIComponent(incoming.caller_id)}`;
   }, [incoming]);
 
   const handleCallEnd = useCallback(() => {
@@ -487,27 +613,37 @@ export default function IncomingCallListener() {
     <AnimatePresence>
       {incoming && (
         <motion.div
-          className="fixed inset-0 z-[9999] bg-black/35 backdrop-blur-md flex items-center justify-center px-6"
+          className="fixed inset-0 z-[9999] bg-black/45 backdrop-blur-xl flex items-end sm:items-center justify-center px-4 pb-[max(calc(var(--zivo-safe-bottom,0px)+1rem),1rem)] sm:pb-0"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
         >
           <motion.div
-            className="relative w-full max-w-sm rounded-3xl border border-white/20 bg-white/92 p-6 shadow-2xl"
-            initial={{ y: 24, scale: 0.96 }}
+            className="relative w-full max-w-sm overflow-hidden rounded-[2rem] border border-white/25 bg-background/96 p-5 shadow-2xl"
+            initial={{ y: 28, scale: 0.96 }}
             animate={{ y: 0, scale: 1 }}
             exit={{ y: 24, scale: 0.96 }}
             transition={{ type: "spring", damping: 24, stiffness: 260 }}
           >
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-primary/10 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/12 via-transparent to-transparent pointer-events-none" />
 
             <div className="relative flex flex-col items-center text-center gap-3">
+              <div className="inline-flex items-center gap-2 rounded-full bg-foreground/5 px-3 py-1 text-[11px] font-semibold text-muted-foreground">
+                <BellRing className="h-3.5 w-3.5 text-primary" />
+                <span>Ringing now</span>
+              </div>
+
               <div className="relative">
                 <motion.div
-                  className="absolute -inset-2 rounded-full border-2 border-primary/30"
-                  animate={{ scale: [1, 1.18, 1], opacity: [0.8, 0.2, 0.8] }}
-                  transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute -inset-4 rounded-full border-2 border-primary/25"
+                  animate={{ scale: [1, 1.28, 1], opacity: [0.75, 0.15, 0.75] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div
+                  className="absolute -inset-8 rounded-full border border-primary/15"
+                  animate={{ scale: [1, 1.22, 1], opacity: [0.5, 0, 0.5] }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: 0.25, ease: "easeInOut" }}
                 />
                 <Avatar className="h-20 w-20 border-2 border-primary/30 shadow-md">
                   <AvatarImage src={incoming.caller_avatar || undefined} />
@@ -526,31 +662,56 @@ export default function IncomingCallListener() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <MessageCircle className="w-3.5 h-3.5" />
-                <span>Tap answer to join</span>
+              <div className="grid w-full grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={handleMessageCaller}
+                  className="flex h-11 items-center justify-center gap-2 rounded-2xl bg-muted/70 text-xs font-semibold text-foreground active:scale-[0.98] transition-transform"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Message
+                </button>
+                {notificationPermission === "granted" ? (
+                  <div className="flex h-11 items-center justify-center gap-2 rounded-2xl bg-emerald-500/10 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                    <Lock className="h-4 w-4" />
+                    Alerts on
+                  </div>
+                ) : notificationPermission === "unsupported" ? (
+                  <div className="flex h-11 items-center justify-center rounded-2xl bg-muted/70 px-2 text-xs font-semibold text-muted-foreground">
+                    In-app only
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleEnableCallAlerts}
+                    className="flex h-11 items-center justify-center gap-2 rounded-2xl bg-primary/10 px-2 text-xs font-semibold text-primary active:scale-[0.98] transition-transform"
+                  >
+                    <Lock className="h-4 w-4" />
+                    Lock alerts
+                  </button>
+                )}
               </div>
 
-              <div className="w-full mt-2 flex items-center justify-center gap-6">
+              <div className="w-full mt-2 flex items-center justify-center gap-8">
                 <button type="button"
                   onClick={handleDecline}
                   aria-label="Decline incoming call"
                   title="Decline"
-                  className="h-14 w-14 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center active:scale-90 transition-transform shadow-md"
+                  className="h-16 w-16 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center active:scale-90 transition-transform shadow-lg shadow-destructive/25"
                 >
-                  <PhoneOff className="h-6 w-6" />
+                  <PhoneOff className="h-7 w-7" />
                 </button>
                 <button type="button"
                   onClick={handleAccept}
                   disabled={isAccepting}
                   aria-label="Accept incoming call"
                   title="Accept"
-                  className="h-14 w-14 rounded-full bg-green-500 text-white flex items-center justify-center active:scale-90 transition-transform shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="h-16 w-16 rounded-full bg-green-500 text-white flex items-center justify-center active:scale-90 transition-transform shadow-lg shadow-green-500/25 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {incoming.call_type === "video" ? (
-                    <Video className="h-6 w-6" />
+                    <Video className="h-7 w-7" />
                   ) : (
-                    <Phone className="h-6 w-6" />
+                    <Phone className="h-7 w-7" />
                   )}
                 </button>
               </div>

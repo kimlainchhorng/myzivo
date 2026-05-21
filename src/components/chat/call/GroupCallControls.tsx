@@ -91,7 +91,7 @@ export default function GroupCallControls(props: Props) {
   return (
     <div
       className="grid shrink-0 grid-cols-[1fr_auto_1fr] items-end gap-3 bg-black/75 px-3 sm:px-6 backdrop-blur-xl"
-      style={{ paddingTop: 14, paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 18px)" }}
+      style={{ paddingTop: 14, paddingBottom: "calc(var(--zivo-safe-bottom,0px) + 18px)" }}
     >
       {/* Left: time + meeting label */}
       <div className="flex items-center gap-2 text-[13px] text-white/85 min-w-0">
