@@ -120,10 +120,12 @@ export function parseRoutes(source = readAppSource()) {
     const start = match.index + match[0].length;
     const end = i + 1 < matches.length ? matches[i + 1].index : source.length;
     const element = source.slice(start, end);
+    const redirect = REDIRECT_ELEMENTS.some((tag) => element.includes(tag));
     return {
       path: routePath,
       protected: element.includes('<ProtectedRoute'),
-      redirect: REDIRECT_ELEMENTS.some((tag) => element.includes(tag)),
+      redirect,
+      redirectTarget: redirect ? (element.match(/\bto="([^"]+)"/)?.[1] ?? null) : null,
       dynamic: routePath.includes(':') || routePath.includes('*'),
       element,
     };
@@ -187,6 +189,7 @@ export function buildInventory(source = readAppSource()) {
   }
 
   const dedupe = (list) => [...new Set(list.map((r) => r.path))].sort();
+  const indexablePaths = new Set(indexable.map((r) => r.path));
 
   return {
     total: routes.length,
@@ -194,6 +197,11 @@ export function buildInventory(source = readAppSource()) {
     noIndex: dedupe(noIndex),
     dynamic: dedupe(dynamic),
     redirects: dedupe(redirects),
+    // A redirect only earns crawl budget when it lands on an indexable page;
+    // /account -> /account/profile is not worth a crawl, /terms -> /legal/terms is.
+    redirectsToIndexable: dedupe(
+      redirects.filter((r) => r.redirectTarget && indexablePaths.has(r.redirectTarget)),
+    ),
   };
 }
 
