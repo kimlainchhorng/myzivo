@@ -184,6 +184,16 @@ jobs:
           VITE_ZIVO_RIDE_APP_URL: ${{ secrets.VITE_ZIVO_RIDE_APP_URL }}
           VITE_ZIVO_SOFTWARE_SUPABASE_URL: ${{ secrets.VITE_ZIVO_SOFTWARE_SUPABASE_URL }}
           VITE_ZIVO_SOFTWARE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_ZIVO_SOFTWARE_SUPABASE_PUBLISHABLE_KEY }}
+          # Marketing attribution. Optional: an unset secret ships as an empty
+          # meta tag and the consent bootstrap simply skips that pixel. Without
+          # them every pixel is dark in production — no analytics, no conversion
+          # tracking, no remarketing audiences, no AdSense revenue.
+          VITE_GOOGLE_ANALYTICS_ID: ${{ secrets.VITE_GOOGLE_ANALYTICS_ID }}
+          VITE_GOOGLE_ADS_ID: ${{ secrets.VITE_GOOGLE_ADS_ID }}
+          VITE_META_PIXEL_ID: ${{ secrets.VITE_META_PIXEL_ID }}
+          VITE_TIKTOK_PIXEL_ID: ${{ secrets.VITE_TIKTOK_PIXEL_ID }}
+          VITE_X_PIXEL_ID: ${{ secrets.VITE_X_PIXEL_ID }}
+          VITE_GOOGLE_ADSENSE_CLIENT: ${{ secrets.VITE_GOOGLE_ADSENSE_CLIENT }}
         run: npm run build
 
       - name: Check Netlify secrets and deploy environment

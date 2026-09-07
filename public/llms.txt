@@ -9,15 +9,14 @@ ZIVO is operated by ZIVO LLC and is a booking agent (not the merchant of record)
 - [Flights](https://zivosmedia.com/flights): Compare flights from 500+ airlines worldwide. No booking fees.
 - [Hotels](https://zivosmedia.com/hotels): Compare hotel prices from 500+ trusted partners.
 - [Car rental](https://zivosmedia.com/rent-car): Compare rental car prices from Hertz, Enterprise, Avis and more.
-- [Rides](https://zivosmedia.com/rides): Book rides on demand.
-- [Eats](https://zivosmedia.com/eats): Order food delivery from local restaurants.
+- Rides: book rides on demand. Requires a signed-in ZIVO account, so there is no public page to link.
+- Eats: order food delivery from local restaurants. Requires a signed-in ZIVO account, so there is no public page to link.
 - [Grocery](https://zivosmedia.com/grocery): Order groceries for delivery.
 - [Travel insurance](https://zivosmedia.com/travel-insurance): Coverage for trips booked on ZIVO.
 
 ## Social & community
 
-- [Feed](https://zivosmedia.com/feed): Personalized social feed of posts and updates.
-- [Reels](https://zivosmedia.com/reels): Short-form video shared by the community.
+- [Feed and Reels](https://zivosmedia.com/): Personalized social feed of posts and updates, plus short-form video shared by the community. Both live on the homepage.
 - [Channels](https://zivosmedia.com/channels): Themed channels across topics.
 - [Communities](https://zivosmedia.com/communities): Group discussions and shared interests.
 - [Trending](https://zivosmedia.com/trending): Currently trending posts and topics.

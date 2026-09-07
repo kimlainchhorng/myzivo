@@ -1,0 +1,178 @@
+#!/usr/bin/env node
+/**
+ * Static SEO contracts.
+ *
+ * These exist because the hand-maintained sitemap drifted away from the router
+ * and started advertising URLs that cost us crawl budget:
+ *   - /feed and /reels have no route, so they fall through to the /:countrySlug
+ *     stub, which renders NotFound and bounces to "/" — a soft 404.
+ *   - /eats and /referrals sit behind ProtectedRoute, so a crawler sees a login
+ *     wall, never the page.
+ *   - /rides, /terms and /ground-transport are client-side redirects, which
+ *     Search Console reports as sitemap errors.
+ *   - /hotels/london and /hotels/in-london were both listed: one page, two URLs,
+ *     split ranking signals.
+ *
+ * Every rule below turns one of those into a build failure.
+ */
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
+import { buildInventory, firstDeclarationWins, parseRoutes } from "../seo/route-inventory.mjs";
+
+const root = process.cwd();
+const failures = [];
+let checks = 0;
+
+function source(relativePath) {
+  const file = path.join(root, relativePath);
+  if (!existsSync(file)) {
+    failures.push(`missing file: ${relativePath}`);
+    return "";
+  }
+  return readFileSync(file, "utf8").replace(/\r\n/g, "\n");
+}
+
+function require(id, condition, message) {
+  checks += 1;
+  if (!condition) failures.push(`${id}: ${message}`);
+}
+
+const SITE_URL = "https://zivosmedia.com";
+
+/* ---------------------------------------------------------------- *
+ * Route facts every rule below reads from                            *
+ * ---------------------------------------------------------------- */
+
+const appSource = source("src/App.tsx");
+const routes = appSource ? firstDeclarationWins(parseRoutes(appSource)) : [];
+const inventory = appSource ? buildInventory(appSource) : { indexable: [] };
+
+const staticRoutes = new Set(routes.filter((r) => !r.dynamic).map((r) => r.path));
+const protectedRoutes = new Set(routes.filter((r) => r.protected).map((r) => r.path));
+const redirectRoutes = new Set(routes.filter((r) => r.redirect).map((r) => r.path));
+
+/**
+ * Dynamic routes that can actually serve a page.
+ *
+ * /:countrySlug is excluded on purpose: it renders NotFound, so treating it as
+ * a match would make every dead one-segment URL look reachable — which is
+ * exactly how /feed and /reels slipped past review.
+ */
+const NOT_FOUND_STUBS = new Set(["/:countrySlug", "*"]);
+const servingDynamicRoutes = routes.filter(
+  (r) => r.dynamic && !r.redirect && !NOT_FOUND_STUBS.has(r.path),
+);
+
+function matchesDynamicRoute(pathname) {
+  const segments = pathname.split("/").filter(Boolean);
+  return servingDynamicRoutes.some((route) => {
+    const routeSegments = route.path.split("/").filter(Boolean);
+    if (routeSegments.length !== segments.length) return false;
+    return routeSegments.every((segment, i) => {
+      if (!segment.includes(":")) return segment === segments[i];
+      // "in-:location" and ":origin-to-:destination" carry a literal prefix.
+      const literalPrefix = segment.slice(0, segment.indexOf(":"));
+      return segments[i].startsWith(literalPrefix);
+    });
+  });
+}
+
+function routeExists(pathname) {
+  return staticRoutes.has(pathname) || matchesDynamicRoute(pathname);
+}
+
+/* ---------------------------------------------------------------- *
+ * sitemap.xml                                                        *
+ * ---------------------------------------------------------------- */
+
+const sitemap = source("public/sitemap.xml");
+const sitemapPaths = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)]
+  .map((m) => m[1])
+  .filter((loc) => loc.startsWith(SITE_URL))
+  .map((loc) => loc.slice(SITE_URL.length) || "/");
+
+require("sitemap-generated", sitemap.includes("scripts/seo/generate-sitemap.mjs"),
+  "public/sitemap.xml must be produced by the generator (run `npm run seo:sitemap`)");
+require("sitemap-not-empty", sitemapPaths.length > 100,
+  `public/sitemap.xml has only ${sitemapPaths.length} URLs — the generator likely failed`);
+
+for (const pathname of sitemapPaths) {
+  const id = `sitemap:${pathname}`;
+  require(`${id}:exists`, routeExists(pathname), `${pathname} is in the sitemap but has no route (soft 404)`);
+  require(`${id}:public`, !protectedRoutes.has(pathname), `${pathname} is in the sitemap but sits behind ProtectedRoute`);
+  require(`${id}:not-redirect`, !redirectRoutes.has(pathname), `${pathname} is in the sitemap but only redirects elsewhere`);
+}
+
+/** One page, one URL. These shapes duplicate a canonical entry. */
+const DUPLICATE_URL_SHAPES = [
+  [/^\/hotels\/in-/, "/hotels/<city>"],
+  [/^\/car-rental\/in-/, "/rent-car/<city>"],
+  [/^\/flights\/cities\//, "/flights/to-<city>"],
+];
+for (const [pattern, canonical] of DUPLICATE_URL_SHAPES) {
+  const offenders = sitemapPaths.filter((p) => pattern.test(p));
+  require(`sitemap-duplicate:${canonical}`, offenders.length === 0,
+    `${offenders.length} sitemap URLs duplicate ${canonical} (e.g. ${offenders[0]})`);
+}
+
+const indexableMissing = inventory.indexable.filter((p) => !sitemapPaths.includes(p));
+require("sitemap-covers-indexable", indexableMissing.length === 0,
+  `${indexableMissing.length} indexable routes are missing from the sitemap (e.g. ${indexableMissing[0]}) — run \`npm run seo:sitemap\``);
+
+/* ---------------------------------------------------------------- *
+ * robots.txt                                                         *
+ * ---------------------------------------------------------------- */
+
+const robots = source("public/robots.txt");
+require("robots-sitemap", robots.includes(`Sitemap: ${SITE_URL}/sitemap.xml`),
+  "public/robots.txt must advertise the sitemap");
+require("robots-no-retired-domain", !robots.includes("hizivo.com"),
+  "public/robots.txt still references the retired hizivo.com domain");
+
+/* ---------------------------------------------------------------- *
+ * llms.txt — the same rules, for AI crawlers                         *
+ * ---------------------------------------------------------------- */
+
+const llms = source("public/llms.txt");
+const llmsPaths = [...new Set(
+  [...llms.matchAll(new RegExp(`${SITE_URL.replace(/[.]/g, "\\.")}(/[^)\\s]*)`, "g"))].map((m) => m[1]),
+)];
+for (const pathname of llmsPaths) {
+  require(`llms:${pathname}:exists`, routeExists(pathname), `llms.txt links ${pathname}, which has no route`);
+  require(`llms:${pathname}:public`, !protectedRoutes.has(pathname), `llms.txt links ${pathname}, which is behind ProtectedRoute`);
+}
+
+/* ---------------------------------------------------------------- *
+ * Marketing attribution                                              *
+ * ---------------------------------------------------------------- */
+
+/**
+ * The consent bootstrap reads these from <meta> tags that
+ * src/config/marketingRuntimeConfig.ts fills from Vite env vars. If the
+ * production deploy does not pass them, every pixel ships dark: no analytics,
+ * no conversion tracking, no remarketing audiences, no AdSense revenue.
+ */
+const MARKETING_ENV_VARS = [
+  "VITE_GOOGLE_ANALYTICS_ID",
+  "VITE_GOOGLE_ADS_ID",
+  "VITE_META_PIXEL_ID",
+  "VITE_TIKTOK_PIXEL_ID",
+  "VITE_GOOGLE_ADSENSE_CLIENT",
+];
+for (const workflow of ["deploy-cloudflare-production.yml", "deploy-production.yml"]) {
+  const contents = source(`.github/workflows/${workflow}`);
+  if (!contents) continue;
+  for (const variable of MARKETING_ENV_VARS) {
+    require(`marketing-env:${workflow}:${variable}`, contents.includes(variable),
+      `${workflow} does not pass ${variable}, so that pixel ships dark in production`);
+  }
+}
+
+const report = {
+  generated: new Date().toISOString(),
+  counts: { checks, failures: failures.length },
+  failures,
+};
+
+console.log(JSON.stringify(report, null, 2));
+if (failures.length > 0) process.exit(1);
