@@ -159,6 +159,49 @@ for (const pathname of llmsPaths) {
 }
 
 /* ---------------------------------------------------------------- *
+ * Structured data                                                    *
+ * ---------------------------------------------------------------- */
+
+/**
+ * index.html carries the site-wide JSON-LD (Organization, WebSite with a
+ * SearchAction, MobileApplication, WebApplication, Service catalogue, FAQ).
+ * It is static, so crawlers get it without executing any JavaScript — but a
+ * malformed block is invisible until Search Console reports the loss weeks
+ * later, so parse every one of them here.
+ */
+const indexHtml = source("index.html");
+const jsonLdBlocks = [...indexHtml.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+
+require("jsonld-present", jsonLdBlocks.length >= 5,
+  `index.html has ${jsonLdBlocks.length} JSON-LD blocks; the site-wide schema set should be there`);
+
+const jsonLdTypes = new Set();
+jsonLdBlocks.forEach((block, i) => {
+  checks += 1;
+  try {
+    const parsed = JSON.parse(block);
+    for (const entry of Array.isArray(parsed) ? parsed : [parsed]) {
+      if (entry["@type"]) jsonLdTypes.add(entry["@type"]);
+    }
+  } catch (error) {
+    failures.push(`jsonld-valid:${i}: index.html JSON-LD block ${i} does not parse (${error.message})`);
+  }
+});
+
+for (const type of ["Organization", "WebSite", "MobileApplication"]) {
+  require(`jsonld-type:${type}`, jsonLdTypes.has(type), `index.html is missing ${type} structured data`);
+}
+
+/**
+ * com.myzivo.app and com.hizovo.app are both suspended on Google Play with an
+ * appeal outstanding. Advertising either in structured data points searchers
+ * and Google at a dead listing, so keep the schema iOS-only until they are
+ * reinstated.
+ */
+require("jsonld-no-suspended-play", !indexHtml.includes("play.google.com/store/apps/details"),
+  "index.html structured data links a Google Play listing while the ZIVO packages are suspended");
+
+/* ---------------------------------------------------------------- *
  * Marketing attribution                                              *
  * ---------------------------------------------------------------- */
 
