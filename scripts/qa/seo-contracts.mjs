@@ -81,6 +81,11 @@ function routeExists(pathname) {
   return staticRoutes.has(pathname) || matchesDynamicRoute(pathname);
 }
 
+const robots = source("public/robots.txt");
+const wildcardGroup = robots.slice(robots.indexOf("User-agent: *"));
+const disallowRules = [...wildcardGroup.matchAll(/^Disallow:\s*(\S+)/gm)].map((m) => m[1].replace(/\*$/, ""));
+const isDisallowed = (pathname) => disallowRules.some((rule) => pathname.startsWith(rule));
+
 /* ---------------------------------------------------------------- *
  * sitemap.xml                                                        *
  * ---------------------------------------------------------------- */
@@ -115,7 +120,9 @@ for (const [pattern, canonical] of DUPLICATE_URL_SHAPES) {
     `${offenders.length} sitemap URLs duplicate ${canonical} (e.g. ${offenders[0]})`);
 }
 
-const indexableMissing = inventory.indexable.filter((p) => !sitemapPaths.includes(p));
+// Routes robots.txt blocks on purpose (search results, dashboards, /profile)
+// are indexable by the router but must stay out of the sitemap.
+const indexableMissing = inventory.indexable.filter((p) => !sitemapPaths.includes(p) && !isDisallowed(p));
 require("sitemap-covers-indexable", indexableMissing.length === 0,
   `${indexableMissing.length} indexable routes are missing from the sitemap (e.g. ${indexableMissing[0]}) — run \`npm run seo:sitemap\``);
 
@@ -123,7 +130,16 @@ require("sitemap-covers-indexable", indexableMissing.length === 0,
  * robots.txt                                                         *
  * ---------------------------------------------------------------- */
 
-const robots = source("public/robots.txt");
+/**
+ * A URL cannot be both advertised and blocked. Google reports these as
+ * "Indexed, though blocked by robots.txt": it keeps the URL but never sees the
+ * page, so the listing shows no description.
+ */
+for (const pathname of sitemapPaths) {
+  const blocking = disallowRules.find((rule) => pathname.startsWith(rule));
+  require(`sitemap-vs-robots:${pathname}`, !blocking,
+    `${pathname} is in the sitemap but robots.txt disallows it via "${blocking}"`);
+}
 require("robots-sitemap", robots.includes(`Sitemap: ${SITE_URL}/sitemap.xml`),
   "public/robots.txt must advertise the sitemap");
 require("robots-no-retired-domain", !robots.includes("hizivo.com"),

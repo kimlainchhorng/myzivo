@@ -9,7 +9,7 @@
  * index routes), so a route's element is everything between its own path="..."
  * and the next path="...". That keeps the parser simple and honest.
  */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -111,12 +111,53 @@ function readAppSource() {
 }
 
 /**
+ * Resolve `path={SOCIAL_ROUTE_PATHS.feed}` style routes.
+ *
+ * Not every route is a string literal, and missing the computed ones is not a
+ * harmless gap: /feed, /reels and /reels/:postId are all declared this way, and
+ * treating them as absent would drop the social surface from the sitemap and
+ * disallow it in robots.txt. Anything unresolvable throws rather than being
+ * silently skipped.
+ */
+function resolveComputedPaths(source) {
+  const resolved = new Map();
+  for (const [, identifier] of source.matchAll(/path=\{([A-Za-z0-9_]+)\./g)) {
+    if (resolved.has(identifier)) continue;
+    const importMatch = source.match(
+      new RegExp(`import\\s*\\{[^}]*\\b${identifier}\\b[^}]*\\}\\s*from\\s*["']([^"']+)["']`),
+    );
+    if (!importMatch) throw new Error(`route-inventory: cannot find the import for ${identifier} in App.tsx`);
+    const specifier = importMatch[1];
+    const base = specifier.startsWith('@/') || specifier.startsWith('./')
+      ? path.join(REPO_ROOT, 'src', specifier.slice(2))
+      : null;
+    if (!base) throw new Error(`route-inventory: unsupported import specifier ${specifier} for ${identifier}`);
+    const file = ['.ts', '.tsx', '/index.ts'].map((ext) => base + ext).find((candidate) => existsSync(candidate));
+    if (!file) throw new Error(`route-inventory: cannot read the module defining ${identifier} (${specifier})`);
+    const module = readFileSync(file, 'utf8');
+    const body = module.match(new RegExp(`${identifier}\\s*=\\s*\\{([\\s\\S]*?)\\}`));
+    if (!body) throw new Error(`route-inventory: ${identifier} is not a literal object in ${specifier}`);
+    const entries = new Map(
+      [...body[1].matchAll(/([A-Za-z0-9_]+)\s*:\s*["']([^"']+)["']/g)].map((m) => [m[1], m[2]]),
+    );
+    resolved.set(identifier, entries);
+  }
+  return resolved;
+}
+
+/**
  * @returns {{ path: string, protected: boolean, redirect: boolean, dynamic: boolean, element: string }[]}
  */
 export function parseRoutes(source = readAppSource()) {
-  const matches = [...source.matchAll(/path="([^"]*)"/g)];
+  const computed = resolveComputedPaths(source);
+  const matches = [...source.matchAll(/path=(?:"([^"]*)"|\{([A-Za-z0-9_]+)\.([A-Za-z0-9_]+)\})/g)];
   return matches.map((match, i) => {
-    const routePath = match[1];
+    let routePath = match[1];
+    if (routePath === undefined) {
+      const [, , identifier, key] = match;
+      routePath = computed.get(identifier)?.get(key);
+      if (!routePath) throw new Error(`route-inventory: cannot resolve path={${identifier}.${key}}`);
+    }
     const start = match.index + match[0].length;
     const end = i + 1 < matches.length ? matches[i + 1].index : source.length;
     const element = source.slice(start, end);

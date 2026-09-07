@@ -470,12 +470,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://zivosmedia.com/driver</loc>
-    <lastmod>2026-06-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://zivosmedia.com/emoji-packs</loc>
     <lastmod>2026-08-29</lastmod>
     <changefreq>weekly</changefreq>
@@ -538,6 +532,11 @@
   <url>
     <loc>https://zivosmedia.com/faq</loc>
     <lastmod>2026-08-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zivosmedia.com/feed</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -812,12 +811,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://zivosmedia.com/flights/live</loc>
-    <lastmod>2026-06-07</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://zivosmedia.com/flights/los-angeles-to-cancun</loc>
     <lastmod>2026-06-07</lastmod>
     <changefreq>weekly</changefreq>
@@ -984,12 +977,6 @@
     <lastmod>2026-06-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://zivosmedia.com/flights/results</loc>
-    <lastmod>2026-08-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://zivosmedia.com/flights/san-francisco-to-london</loc>
@@ -1867,6 +1854,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://zivosmedia.com/reels</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://zivosmedia.com/refund-policy</loc>
     <lastmod>2026-08-07</lastmod>
     <changefreq>weekly</changefreq>
@@ -1933,12 +1925,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://zivosmedia.com/rent-car/detail</loc>
-    <lastmod>2026-08-10</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://zivosmedia.com/rent-car/dubai</loc>
     <lastmod>2026-06-07</lastmod>
     <changefreq>weekly</changefreq>
@@ -2003,12 +1989,6 @@
     <lastmod>2026-06-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://zivosmedia.com/rent-car/results</loc>
-    <lastmod>2026-08-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://zivosmedia.com/rent-car/rome</loc>

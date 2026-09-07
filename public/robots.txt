@@ -207,8 +207,38 @@ Disallow: /more
 # BEGIN generated app-only routes (scripts/seo/generate-robots.mjs)
 # Signed-in and operational routes. Generated from the router — do not edit
 # by hand; run `npm run seo:robots` after changing routes.
-Disallow: /account
 Disallow: /account-deletion
+Disallow: /account/activity-log
+Disallow: /account/addresses
+Disallow: /account/analytics
+Disallow: /account/data-rights
+Disallow: /account/export
+Disallow: /account/favorites
+Disallow: /account/gift-cards
+Disallow: /account/invoices
+Disallow: /account/legal
+Disallow: /account/link-device
+Disallow: /account/linked-devices
+Disallow: /account/loyalty
+Disallow: /account/membership
+Disallow: /account/notifications
+Disallow: /account/preferences
+Disallow: /account/privacy
+Disallow: /account/profile-edit
+Disallow: /account/promos
+Disallow: /account/receipts
+Disallow: /account/referrals
+Disallow: /account/reviews
+Disallow: /account/saved-places
+Disallow: /account/scan-device
+Disallow: /account/security
+Disallow: /account/sessions
+Disallow: /account/settings
+Disallow: /account/subscriptions
+Disallow: /account/tax
+Disallow: /account/travelers
+Disallow: /account/username
+Disallow: /account/verification
 Disallow: /activity
 Disallow: /albums
 Disallow: /archive

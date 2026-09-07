@@ -20,6 +20,7 @@ import { REPO_ROOT, buildInventory, parseRoutes, isSitemapExcluded } from './rou
 
 const SITE_URL = 'https://zivosmedia.com';
 const SITEMAP_PATH = path.join(REPO_ROOT, 'public', 'sitemap.xml');
+const ROBOTS_PATH = path.join(REPO_ROOT, 'public', 'robots.txt');
 const SITEMAP_INDEX_PATH = path.join(REPO_ROOT, 'public', 'sitemap-index.xml');
 
 /* ------------------------------------------------------------------ *
@@ -150,6 +151,22 @@ async function programmaticUrls() {
   return urls;
 }
 
+/**
+ * robots.txt has the final say.
+ *
+ * A URL that is both advertised and blocked lands in Search Console as
+ * "Indexed, though blocked by robots.txt" — Google keeps the URL but never
+ * reads the page, so it ranks with no description. Reading the rules here
+ * means the two files cannot contradict each other: /flights/results,
+ * /rent-car/detail and /profile are all deliberately blocked, and now they
+ * simply never reach the sitemap.
+ */
+function disallowedPathPrefixes() {
+  const robots = readFileSync(ROBOTS_PATH, 'utf8');
+  const wildcardGroup = robots.slice(robots.indexOf('User-agent: *'));
+  return [...wildcardGroup.matchAll(/^Disallow:\s*(\S+)/gm)].map((m) => m[1].replace(/\*$/, ''));
+}
+
 /* ------------------------------------------------------------------ *
  * priority heuristics for static routes                                *
  * ------------------------------------------------------------------ */
@@ -197,9 +214,11 @@ export async function buildSitemapUrls({ withDates = true } = {}) {
     if (!routeByPath.has(route.path)) routeByPath.set(route.path, route);
   }
 
+  const disallowed = disallowedPathPrefixes();
   const urls = new Map();
   const add = ({ loc, priority, changefreq, lastmod }) => {
     if (urls.has(loc)) return;
+    if (disallowed.some((rule) => loc.startsWith(rule))) return;
     urls.set(loc, { loc, priority, changefreq, lastmod });
   };
 

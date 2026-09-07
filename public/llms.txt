@@ -16,7 +16,8 @@ ZIVO is operated by ZIVO LLC and is a booking agent (not the merchant of record)
 
 ## Social & community
 
-- [Feed and Reels](https://zivosmedia.com/): Personalized social feed of posts and updates, plus short-form video shared by the community. Both live on the homepage.
+- [Feed](https://zivosmedia.com/feed): Personalized social feed of posts and updates.
+- [Reels](https://zivosmedia.com/reels): Short-form video shared by the community.
 - [Channels](https://zivosmedia.com/channels): Themed channels across topics.
 - [Communities](https://zivosmedia.com/communities): Group discussions and shared interests.
 - [Trending](https://zivosmedia.com/trending): Currently trending posts and topics.
