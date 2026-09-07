@@ -84,7 +84,7 @@ export default function FlightToCity() {
       <SEOHead
         title={pageTitle}
         description={pageDescription}
-        canonical={`https://zivosmedia.com/flights/to-${citySlug}`}
+        canonical={`https://zivosmedia.com/flights/to/${citySlug}`}
         ogImage="/og-flights.jpg"
         appLink={`zivo://flights/to/${citySlug}`}
         structuredData={{

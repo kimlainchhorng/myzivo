@@ -108,11 +108,22 @@ for (const pathname of sitemapPaths) {
   require(`${id}:not-redirect`, !redirectRoutes.has(pathname), `${pathname} is in the sitemap but only redirects elsewhere`);
 }
 
-/** One page, one URL. These shapes duplicate a canonical entry. */
+/**
+ * Shapes that must never be advertised.
+ *
+ * /hotels/in-<city> renders HotelCityLandingPage with the slug taken
+ * literally, so the page titles itself "Hotels in In London".
+ *
+ * The flight and car-rental shapes below all fall through to a generic landing
+ * page that sets `canonical` to /flights or /rent-car — React Router does not
+ * match params inside a segment, so `to-:toCity` and `:origin-to-:destination`
+ * never bind. Verified in the running app.
+ */
 const DUPLICATE_URL_SHAPES = [
   [/^\/hotels\/in-/, "/hotels/<city>"],
   [/^\/car-rental\/in-/, "/rent-car/<city>"],
-  [/^\/flights\/cities\//, "/flights/to-<city>"],
+  [/^\/flights\/(to|from)-/, "/flights/to/<city>"],
+  [/^\/flights\/[a-z-]+-to-[a-z-]+$/, "the generic /flights landing"],
 ];
 for (const [pattern, canonical] of DUPLICATE_URL_SHAPES) {
   const offenders = sitemapPaths.filter((p) => pattern.test(p));
@@ -171,6 +182,21 @@ for (const pathname of llmsPaths) {
  */
 const indexHtml = source("index.html");
 const jsonLdBlocks = [...indexHtml.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+
+/**
+ * No static canonical in index.html.
+ *
+ * SEOHead updates the tag in place, but the 59 react-helmet-async pages append
+ * a second one — leaving two canonicals with the static homepage first, which
+ * is the one Google reads. Measured on /hotels/london before this was removed:
+ * ["https://zivosmedia.com/", "https://zivosmedia.com/hotels/london"]. Pages
+ * set their own; a page that sets none is better off with no canonical at all.
+ *
+ * The sibling hosts are unaffected: cloudflare/worker.ts strips and re-injects
+ * the whole SEO head for zivosoftware.com and zivostravel.com.
+ */
+require("no-static-canonical", !/<link[^>]+rel="canonical"/.test(indexHtml),
+  'index.html must not ship a static <link rel="canonical"> — Helmet pages append a second one and Google reads the first');
 
 require("jsonld-present", jsonLdBlocks.length >= 5,
   `index.html has ${jsonLdBlocks.length} JSON-LD blocks; the site-wide schema set should be there`);

@@ -26,10 +26,58 @@ declarations the way React Router does — first wins — which is what exposed 
 dead `/events` and `/places` redirects sitting behind live pages.
 
 `npm run seo:sitemap` builds the sitemap from that partition plus
-`src/config/programmaticSEO.ts`: **382 URLs, up from 170**, one canonical URL
+`src/config/programmaticSEO.ts`: **278 URLs, up from 170**, one canonical URL
 shape per entity, and `lastmod` taken from each page's own git history rather
 than the build date. Where a date cannot be derived the tag is omitted — an
 absent `lastmod` beats an invented one.
+
+### Every Helmet page pointed its canonical at the homepage
+
+`index.html` shipped a static `<link rel="canonical" href="https://zivosmedia.com/">`.
+`SEOHead` updates that tag in place, so its pages were fine. But 59 pages use
+`react-helmet-async`, which **appends** a second canonical instead — leaving two
+tags, with the homepage first. Google reads the first one.
+
+Measured on `/hotels/london` before the fix:
+
+```
+canonicals: ["https://zivosmedia.com/", "https://zivosmedia.com/hotels/london"]
+titles:     ["Hotels in London 2027 | ...", "ZIVO – Travel, Rides, Food, Shop & Jobs"]
+```
+
+Every city landing page, guide, cafe and salon storefront was telling Google it
+was a copy of the homepage. The static canonical is gone; pages now set their
+own, and a page that sets none has no canonical at all — Google then uses the
+URL it crawled, which is strictly better than pointing at `/`.
+
+Verified after the fix: `/hotels/london`, `/deals/summer-flights` and
+`/flights/to/paris` each have exactly one canonical, pointing at themselves.
+
+### Most of the programmatic flight and car-rental URLs were one page wearing 85 hats
+
+React Router does not bind params inside a path segment, so these route patterns
+never match anything:
+
+```
+/flights/:origin-to-:destination   -> FlightRoutePage   (dead)
+/flights/to-:toCity                -> FlightLanding     (dead)
+/flights/from-:fromCity            -> FlightLanding     (dead)
+/car-rental/in-:location           -> CarRentalLanding  (dead)
+```
+
+Those URLs fall through to `/flights/:route` and `/car-rental/:slug` instead.
+Confirmed in the browser: `/flights/new-york-to-london` and `/flights/to-paris`
+both serve *"Search Flights from Cambodia – ZIVO | 500+ Airlines"* with
+`canonical="/flights"`, and `/rent-car/miami` serves the generic car-rental
+landing with `canonical="/rent-car"`.
+
+So 85 sitemap URLs were 85 copies of two pages, each disclaiming itself. They
+are out. What is left renders a real, self-canonical page: `/flights/to/<city>`
+(25), `/hotels/<city>` (25), `/airports/<iata>` (25) and `/deals/<slug>`.
+
+`/flights/cities/:citySlug` was a stub that redirected to `/flights`, throwing
+the city away. It now redirects to `/flights/to/<city>`, and `FlightToCity`
+canonicalises to its own URL instead of the dead hyphen form.
 
 ### robots.txt blocks the signed-in app
 
@@ -107,16 +155,25 @@ library is invisible to search. `VideoObject` structured data on reel pages plus
 a video sitemap is the standard fix. Needs a data-backed listing route, so it is
 product work, not a config change.
 
-### 2. Duplicate URL shapes still resolve
+### 2. The dead route patterns should be fixed or removed
 
-`/hotels/in-london` and `/flights/cities/london` still render alongside their
-canonical forms. They are out of the sitemap, but they self-canonicalise:
-`SEOHead` defaults `canonical` to `location.pathname`, so each duplicate still
-declares itself canonical. The fix is a canonical-normalisation map in
-`SEOHead`, or 301s at the edge in `cloudflare/worker.ts`. Not done here because
-it touches request handling on the live domain and deserves its own change.
+`FlightRoutePage` is unreachable and `src/pages/seo/FlightRoutePage.tsx`,
+`AirportTransfersPage` and friends may be in the same position. Either give them
+segment-shaped routes (`/flights/route/:origin/:destination`) or delete them.
+Until then, roughly 60 previously-indexed `/flights/<a>-to-<b>` URLs serve the
+generic landing. They consolidate into `/flights` via canonical, so nothing is
+broken — but the route-level content that was built for them is not being
+served.
 
-### 3. Eight admin routes are not behind `ProtectedRoute`
+### 3. Legacy URL shapes deserve 301s
+
+`/hotels/in-london`, `/flights/to-paris` and `/car-rental/in-miami` were all
+indexed and now resolve to a generic or mangled page. Edge 301s in
+`cloudflare/worker.ts` pointing them at `/hotels/london`, `/flights/to/paris`
+and `/rent-car/miami` would recover that link equity. Not done here because it
+changes request handling on the live domain and deserves its own change.
+
+### 4. Eight admin routes are not behind `ProtectedRoute`
 
 `/admin/cafe-qr-sheet/:storeId`, `/admin/cafe-summary/:storeId/:date`,
 `/admin/salon-queue/:storeId`, `/admin/salon-receipt/:bookingId`,
@@ -127,36 +184,43 @@ from the URL with no route-level guard. They are print/receipt views, so this
 may be deliberate — but it is a security question, not an SEO one, and needs a
 look at whether the components check authorisation themselves.
 
-### 4. `sameAs` lists no social profiles
+### 5. `sameAs` lists no social profiles
 
 The `Organization` schema in `index.html` links only zivosmedia.com and the App
 Store listing. `sameAs` is how Google ties the entity to its Facebook,
 Instagram, X, LinkedIn, TikTok and YouTube profiles. Left alone because the
 profile URLs are not in the repo and must not be guessed.
 
-### 5. No hreflang despite four languages
+### 6. No hreflang despite four languages
 
 The app supports English, Khmer, Arabic and French, but language is switched
 client-side with no distinct URLs, so there is nothing for `hreflang` to point
 at. Real localised URLs (`/km/...`) would have to come first.
 
-### 6. `/` redirects to `/feed` above 1024px
+### 7. `/` redirects to `/feed` above 1024px
 
 `src/pages/Index.tsx` renders `AppHome` on mobile and `<Navigate to="/feed">` on
 desktop. Google indexes mobile-first so this is not urgent, but the canonical
 homepage redirecting on desktop is worth revisiting.
 
-### 7. `getCarRentalCityUrl` returns a dead path
+### 8. `getCarRentalCityUrl` returns a dead path
 
 `src/config/programmaticSEO.ts` builds `/car-rentals/{slug}`, but no such route
 exists — the real ones are `/rent-car/:city` and `/car-rental/:city`. The
 function currently has no callers, so nothing is broken; fix or delete it before
 someone uses it.
 
-### 8. `RouteSEOHeader.tsx` has zero usages
+### 9. `RouteSEOHeader.tsx` has zero usages
 
 `src/components/seo/RouteSEOHeader.tsx` is imported nowhere. Wire it up or
 delete it.
+
+### 10. App Links point at a package that does not exist
+
+`src/components/SEOHead.tsx` writes `al:android:package` as `com.zivo.app`,
+while `src/config/appStoreLinks.ts` uses `com.hizovo.app`. Neither matches
+`com.myzivo.app`. Worth reconciling once the Play appeal resolves and it is
+clear which package survives.
 
 ## Commands
 

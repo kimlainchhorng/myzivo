@@ -137,7 +137,14 @@
     <link rel="manifest" href="/manifest.webmanifest" />
 
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://zivosmedia.com/" data-rh="true" />
+    <!--
+      No static canonical here on purpose. Pages set their own: SEOHead updates
+      the tag in place, while the 59 react-helmet-async pages append one. With a
+      static tag present the Helmet pages ended up with two canonicals and Google
+      reads the first, so every one of them pointed at the homepage instead of
+      itself. A page that sets none is better off with no canonical at all —
+      Google then uses the URL it crawled.
+    -->
 
     <!-- Open Graph - Enhanced for Social Sharing -->
     <meta property="og:type" content="website" />

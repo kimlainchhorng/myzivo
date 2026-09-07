@@ -122,28 +122,32 @@ async function importTsConfig(relativePath) {
 /**
  * Canonical URL for every programmatic page.
  *
- * One URL shape per entity on purpose. The old sitemap listed both
- * /hotels/london and /hotels/in-london (and /rent-car/miami plus
- * /car-rental/in-miami) — the same page under two URLs, which splits ranking
- * signals. The alternates still resolve; they just are not advertised.
+ * Only shapes that actually render their own page belong here, and that is
+ * fewer than the config implies. React Router does not match params inside a
+ * segment, so `/flights/:origin-to-:destination`, `/flights/to-:toCity` and
+ * `/flights/from-:fromCity` never match — those URLs fall through to
+ * `/flights/:route`, which renders the generic flights landing with
+ * `canonical="/flights"`. Verified in the browser: /flights/new-york-to-london
+ * and /flights/to-paris both serve "Search Flights from Cambodia" and point
+ * their canonical at /flights. Advertising them would be advertising 85 copies
+ * of one page.
+ *
+ * /rent-car/:city is the same story: /rent-car/miami renders the generic
+ * CarRentalLanding with `canonical="/rent-car"`.
+ *
+ * What is left renders a real, self-canonical page: /flights/to/<city>,
+ * /hotels/<city>, /airports/<iata> and /deals/<slug>.
  */
 async function programmaticUrls() {
   const seo = await importTsConfig('src/config/programmaticSEO.ts');
   const urls = [];
 
-  for (const route of seo.getAllFlightRoutes()) {
-    urls.push({ loc: `/flights/${route.from}-to-${route.to}`, priority: route.priority === 1 ? 0.8 : 0.6, changefreq: 'weekly' });
-  }
   for (const city of seo.getCitiesByService('flights')) {
-    urls.push({ loc: `/flights/to-${city.slug}`, priority: 0.7, changefreq: 'weekly' });
-    urls.push({ loc: `/flights/from-${city.slug}`, priority: 0.6, changefreq: 'weekly' });
+    urls.push({ loc: `/flights/to/${city.slug}`, priority: 0.7, changefreq: 'weekly' });
     urls.push({ loc: `/airports/${city.iataCode.toLowerCase()}`, priority: 0.5, changefreq: 'monthly' });
   }
   for (const city of seo.getCitiesByService('hotels')) {
     urls.push({ loc: `/hotels/${city.slug}`, priority: 0.7, changefreq: 'weekly' });
-  }
-  for (const city of seo.getCitiesByService('cars')) {
-    urls.push({ loc: `/rent-car/${city.slug}`, priority: 0.6, changefreq: 'weekly' });
   }
   for (const deal of seo.SEASONAL_DEALS) {
     urls.push({ loc: `/deals/${deal.slug}`, priority: 0.5, changefreq: 'monthly' });
@@ -157,9 +161,7 @@ async function programmaticUrls() {
  * A URL that is both advertised and blocked lands in Search Console as
  * "Indexed, though blocked by robots.txt" — Google keeps the URL but never
  * reads the page, so it ranks with no description. Reading the rules here
- * means the two files cannot contradict each other: /flights/results,
- * /rent-car/detail and /profile are all deliberately blocked, and now they
- * simply never reach the sitemap.
+ * means the two files cannot contradict each other.
  */
 function disallowedPathPrefixes() {
   const robots = readFileSync(ROBOTS_PATH, 'utf8');
