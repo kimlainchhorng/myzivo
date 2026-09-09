@@ -84,6 +84,7 @@
     "qa:i18n-literal-strings": "node scripts/qa/i18n-literal-strings.mjs",
     "qa:realtime-handshake": "node scripts/qa/realtime-handshake-probe.mjs",
     "qa:realtime-roundtrip": "node scripts/qa/realtime-roundtrip-probe.mjs",
+    "qa:realtime-publication": "node scripts/qa/realtime-publication-check.mjs",
     "qa:money-formatting": "node scripts/qa/money-formatting.mjs",
     "qa:safe-area:e2e": "playwright test tests/e2e/safe-area.spec.ts",
     "qa:safe-area:all": "node scripts/qa/safe-area-check.mjs && playwright test tests/e2e/safe-area.spec.ts",
