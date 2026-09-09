@@ -2085,6 +2085,14 @@ html[lang="km"] .text-sm {
   line-height: 1.6;
 }
 
+/* ── end Khmer typography ──
+ * scripts/seo/prerender-public-home.mjs slices from `html[lang="km"],` above to
+ * this marker and inlines the result as critical CSS on the prerendered public
+ * pages. Keep new Khmer rules ABOVE this line, or they compile into the full
+ * stylesheet — which those pages load deferred — and Khmer renders at the Latin
+ * size until it arrives. That is exactly how the 15px floor above shipped
+ * inert. */
+
 /* =============================================
    3D SPATIAL UI SYSTEM — 2026 Alive UX
    ============================================= */
