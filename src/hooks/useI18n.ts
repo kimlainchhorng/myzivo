@@ -76,13 +76,31 @@ function applyLang(code: string, chosenHere: boolean) {
   window.dispatchEvent(new CustomEvent("zivo:lang-change", { detail: code }));
   // Only a real choice is worth writing back; echoing the value we just read
   // would be a pointless round trip.
-  if (chosenHere) {
-    void supabase.auth.getUser().then(({ data }) => {
-      const userId = data.user?.id;
-      if (userId) void supabase.from("profiles").update({ preferred_language: code }).eq("user_id", userId);
-    }).catch(() => undefined);
-  }
+  if (chosenHere) void saveAccountLanguage(code);
   _listeners.forEach((l) => l());
+}
+
+/**
+ * The account copy of the preference. It lives on user_personalization_settings
+ * — `profiles` has no `preferred_language` column at all, so the previous
+ * `profiles.update({ preferred_language })` failed with Postgres 42703 on every
+ * single call, and the `.catch(() => undefined)` swallowed it. The setting
+ * looked like it persisted and never did.
+ *
+ * Upsert rather than update: a user who has never opened personalization
+ * settings has no row, and an `update` matching nothing reports success.
+ */
+async function saveAccountLanguage(code: string) {
+  try {
+    const { data } = await supabase.auth.getUser();
+    const userId = data.user?.id;
+    if (!userId) return;
+    await supabase
+      .from("user_personalization_settings")
+      .upsert({ user_id: userId, preferred_language: code }, { onConflict: "user_id" });
+  } catch {
+    // A device that cannot reach the account keeps its local choice.
+  }
 }
 
 /** The public switch: everything a user clicks lands here. */
@@ -162,8 +180,12 @@ if (typeof window !== "undefined") {
     load: async () => {
       const { data } = await supabase.auth.getUser();
       if (!data.user?.id) return null;
-      const { data: profile } = await supabase.from("profiles").select("preferred_language").eq("user_id", data.user.id).maybeSingle();
-      return profile?.preferred_language ?? null;
+      const { data: settings } = await supabase
+        .from("user_personalization_settings")
+        .select("preferred_language")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+      return settings?.preferred_language ?? null;
     },
     apply: adoptAccountLang,
   });
