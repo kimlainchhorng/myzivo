@@ -7,6 +7,7 @@ import {
   rememberLanguageChoice,
   resolveInitialLanguage,
   syncAccountLanguage,
+  upgradeLegacyLanguageChoice,
 } from "@/lib/i18n/languagePreference";
 
 /* ── Available languages ── */
@@ -48,6 +49,9 @@ function readInitialLanguage() {
   return resolveInitialLanguage({ query, supported: SUPPORTED_CODES });
 }
 const _initial = readInitialLanguage();
+// Persist the pre-marker inference once here, so resolveInitialLanguage stays a
+// pure read everywhere else (it runs during render on the public hub).
+upgradeLegacyLanguageChoice();
 let _lang = _initial.code;
 // Cache, but do not mark as chosen: writing the storage key on boot is what made
 // the very first visit look like a decision and kept the browser locale from
@@ -55,20 +59,40 @@ let _lang = _initial.code;
 cacheLanguage(_lang);
 const _listeners = new Set<() => void>();
 
-function setGlobalLang(code: string) {
+function applyLang(code: string, chosenHere: boolean) {
   _lang = code;
   ensureLocaleLoaded(code);
   // Selecting a language is a decision; from here on the browser locale is not
-  // consulted, so choosing English on a Khmer phone sticks.
-  rememberLanguageChoice(code);
+  // consulted, so choosing English on a Khmer phone sticks. A preference merely
+  // read back from the account is NOT such a decision — stamping it here would
+  // silence the browser locale on a device the user never chose anything on
+  // (a shared phone, the next person to sign in), which is the very failure the
+  // marker exists to prevent. It is also already the higher-authority source
+  // and is re-read on every load, so it has nothing to gain from the marker.
+  if (chosenHere) rememberLanguageChoice(code);
+  else cacheLanguage(code);
   applyLanguageToDocument(code);
   window.dispatchEvent(new CustomEvent("zivo-lang-change", { detail: code }));
   window.dispatchEvent(new CustomEvent("zivo:lang-change", { detail: code }));
-  void supabase.auth.getUser().then(({ data }) => {
-    const userId = data.user?.id;
-    if (userId) void supabase.from("profiles").update({ preferred_language: code }).eq("user_id", userId);
-  }).catch(() => undefined);
+  // Only a real choice is worth writing back; echoing the value we just read
+  // would be a pointless round trip.
+  if (chosenHere) {
+    void supabase.auth.getUser().then(({ data }) => {
+      const userId = data.user?.id;
+      if (userId) void supabase.from("profiles").update({ preferred_language: code }).eq("user_id", userId);
+    }).catch(() => undefined);
+  }
   _listeners.forEach((l) => l());
+}
+
+/** The public switch: everything a user clicks lands here. */
+function setGlobalLang(code: string) {
+  applyLang(code, true);
+}
+
+/** The account preference arriving over the network, which is not a local choice. */
+function adoptAccountLang(code: string) {
+  applyLang(code, false);
 }
 
 applyLanguageToDocument(_lang);
@@ -141,7 +165,7 @@ if (typeof window !== "undefined") {
       const { data: profile } = await supabase.from("profiles").select("preferred_language").eq("user_id", data.user.id).maybeSingle();
       return profile?.preferred_language ?? null;
     },
-    apply: setGlobalLang,
+    apply: adoptAccountLang,
   });
 }
 

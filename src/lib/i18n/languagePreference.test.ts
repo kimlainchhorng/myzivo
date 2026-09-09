@@ -8,6 +8,7 @@ import {
   rememberLanguageChoice,
   resolveInitialLanguage,
   syncAccountLanguage,
+  upgradeLegacyLanguageChoice,
 } from "./languagePreference";
 
 /** `navigator.languages` is read-only; override it for the length of one test. */
@@ -189,16 +190,61 @@ describe("migration from before the explicit marker", () => {
     });
   });
 
-  it("upgrades that preference so it stops being ambiguous", () => {
+  it("upgrades that preference at boot so it stops being ambiguous", () => {
     localStorage.setItem(LANGUAGE_STORAGE_KEY, "km");
-    resolveInitialLanguage();
+    upgradeLegacyLanguageChoice();
     expect(localStorage.getItem(LANGUAGE_EXPLICIT_KEY)).toBe("1");
+  });
+
+  it("does not invent a marker for a stored fallback", () => {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, "en");
+    upgradeLegacyLanguageChoice();
+    expect(localStorage.getItem(LANGUAGE_EXPLICIT_KEY)).toBeNull();
+  });
+
+  /**
+   * resolveInitialLanguage runs during render on the public hub and on every
+   * language-change event. A read that writes there is a trap, so the upgrade
+   * lives in the boot path instead.
+   */
+  it("resolves without writing to storage", () => {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, "km");
+    const setItem = vi.spyOn(Storage.prototype, "setItem");
+    try {
+      resolveInitialLanguage();
+      expect(setItem).not.toHaveBeenCalled();
+    } finally { setItem.mockRestore(); }
   });
 
   it("still treats a pre-existing English value as the boot default, not a choice", () => {
     localStorage.setItem(LANGUAGE_STORAGE_KEY, "en");
     withBrowserLanguages(["km-KH"], () => {
       expect(resolveInitialLanguage()).toEqual({ code: "km", source: "browser" });
+    });
+  });
+});
+
+describe("an account preference is not a choice made on this device", () => {
+  /**
+   * The account path applies through cacheLanguage, never
+   * rememberLanguageChoice. Marking it would silence the browser locale on a
+   * device the user never chose anything on -- a shared phone, or the next
+   * person to sign in -- which is the failure the marker exists to prevent.
+   * The account is also the higher-authority source and is re-read every load,
+   * so it gains nothing from the marker.
+   */
+  it("caching a language leaves the browser locale in charge", () => {
+    cacheLanguage("en");
+    expect(localStorage.getItem(LANGUAGE_EXPLICIT_KEY)).toBeNull();
+    withBrowserLanguages(["km-KH"], () => {
+      expect(resolveInitialLanguage()).toEqual({ code: "km", source: "browser" });
+    });
+  });
+
+  it("only an actual selection takes the browser locale out of play", () => {
+    rememberLanguageChoice("en");
+    withBrowserLanguages(["km-KH"], () => {
+      expect(resolveInitialLanguage().source).toBe("chosen");
     });
   });
 });

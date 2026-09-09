@@ -79,9 +79,21 @@ export function browserLanguage(supported: readonly string[] = BUNDLED_LANGUAGES
 export function hasExplicitLanguageChoice(): boolean {
   if (safeRead(LANGUAGE_EXPLICIT_KEY) === "1") return true;
   const stored = safeRead(LANGUAGE_STORAGE_KEY);
-  if (!stored || stored === FALLBACK_LANGUAGE) return false;
-  safeWrite(LANGUAGE_EXPLICIT_KEY, "1");
-  return true;
+  return Boolean(stored) && stored !== FALLBACK_LANGUAGE;
+}
+
+/**
+ * Persists the inference above, once, so the predicate stays a pure read.
+ *
+ * It matters that this is separate: `resolveInitialLanguage` runs from a React
+ * render on the public hub and from every language-change event, and a
+ * read-named function that writes to storage in those paths is a trap for
+ * whoever touches it next. Call this from app boot instead.
+ */
+export function upgradeLegacyLanguageChoice() {
+  if (safeRead(LANGUAGE_EXPLICIT_KEY) === "1") return;
+  const stored = safeRead(LANGUAGE_STORAGE_KEY);
+  if (stored && stored !== FALLBACK_LANGUAGE) safeWrite(LANGUAGE_EXPLICIT_KEY, "1");
 }
 
 export function storedLanguage(supported: readonly string[] = BUNDLED_LANGUAGES): string | null {
