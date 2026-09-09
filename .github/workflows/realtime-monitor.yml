@@ -42,6 +42,23 @@ jobs:
         run: |
           test -n "$VITE_SUPABASE_URL" || { echo 'VITE_SUPABASE_URL is required'; exit 1; }
           test -n "$VITE_SUPABASE_PUBLISHABLE_KEY" || { echo 'VITE_SUPABASE_PUBLISHABLE_KEY is required'; exit 1; }
+      # A monitor whose alert path is dead is worse than no monitor: it reports
+      # green for the probe and silently cannot page anyone when the probe goes
+      # red. TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID were both unset when this
+      # check was added, so the alert step below could never have delivered.
+      # Warn on every run rather than fail, so a missing alert channel is
+      # visible in the run summary without turning the schedule permanently red.
+      - name: Check the alert channel is armed
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram alert channel is armed."
+          else
+            echo "::warning title=Realtime monitor cannot alert::TELEGRAM_BOT_TOKEN and/or TELEGRAM_CHAT_ID are not set, so a failing probe will not reach Telegram. Set them with: gh secret set TELEGRAM_BOT_TOKEN && gh secret set TELEGRAM_CHAT_ID"
+          fi
+
       - name: Probe Realtime handshake with the production key
         env:
           CI: "true"
