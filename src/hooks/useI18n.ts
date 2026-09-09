@@ -95,11 +95,17 @@ async function saveAccountLanguage(code: string) {
     const { data } = await supabase.auth.getUser();
     const userId = data.user?.id;
     if (!userId) return;
-    await supabase
+    // PostgREST resolves rather than rejects, so the failure arrives in `error`
+    // and a bare `await` throws it away. Discarding it is precisely how the
+    // profiles.update version stayed broken for so long: log it, so the next
+    // occurrence is visible in DevTools instead of being invisible for months.
+    const { error } = await supabase
       .from("user_personalization_settings")
       .upsert({ user_id: userId, preferred_language: code }, { onConflict: "user_id" });
-  } catch {
+    if (error) console.error("[useI18n] could not save the account language preference:", error.message);
+  } catch (error) {
     // A device that cannot reach the account keeps its local choice.
+    console.error("[useI18n] account language preference save did not reach the server:", error);
   }
 }
 
@@ -180,11 +186,14 @@ if (typeof window !== "undefined") {
     load: async () => {
       const { data } = await supabase.auth.getUser();
       if (!data.user?.id) return null;
-      const { data: settings } = await supabase
+      const { data: settings, error } = await supabase
         .from("user_personalization_settings")
         .select("preferred_language")
         .eq("user_id", data.user.id)
         .maybeSingle();
+      // No row is normal — someone who has never set a preference. A real error
+      // is not, and gets said out loud rather than read as "no preference".
+      if (error) console.error("[useI18n] could not read the account language preference:", error.message);
       return settings?.preferred_language ?? null;
     },
     apply: adoptAccountLang,
