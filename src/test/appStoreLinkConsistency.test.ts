@@ -75,7 +75,9 @@ describe("app store link consistency", () => {
     const offenders: string[] = [];
 
     for (const file of walk(SRC)) {
-      if (file === CONFIG_REL) continue;
+      // Normalize separators so the shared-config exclusion also holds on
+      // Windows, where walk() yields backslash paths.
+      if (file.split(path.sep).join("/") === CONFIG_REL) continue;
       if (file.includes(`${path.sep}test${path.sep}`) || /\.test\.tsx?$/.test(file)) continue;
 
       const source = read(file);
